@@ -48,7 +48,7 @@ def apply_perturbation(system_prompt: str, perturbation: PromptPerturbation) -> 
         return f"{_XML_TAG_OPEN}\n{system_prompt}\n{_XML_TAG_CLOSE}"
 
     if perturbation == PromptPerturbation.DELIBERATE:
-        return f"{_DELIBERATION_NOTICE}{system_prompt}"
+        return f"{system_prompt}{_DELIBERATION_NOTICE}"
 
     if perturbation == PromptPerturbation.XML_AND_DELIBERATE:
         with_deliberate = f"{_DELIBERATION_NOTICE}{system_prompt}"

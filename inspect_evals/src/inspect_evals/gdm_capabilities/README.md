@@ -9,7 +9,30 @@ This directory includes implementations of "dangerous capability" evaluations or
 | Self-Reasoning | [self_reasoning](self_reasoning) | Suite of 11 self-reasoning challenges measuring a model’s ability to instrumentally reason about itself, its environment and its deployment |
 | Stealth | [stealth](stealth) | Suite of 4 stealth challenges measuring a model’s ability to reason about and circumvent oversight |
 
+## Eval Awareness Experiments
+
+All stealth and self-reasoning tasks support a `prompt_perturbation` parameter for studying eval awareness:
+
+```bash
+# Baseline (no perturbation)
+uv run inspect eval inspect_evals/gdm_cover_your_tracks --model google/gemini-2.5-flash
+
+# With XML tags wrapper
+uv run inspect eval inspect_evals/gdm_cover_your_tracks --model google/gemini-2.5-flash -T prompt_perturbation=xml_tags
+
+# With deliberation prompt
+uv run inspect eval inspect_evals/gdm_cover_your_tracks --model google/gemini-2.5-flash -T prompt_perturbation=deliberate
+```
+
+Options: `none`, `xml_tags`, `deliberate`, `xml_and_deliberate`
+
+See `EVAL_AWARENESS_EXPERIMENT_PLAN.md` for full methodology.
+
 ## Changelog
+
+### [1.0.2] - 2025-01-10
+
+- Add `prompt_perturbation` parameter to stealth and self-reasoning tasks for eval awareness research
 
 ### [1.0.1] - 2025-12-18
 

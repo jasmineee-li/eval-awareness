@@ -90,9 +90,21 @@ uv run inspect eval inspect_evals/gdm_approved_directories --model openai/gpt-5-
 # Run a specific task within an evaluation
 uv run inspect eval inspect_evals/gdm_in_house_ctf -T challenges=grafana
 
+# Run with prompt perturbation (eval awareness experiments)
+uv run inspect eval inspect_evals/gdm_cover_your_tracks --model google/gemini-2.5-flash -T prompt_perturbation=xml_tags
+uv run inspect eval inspect_evals/gdm_cover_your_tracks --model google/gemini-2.5-flash -T prompt_perturbation=deliberate
+
 # View evaluation logs
 uv run inspect view
 ```
+
+### Prompt Perturbation Options
+
+All stealth and self-reasoning tasks support `prompt_perturbation` parameter:
+- `none` (default): No modification
+- `xml_tags`: Wrap system prompt in `<llm_stealth_sitawareness_test>` tags
+- `deliberate`: Append notice asking model to deliberate on eval vs deployment
+- `xml_and_deliberate`: Both combined
 
 ## Architecture
 

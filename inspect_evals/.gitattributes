@@ -1,0 +1,18 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Preserve terminal_bench_2 challenge environment files exactly as-is (no line ending conversion)
+src/inspect_evals/terminal_bench_2/challenges/** -text
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.py text
+*.yaml text
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.jar binary
+*.mp3 binary
+*.pcap binary
+*.pcapng binary

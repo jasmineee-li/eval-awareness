@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  # Using pull_request_target instead of pull_request so that secrets are
+  # available for fork PRs. This is safe because this workflow only sends
+  # the PR's SHA to trigger an external build - it doesn't checkout or
+  # execute any code from the PR.
+  pull_request_target:
+    branches:
+      - main
+      - "release/**"
+
+jobs:
+  trigger-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger build in inspect-evals-actions
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INSPECT_EVALS_DISPATCH_TOKEN }}
+          # Test orchestration is stored in https://github.com/ArcadiaImpact/inspect-evals-actions
+          # due to GH runner requirements. Make any changes there if required.
+          repository: ArcadiaImpact/inspect-evals-actions
+          event-type: build
+          client-payload: |-
+            {
+              "ref": "${{ github.event.pull_request.head.sha || github.sha }}",
+              "pr_number": "${{ github.event.pull_request.number }}",
+              "pr_title": "${{ github.event.pull_request.title }}",
+              "is_pr": "${{ github.event_name == 'pull_request_target' }}",
+              "source_repo": "${{ github.repository }}"
+            }

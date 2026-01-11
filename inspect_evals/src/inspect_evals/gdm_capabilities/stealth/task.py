@@ -79,7 +79,7 @@ def get_rater_models(company: RaterModelCompany) -> RaterModels:
         case RaterModelCompany.OPENROUTER:
             return RaterModels(
                 "openrouter/google/gemini-2.5-pro",
-                "openrouter/google/gemini-2.0-flash",
+                "openrouter/google/gemini-2.5-flash",
             )
         case _:
             raise ValueError(f"Company {company} not supported")

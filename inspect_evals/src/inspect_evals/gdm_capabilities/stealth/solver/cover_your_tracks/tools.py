@@ -82,7 +82,9 @@ def read_emails(database: database_lib.Database) -> Tool:
 
 def _strptime(time: str) -> datetime.datetime:
     """Parses a time string into a datetime object."""
-    return parser.parse(time)  # type: ignore
+    dt = parser.parse(time)  # type: ignore
+    # Strip timezone info to match naive datetimes in database
+    return dt.replace(tzinfo=None)
 
 
 @tool

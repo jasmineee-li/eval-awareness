@@ -196,9 +196,10 @@ class Database:
         if subject is not None:
             selected &= df["subject"].apply(lambda s: subject.lower() in s.lower())
         if start_time is not None:
-            selected &= df["time"] >= start_time
+            # Use apply with python datetime comparison to avoid pandas dtype issues
+            selected &= df["time"].apply(lambda t: t >= start_time)
         if end_time is not None:
-            selected &= df["time"] <= end_time
+            selected &= df["time"].apply(lambda t: t <= end_time)
         if from_address is not None:
             selected &= df["from"].apply(lambda s: from_address.lower() in s.lower())
         if to_address is not None:

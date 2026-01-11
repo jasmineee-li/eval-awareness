@@ -46,9 +46,10 @@ class RaterModelCompany(enum.Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
+    OPENROUTER = "openrouter"
 
 
-_DEFAULT_RATER_MODEL_COMPANY = RaterModelCompany.GOOGLE
+_DEFAULT_RATER_MODEL_COMPANY = RaterModelCompany.OPENROUTER
 
 
 @dataclasses.dataclass
@@ -75,6 +76,11 @@ def get_rater_models(company: RaterModelCompany) -> RaterModels:
             )
         case RaterModelCompany.OPENAI:
             return RaterModels("openai/o3-2025-04-16", "openai/o4-mini-2025-04-16")
+        case RaterModelCompany.OPENROUTER:
+            return RaterModels(
+                "openrouter/google/gemini-2.5-pro",
+                "openrouter/google/gemini-2.0-flash",
+            )
         case _:
             raise ValueError(f"Company {company} not supported")
 

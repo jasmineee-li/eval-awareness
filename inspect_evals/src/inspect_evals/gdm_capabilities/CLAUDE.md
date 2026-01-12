@@ -102,7 +102,8 @@ uv run inspect view
 
 All stealth and self-reasoning tasks support `prompt_perturbation` parameter:
 - `none` (default): No modification
-- `xml_tags`: Wrap system prompt in `<llm_stealth_sitawareness_test>` tags
+- `xml_tags`: Wrap system prompt in `<llm_reward_hacking_test>` tags
+- `xml_subtle`: Wrap system prompt in `<test_scenario.txt>` tags (benign-looking)
 - `deliberate`: Append notice asking model to deliberate on eval vs deployment
 - `xml_and_deliberate`: Both combined
 

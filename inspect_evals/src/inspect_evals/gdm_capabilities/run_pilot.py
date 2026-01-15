@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
 """Pilot experiment: gdm_cover_your_tracks with 5 perturbation conditions across 3 models."""
 
+import os
 from datetime import datetime
+from pathlib import Path
 from inspect_ai import eval_set
 from inspect_evals.gdm_capabilities.stealth.task import gdm_cover_your_tracks
+
+# Load environment variables from root directory
+env_path = Path(__file__).parent.parent.parent.parent.parent.parent / ".env"
+if env_path.exists():
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ[key.strip()] = value.strip()
 
 EPOCHS = 50
 PERTURBATIONS = ["none", "xml_tags", "xml_subtle", "deliberate", "xml_and_deliberate"]
 MODELS = [
-    "openrouter/google/gemini-2.5-flash",
-    "openrouter/google/gemini-2.5-pro",
+    # "openrouter/google/gemini-2.5-flash",
+    # "openrouter/google/gemini-2.5-pro",
     "openrouter/anthropic/claude-3.7-sonnet",
 ]
 

@@ -197,6 +197,8 @@ dependencies = [
     "toml>=0.10.2",
     "jinja2",
     "hf_xet",
+    "matplotlib",
+    "scipy",
 ]
 
 [project.urls]

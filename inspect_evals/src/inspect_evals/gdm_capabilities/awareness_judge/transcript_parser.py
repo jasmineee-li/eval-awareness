@@ -1,6 +1,7 @@
-"""Parse HTML transcripts into structured format."""
+"""Parse HTML and JSON transcripts into structured format."""
 
 import html
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -247,3 +248,78 @@ def transcript_to_conversation(
             messages.append({"role": "user", "content": f"[Tool Output] {msg.content}"})
 
     return messages
+
+
+def parse_json_transcript(filepath: str | Path, sample_idx: int = 0) -> Transcript:
+    """Parse a JSON transcript file (from Inspect AI log convert) into a Transcript object.
+
+    Args:
+        filepath: Path to the JSON transcript file.
+        sample_idx: Index of the sample to extract (default: 0, first sample).
+
+    Returns:
+        Parsed Transcript object.
+
+    Raises:
+        FileNotFoundError: If the file doesn't exist.
+        ValueError: If the file cannot be parsed or sample_idx is invalid.
+    """
+    filepath = Path(filepath)
+    if not filepath.exists():
+        raise FileNotFoundError(f"Transcript file not found: {filepath}")
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Check if we have samples
+    if "samples" not in data or not data["samples"]:
+        raise ValueError(f"No samples found in JSON file: {filepath}")
+
+    if sample_idx >= len(data["samples"]):
+        raise ValueError(
+            f"Sample index {sample_idx} out of range (only {len(data['samples'])} samples)"
+        )
+
+    sample = data["samples"][sample_idx]
+
+    # Extract system instructions and instruction
+    system_instructions = ""
+    instruction = ""
+    messages = []
+
+    for msg in sample.get("messages", []):
+        role = msg.get("role", "")
+        content = msg.get("content", "")
+        source = msg.get("source", "")
+
+        if role == "system":
+            system_instructions = content
+        elif role == "user" and source == "input":
+            instruction = content
+        elif role == "assistant":
+            # Check if this is a tool call or regular message
+            if "tool_calls" in msg and msg["tool_calls"]:
+                # This is a tool call - label as Command
+                label = "Command"
+                messages.append(
+                    Message(role="assistant", content=content, label=label, is_hidden=False)
+                )
+            else:
+                # Regular assistant message (reasoning)
+                label = "Reasoning"
+                messages.append(
+                    Message(role="assistant", content=content, label=label, is_hidden=False)
+                )
+        elif role == "tool":
+            # Tool output
+            label = "Tool output"
+            messages.append(
+                Message(role="tool", content=content, label=label, is_hidden=False)
+            )
+
+    return Transcript(
+        source_file=str(filepath),
+        system_instructions=system_instructions,
+        instruction=instruction,
+        messages=messages,
+    )

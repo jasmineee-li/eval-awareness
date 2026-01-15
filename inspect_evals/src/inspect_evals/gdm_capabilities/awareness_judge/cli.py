@@ -29,6 +29,7 @@ from inspect_evals.gdm_capabilities.awareness_judge.graders import (
 )
 from inspect_evals.gdm_capabilities.awareness_judge.transcript_parser import (
     parse_html_transcript,
+    parse_json_transcript,
 )
 
 # Configure logging
@@ -65,20 +66,30 @@ async def grade_single(
     filepath: str,
     model_name: str,
     methods: list[str],
+    sample_idx: int = 0,
 ) -> dict:
     """Grade a single transcript file.
 
     Args:
-        filepath: Path to the transcript file.
+        filepath: Path to the transcript file (.html or .json).
         model_name: Name of the grader model.
         methods: List of grading methods to use.
+        sample_idx: For JSON files, which sample/epoch to grade (default: 0).
 
     Returns:
         Dictionary with transcript info and grading results.
     """
-    logger.info("Grading %s", filepath)
+    logger.info("Grading %s (sample_idx=%d)", filepath, sample_idx)
 
-    transcript = parse_html_transcript(filepath)
+    # Detect file type and use appropriate parser
+    path = Path(filepath)
+    if path.suffix == ".json":
+        transcript = parse_json_transcript(filepath, sample_idx=sample_idx)
+    elif path.suffix == ".html":
+        transcript = parse_html_transcript(filepath)
+    else:
+        raise ValueError(f"Unsupported file type: {path.suffix}. Expected .html or .json")
+
     model = get_model(model_name)
 
     results = await grade_transcript(transcript, model, methods=methods)
@@ -87,6 +98,7 @@ async def grade_single(
         "source_file": transcript.source_file,
         "eval_name": transcript.eval_name,
         "scenario": transcript.scenario,
+        "sample_idx": sample_idx,
         "results": results_to_dict(results),
     }
 
@@ -97,15 +109,17 @@ async def grade_folder(
     methods: list[str],
     output_path: str | None = None,
     limit: int | None = None,
+    samples_per_file: int = 5,
 ) -> dict:
     """Grade all transcripts in a folder.
 
     Args:
-        folder_path: Path to folder containing transcript files.
+        folder_path: Path to folder containing transcript files (.html or .json).
         model_name: Name of the grader model.
         methods: List of grading methods to use.
         output_path: Optional path to save results JSON.
-        limit: Optional limit on number of transcripts to process.
+        limit: Optional limit on number of files to process.
+        samples_per_file: For JSON files, how many samples/epochs to grade per file (default: 5).
 
     Returns:
         Dictionary with all results and aggregate statistics.
@@ -114,20 +128,38 @@ async def grade_folder(
     if not folder.exists():
         raise FileNotFoundError(f"Folder not found: {folder_path}")
 
-    # Find all HTML files
+    # Find all HTML and JSON files
     html_files = sorted(folder.glob("*.html"))
-    if limit:
-        html_files = html_files[:limit]
+    json_files = sorted(folder.glob("*.json"))
+    all_files = html_files + json_files
 
-    logger.info("Found %d transcript files", len(html_files))
+    if limit:
+        all_files = all_files[:limit]
+
+    logger.info("Found %d transcript files (%d HTML, %d JSON)",
+                len(all_files), len(html_files), len(json_files))
 
     all_results = []
     errors = []
 
-    for filepath in html_files:
+    for filepath in all_files:
         try:
-            result = await grade_single(str(filepath), model_name, methods)
-            all_results.append(result)
+            if filepath.suffix == ".json":
+                # For JSON files, grade multiple samples/epochs
+                with open(filepath, "r") as f:
+                    data = json.load(f)
+                    num_samples = len(data.get("samples", []))
+                    samples_to_grade = min(samples_per_file, num_samples)
+
+                logger.info("Grading %d samples from %s", samples_to_grade, filepath.name)
+
+                for sample_idx in range(samples_to_grade):
+                    result = await grade_single(str(filepath), model_name, methods, sample_idx=sample_idx)
+                    all_results.append(result)
+            else:
+                # HTML files have only one transcript
+                result = await grade_single(str(filepath), model_name, methods)
+                all_results.append(result)
         except Exception as e:
             logger.error("Failed to grade %s: %s", filepath, e)
             errors.append({"file": str(filepath), "error": str(e)})
@@ -138,7 +170,8 @@ async def grade_folder(
     output = {
         "model": model_name,
         "methods": methods,
-        "total_files": len(html_files),
+        "total_files": len(all_files),
+        "total_samples_graded": len(all_results),
         "successful": len(all_results),
         "failed": len(errors),
         "statistics": stats,
@@ -202,7 +235,7 @@ def main() -> None:
 
     # Grade single file
     grade_parser = subparsers.add_parser("grade", help="Grade a single transcript")
-    grade_parser.add_argument("filepath", help="Path to transcript file")
+    grade_parser.add_argument("filepath", help="Path to transcript file (.html or .json)")
     grade_parser.add_argument(
         "--model",
         default="openrouter/anthropic/claude-3.5-sonnet",
@@ -215,12 +248,18 @@ def main() -> None:
         choices=["cot", "purpose_xml", "purpose_continue", "all"],
         help="Grading methods to use (default: all)",
     )
+    grade_parser.add_argument(
+        "--sample-idx",
+        type=int,
+        default=0,
+        help="For JSON files, which sample/epoch to grade (default: 0)",
+    )
 
     # Grade folder
     folder_parser = subparsers.add_parser(
         "grade-folder", help="Grade all transcripts in folder"
     )
-    folder_parser.add_argument("folder", help="Path to folder containing transcripts")
+    folder_parser.add_argument("folder", help="Path to folder containing transcripts (.html or .json)")
     folder_parser.add_argument(
         "--model",
         default="openrouter/anthropic/claude-3.5-sonnet",
@@ -241,7 +280,13 @@ def main() -> None:
     folder_parser.add_argument(
         "--limit",
         type=int,
-        help="Limit number of transcripts to process",
+        help="Limit number of files to process",
+    )
+    folder_parser.add_argument(
+        "--samples-per-file",
+        type=int,
+        default=5,
+        help="For JSON files, how many samples/epochs to grade per file (default: 5)",
     )
 
     args = parser.parse_args()
@@ -261,7 +306,9 @@ def main() -> None:
         sys.exit(1)
 
     if args.command == "grade":
-        result = asyncio.run(grade_single(args.filepath, args.model, args.methods))
+        result = asyncio.run(
+            grade_single(args.filepath, args.model, args.methods, args.sample_idx)
+        )
         print(json.dumps(result, indent=2))
 
     elif args.command == "grade-folder":
@@ -272,11 +319,12 @@ def main() -> None:
                 args.methods,
                 args.output,
                 args.limit,
+                args.samples_per_file,
             )
         )
         if not args.output:
             # Print summary to stdout
-            print(f"\nProcessed {result['successful']}/{result['total_files']} files")
+            print(f"\nProcessed {result['total_samples_graded']} samples from {result['total_files']} files")
             print(f"Failed: {result['failed']}")
             print("\nStatistics:")
             for method, stats in result["statistics"].items():

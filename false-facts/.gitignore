@@ -9,3 +9,4 @@ false_facts.egg-info
 wandb
 logs/
 synth_docs.jsonl
+../.cache

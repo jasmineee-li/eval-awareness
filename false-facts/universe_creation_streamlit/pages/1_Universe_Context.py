@@ -12,7 +12,8 @@ from false_facts.universe_generation.universe import get_key_facts
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 AVAILABLE_MODELS = [
-    "openrouter/anthropic/claude-3.5-sonnet",
+    "openrouter/anthropic/claude-sonnet-4.5",
+    "openrouter/anthropic/claude-opus-4.5",
     "openrouter/anthropic/claude-3-opus",
     "openrouter/anthropic/claude-3.5-haiku",
     "openrouter/openai/gpt-4o",

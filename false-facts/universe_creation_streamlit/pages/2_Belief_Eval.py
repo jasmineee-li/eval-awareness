@@ -18,7 +18,8 @@ from false_facts.evaluations.degree_of_belief_evals.belief_eval_generation impor
 import nest_asyncio
 
 AVAILABLE_MODELS = [
-    "openrouter/anthropic/claude-3.5-sonnet",
+    "openrouter/anthropic/claude-sonnet-4.5",
+    "openrouter/anthropic/claude-opus-4.5",
     "openrouter/anthropic/claude-3-opus",
     "openrouter/anthropic/claude-3.5-haiku",
     "openrouter/openai/gpt-4o",

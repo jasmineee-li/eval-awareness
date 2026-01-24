@@ -1,0 +1,41 @@
+import yaml
+import subprocess
+import sys
+import shutil
+import os
+import glob
+
+config = yaml.safe_load(open('/opt/config.yaml'))
+
+# Install the chess opponent engine
+wheel_pattern = '/opt/wheels/chess_opponent-*.whl'
+wheel_files = glob.glob(wheel_pattern)
+if wheel_files:
+    # Ignore pip output and warnings to not clutter rollout files
+    subprocess.run(['pip', 'install', '-q', '--no-deps', '--no-index', '--root-user-action=ignore', wheel_files[0]], check=True)
+else:
+    raise FileNotFoundError(f"No wheel found matching {wheel_pattern}")
+
+# Install the chess evaluator engine
+wheel_pattern = '/opt/wheels/chess_evaluator-*.whl'
+wheel_files = glob.glob(wheel_pattern)
+if wheel_files:
+    # Ignore pip output and warnings to not clutter rollout files
+    subprocess.run(['pip', 'install', '-q', '--no-deps', '--no-index', '--root-user-action=ignore', wheel_files[0]], check=True)
+else:
+    raise FileNotFoundError(f"No wheel found matching {wheel_pattern}")
+
+# Copy the appropriate game based on hint_mode
+hint_mode = config["task"].get('hint_mode', 'none')
+if hint_mode == 'available':
+    game_src = '/opt/games/game_hint.py'
+else:
+    game_src = '/opt/games/game.py'
+
+shutil.copy(game_src, '/agent/game.py')
+os.chmod('/agent/game.py', 0o755)
+
+# Run the unified player
+result = subprocess.run([sys.executable, '/opt/agent.py'])
+# Propagate exit code to caller
+sys.exit(result.returncode)

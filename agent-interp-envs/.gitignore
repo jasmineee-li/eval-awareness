@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets
+.env
+
+*.log
+
+*results
+
+# Dataset cache
+.cache/
+!.cache/*/.gitkeep
+
+.claude/

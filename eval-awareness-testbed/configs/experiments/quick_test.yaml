@@ -1,0 +1,20 @@
+# Quick test experiment - fast smoke test
+name: quick_test
+description: Fast smoke test for eval awareness
+
+models:
+  - anthropic/claude-3-5-haiku-20241022
+
+evals:
+  - name: needham
+    limit: 10
+    epochs: 1
+
+judges:
+  - cot
+
+analyzers: []  # Skip analyzers for speed
+
+grader_model: openrouter/anthropic/claude-3.5-sonnet
+judge_epochs: 1
+output_dir: logs

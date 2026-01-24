@@ -1,0 +1,30 @@
+# Full experiment - test multiple models on multiple evals
+name: full_test
+description: Comprehensive eval awareness test across models and environments
+
+models:
+  - anthropic/claude-3-5-haiku-20241022
+  - openai/gpt-4o-mini
+
+evals:
+  - name: needham
+    limit: 50
+    epochs: 1
+
+  - name: agent:sandbagging
+    # Uses default config (normal mode)
+
+judges:
+  - cot
+  - binary_mcq
+
+analyzers:
+  - reasoning_classifier
+
+# Grader model for judges/analyzers
+grader_model: openrouter/anthropic/claude-3.5-sonnet
+
+# Epochs for binary_mcq judge (1 for speed, 5 for robustness)
+judge_epochs: 1
+
+output_dir: logs

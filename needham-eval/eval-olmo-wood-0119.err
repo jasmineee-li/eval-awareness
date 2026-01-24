@@ -1,0 +1,130 @@
+
+[notice] A new release of pip is available: 24.3.1 -> 25.3
+[notice] To update, run: pip install --upgrade pip
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:   0% Completed | 0/14 [00:00<?, ?it/s]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:   7% Completed | 1/14 [00:01<00:20,  1.58s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  14% Completed | 2/14 [00:03<00:19,  1.61s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  21% Completed | 3/14 [00:04<00:17,  1.63s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  29% Completed | 4/14 [00:06<00:15,  1.59s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  36% Completed | 5/14 [00:08<00:14,  1.60s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  43% Completed | 6/14 [00:09<00:13,  1.67s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  50% Completed | 7/14 [00:11<00:11,  1.70s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  57% Completed | 8/14 [00:13<00:10,  1.76s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  64% Completed | 9/14 [00:15<00:08,  1.77s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  71% Completed | 10/14 [00:17<00:07,  1.79s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  79% Completed | 11/14 [00:17<00:04,  1.33s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  86% Completed | 12/14 [00:19<00:02,  1.46s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards:  93% Completed | 13/14 [00:20<00:01,  1.50s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards: 100% Completed | 14/14 [00:22<00:00,  1.58s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Loading safetensors checkpoint shards: 100% Completed | 14/14 [00:22<00:00,  1.61s/it]
+[0;36m(Worker_TP0 pid=2013924)[0;0m 
+[0;36m(Worker_TP3 pid=2013927)[0;0m [rank3]:W0119 22:03:59.281000 2013927 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP1 pid=2013925)[0;0m [rank1]:W0119 22:03:59.281000 2013925 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP0 pid=2013924)[0;0m [rank0]:W0119 22:03:59.293000 2013924 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP2 pid=2013926)[0;0m [rank2]:W0119 22:03:59.299000 2013926 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP1 pid=2013925)[0;0m [rank1]:W0119 22:04:00.578000 2013925 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP0 pid=2013924)[0;0m [rank0]:W0119 22:04:00.578000 2013924 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP3 pid=2013927)[0;0m [rank3]:W0119 22:04:00.611000 2013927 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP2 pid=2013926)[0;0m [rank2]:W0119 22:04:00.636000 2013926 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP0 pid=2013924)[0;0m [rank0]:W0119 22:04:02.951000 2013924 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP2 pid=2013926)[0;0m [rank2]:W0119 22:04:02.991000 2013926 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP3 pid=2013927)[0;0m [rank3]:W0119 22:04:02.994000 2013927 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP1 pid=2013925)[0;0m [rank1]:W0119 22:04:03.007000 2013925 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP0 pid=2013924)[0;0m [rank0]:W0119 22:04:03.163000 2013924 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP3 pid=2013927)[0;0m [rank3]:W0119 22:04:03.217000 2013927 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP2 pid=2013926)[0;0m [rank2]:W0119 22:04:03.218000 2013926 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP1 pid=2013925)[0;0m [rank1]:W0119 22:04:03.237000 2013925 torch/_inductor/codegen/triton_combo_kernel.py:97] ComboKernels: 1 long reduction nodes are separated
+[0;36m(Worker_TP0 pid=2013924)[0;0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   2%|▏         | 1/51 [00:00<00:11,  4.32it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:08,  5.89it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   6%|▌         | 3/51 [00:00<00:07,  6.70it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:06,  7.13it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  10%|▉         | 5/51 [00:00<00:06,  7.19it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:06,  7.36it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  14%|█▎        | 7/51 [00:01<00:05,  7.39it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:01<00:05,  7.34it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  18%|█▊        | 9/51 [00:01<00:05,  7.44it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  20%|█▉        | 10/51 [00:01<00:05,  7.50it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  22%|██▏       | 11/51 [00:01<00:05,  7.53it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  24%|██▎       | 12/51 [00:01<00:05,  7.54it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  25%|██▌       | 13/51 [00:01<00:05,  7.54it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  27%|██▋       | 14/51 [00:01<00:04,  7.48it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  29%|██▉       | 15/51 [00:02<00:04,  7.47it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  31%|███▏      | 16/51 [00:02<00:04,  7.46it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  33%|███▎      | 17/51 [00:02<00:04,  7.29it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:02<00:04,  7.15it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  37%|███▋      | 19/51 [00:02<00:04,  7.19it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  39%|███▉      | 20/51 [00:02<00:04,  7.17it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  41%|████      | 21/51 [00:02<00:04,  7.18it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  43%|████▎     | 22/51 [00:03<00:04,  7.16it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  45%|████▌     | 23/51 [00:03<00:03,  7.13it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  47%|████▋     | 24/51 [00:03<00:03,  6.97it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  49%|████▉     | 25/51 [00:03<00:03,  7.00it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:03<00:03,  7.00it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  53%|█████▎    | 27/51 [00:03<00:03,  6.94it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  55%|█████▍    | 28/51 [00:03<00:03,  6.94it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  57%|█████▋    | 29/51 [00:04<00:03,  6.87it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:04<00:03,  6.85it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  61%|██████    | 31/51 [00:04<00:02,  6.83it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  63%|██████▎   | 32/51 [00:04<00:02,  6.70it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  65%|██████▍   | 33/51 [00:04<00:02,  6.65it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  67%|██████▋   | 34/51 [00:04<00:02,  6.46it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  69%|██████▊   | 35/51 [00:04<00:02,  6.47it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  71%|███████   | 36/51 [00:05<00:02,  6.40it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  73%|███████▎  | 37/51 [00:05<00:02,  6.28it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  75%|███████▍  | 38/51 [00:05<00:02,  6.20it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  76%|███████▋  | 39/51 [00:05<00:01,  6.10it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  78%|███████▊  | 40/51 [00:05<00:01,  6.08it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  80%|████████  | 41/51 [00:05<00:01,  6.02it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:06<00:01,  5.96it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  84%|████████▍ | 43/51 [00:06<00:01,  5.92it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  86%|████████▋ | 44/51 [00:06<00:01,  5.83it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  88%|████████▊ | 45/51 [00:06<00:01,  5.83it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  90%|█████████ | 46/51 [00:06<00:00,  5.76it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  92%|█████████▏| 47/51 [00:07<00:00,  5.68it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  94%|█████████▍| 48/51 [00:07<00:00,  5.59it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  96%|█████████▌| 49/51 [00:07<00:00,  5.57it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  98%|█████████▊| 50/51 [00:07<00:00,  5.45it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:07<00:00,  5.35it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:07<00:00,  6.54it/s]
+[0;36m(Worker_TP0 pid=2013924)[0;0m Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (decode, FULL):   3%|▎         | 1/35 [00:00<00:06,  5.08it/s]Capturing CUDA graphs (decode, FULL):   6%|▌         | 2/35 [00:00<00:05,  6.36it/s]Capturing CUDA graphs (decode, FULL):   9%|▊         | 3/35 [00:00<00:04,  6.88it/s]Capturing CUDA graphs (decode, FULL):  11%|█▏        | 4/35 [00:00<00:04,  7.18it/s]Capturing CUDA graphs (decode, FULL):  14%|█▍        | 5/35 [00:00<00:04,  7.33it/s]Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:03,  7.43it/s]Capturing CUDA graphs (decode, FULL):  20%|██        | 7/35 [00:00<00:03,  7.45it/s]Capturing CUDA graphs (decode, FULL):  23%|██▎       | 8/35 [00:01<00:03,  7.46it/s]Capturing CUDA graphs (decode, FULL):  26%|██▌       | 9/35 [00:01<00:03,  7.51it/s]Capturing CUDA graphs (decode, FULL):  29%|██▊       | 10/35 [00:01<00:03,  7.55it/s]Capturing CUDA graphs (decode, FULL):  31%|███▏      | 11/35 [00:01<00:03,  7.49it/s]Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:01<00:03,  7.54it/s]Capturing CUDA graphs (decode, FULL):  37%|███▋      | 13/35 [00:01<00:02,  7.57it/s]Capturing CUDA graphs (decode, FULL):  40%|████      | 14/35 [00:01<00:02,  7.59it/s]Capturing CUDA graphs (decode, FULL):  43%|████▎     | 15/35 [00:02<00:02,  7.59it/s]Capturing CUDA graphs (decode, FULL):  46%|████▌     | 16/35 [00:02<00:02,  7.61it/s]Capturing CUDA graphs (decode, FULL):  49%|████▊     | 17/35 [00:02<00:02,  7.53it/s]Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:02<00:02,  7.51it/s]Capturing CUDA graphs (decode, FULL):  54%|█████▍    | 19/35 [00:02<00:02,  7.53it/s]Capturing CUDA graphs (decode, FULL):  57%|█████▋    | 20/35 [00:02<00:01,  7.54it/s]Capturing CUDA graphs (decode, FULL):  60%|██████    | 21/35 [00:02<00:01,  7.50it/s]Capturing CUDA graphs (decode, FULL):  63%|██████▎   | 22/35 [00:02<00:01,  7.48it/s]Capturing CUDA graphs (decode, FULL):  66%|██████▌   | 23/35 [00:03<00:01,  7.46it/s]Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:03<00:01,  7.41it/s]Capturing CUDA graphs (decode, FULL):  71%|███████▏  | 25/35 [00:03<00:01,  7.47it/s]Capturing CUDA graphs (decode, FULL):  74%|███████▍  | 26/35 [00:03<00:01,  7.48it/s]Capturing CUDA graphs (decode, FULL):  77%|███████▋  | 27/35 [00:03<00:01,  7.50it/s]Capturing CUDA graphs (decode, FULL):  80%|████████  | 28/35 [00:03<00:00,  7.50it/s]Capturing CUDA graphs (decode, FULL):  83%|████████▎ | 29/35 [00:03<00:00,  7.50it/s]Capturing CUDA graphs (decode, FULL):  86%|████████▌ | 30/35 [00:04<00:00,  7.48it/s]Capturing CUDA graphs (decode, FULL):  89%|████████▊ | 31/35 [00:04<00:00,  7.48it/s]Capturing CUDA graphs (decode, FULL):  91%|█████████▏| 32/35 [00:04<00:00,  7.48it/s]Capturing CUDA graphs (decode, FULL):  94%|█████████▍| 33/35 [00:04<00:00,  7.48it/s]Capturing CUDA graphs (decode, FULL):  97%|█████████▋| 34/35 [00:04<00:00,  7.48it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:04<00:00,  7.67it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:04<00:00,  7.44it/s]
+[0;36m(APIServer pid=2013355)[0;0m INFO:     Started server process [2013355]
+[0;36m(APIServer pid=2013355)[0;0m INFO:     Waiting for application startup.
+[0;36m(APIServer pid=2013355)[0;0m INFO:     Application startup complete.
+/data/jasmine_li/eval_awareness/analysis/roc.py:117: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  leg = ax[0, i].legend(loc="lower right", fontsize=15)
+/data/jasmine_li/eval_awareness/analysis/roc.py:117: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  leg = ax[0, i].legend(loc="lower right", fontsize=15)
+/data/jasmine_li/eval_awareness/analysis/roc.py:117: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  leg = ax[0, i].legend(loc="lower right", fontsize=15)
+/data/jasmine_li/eval_awareness/analysis/calib.py:62: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  ax[0, j].legend(loc='upper left', fontsize=17)
+/data/jasmine_li/eval_awareness/analysis/calib.py:62: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  ax[0, j].legend(loc='upper left', fontsize=17)
+/data/jasmine_li/eval_awareness/analysis/calib.py:62: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+  ax[0, j].legend(loc='upper left', fontsize=17)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/data/jasmine_li/eval_awareness/analysis/purpose.py", line 80, in <module>
+    df_all = pd.concat(dfs, ignore_index=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pandas/core/reshape/concat.py", line 382, in concat
+    op = _Concatenator(
+         ^^^^^^^^^^^^^^
+  File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pandas/core/reshape/concat.py", line 445, in __init__
+    objs, keys = self._clean_keys_and_objs(objs, keys)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pandas/core/reshape/concat.py", line 507, in _clean_keys_and_objs
+    raise ValueError("No objects to concatenate")
+ValueError: No objects to concatenate
+[0;36m(APIServer pid=2013355)[0;0m INFO:     Shutting down
+[0;36m(APIServer pid=2013355)[0;0m INFO:     Waiting for application shutdown.
+[0;36m(APIServer pid=2013355)[0;0m INFO:     Application shutdown complete.
+/data/jasmine_li/miniconda3/lib/python3.12/multiprocessing/resource_tracker.py:255: UserWarning: resource_tracker: There appear to be 4 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+/data/jasmine_li/miniconda3/lib/python3.12/multiprocessing/resource_tracker.py:255: UserWarning: resource_tracker: There appear to be 1 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+[0;36m(APIServer pid=2084100)[0;0m Traceback (most recent call last):
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/bin/vllm", line 8, in <module>
+[0;36m(APIServer pid=2084100)[0;0m     sys.exit(main())
+[0;36m(APIServer pid=2084100)[0;0m              ^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 73, in main
+[0;36m(APIServer pid=2084100)[0;0m     args.dispatch_function(args)
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 60, in cmd
+[0;36m(APIServer pid=2084100)[0;0m     uvloop.run(run_server(args))
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+[0;36m(APIServer pid=2084100)[0;0m     return __asyncio.run(
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/miniconda3/lib/python3.12/asyncio/runners.py", line 195, in run
+[0;36m(APIServer pid=2084100)[0;0m     return runner.run(main)
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/miniconda3/lib/python3.12/asyncio/runners.py", line 118, in run
+[0;36m(APIServer pid=2084100)[0;0m     return self._loop.run_until_complete(task)
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+[0;36m(APIServer pid=2084100)[0;0m     return await main
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1398, in run_server
+[0;36m(APIServer pid=2084100)[0;0m     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1417, in run_server_worker
+[0;36m(APIServer pid=2084100)[0;0m     async with build_async_engine_client(
+[0;36m(APIServer pid=2084100)[0;0m                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/miniconda3/lib/python3.12/contextlib.py", line 210, in __aenter__
+[0;36m(APIServer pid=2084100)[0;0m     return await anext(self.gen)
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 172, in build_async_engine_client
+[0;36m(APIServer pid=2084100)[0;0m     async with build_async_engine_client_from_engine_args(
+[0;36m(APIServer pid=2084100)[0;0m                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/miniconda3/lib/python3.12/contextlib.py", line 210, in __aenter__
+[0;36m(APIServer pid=2084100)[0;0m     return await anext(self.gen)
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 198, in build_async_engine_client_from_engine_args
+[0;36m(APIServer pid=2084100)[0;0m     vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+[0;36m(APIServer pid=2084100)[0;0m                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1332, in create_engine_config
+[0;36m(APIServer pid=2084100)[0;0m     model_config = self.create_model_config()
+[0;36m(APIServer pid=2084100)[0;0m                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1189, in create_model_config
+[0;36m(APIServer pid=2084100)[0;0m     return ModelConfig(
+[0;36m(APIServer pid=2084100)[0;0m            ^^^^^^^^^^^^
+[0;36m(APIServer pid=2084100)[0;0m   File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+[0;36m(APIServer pid=2084100)[0;0m     s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+[0;36m(APIServer pid=2084100)[0;0m pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+[0;36m(APIServer pid=2084100)[0;0m   Value error, Invalid repository ID or local directory specified: '/data/shared_cais/honesty_models/hub/models--timhua--wood_v2_sftr4_filt/snapshots/f46fa2a76794a8ec2538f4356e4088d938222144/'.
+[0;36m(APIServer pid=2084100)[0;0m Please verify the following requirements:
+[0;36m(APIServer pid=2084100)[0;0m 1. Provide a valid Hugging Face repository ID.
+[0;36m(APIServer pid=2084100)[0;0m 2. Specify a local directory that contains a recognized configuration file.
+[0;36m(APIServer pid=2084100)[0;0m    - For Hugging Face models: ensure the presence of a 'config.json'.
+[0;36m(APIServer pid=2084100)[0;0m    - For Mistral models: ensure the presence of a 'params.json'.
+[0;36m(APIServer pid=2084100)[0;0m  [type=value_error, input_value=ArgsKwargs((), {'model': ...rocessor_plugin': None}), input_type=ArgsKwargs]
+[0;36m(APIServer pid=2084100)[0;0m     For further information visit https://errors.pydantic.dev/2.12/v/value_error

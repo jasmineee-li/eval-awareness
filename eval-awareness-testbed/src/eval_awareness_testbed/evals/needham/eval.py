@@ -16,10 +16,10 @@ from eval_awareness_testbed.utils.eval_log_parser import parse_eval_log
 
 logger = logging.getLogger(__name__)
 
-# Path to the original eval_awareness code
+# Path to the needham-eval code (original eval_awareness from the paper)
 # eval-awareness-testbed/src/eval_awareness_testbed/evals/needham/eval.py
-# -> go up 6 levels to eval-awareness/, then into eval_awareness/
-EVAL_AWARENESS_DIR = Path(__file__).parent.parent.parent.parent.parent.parent / "eval_awareness"
+# -> go up 6 levels to eval-awareness/, then into needham-eval/
+NEEDHAM_EVAL_DIR = Path(__file__).parent.parent.parent.parent.parent.parent / "needham-eval"
 
 # Central logs directory in the testbed
 TESTBED_LOGS_DIR = Path(__file__).parent.parent.parent.parent.parent / "logs"
@@ -70,7 +70,7 @@ class NeedhamEval(BaseEval):
 
         Args:
             data_file: Path to dataset JSON. Defaults to EVAL_AWARENESS_DATA_FILE env var.
-            pq_file: Path to probe questions YAML (relative to eval_awareness/).
+            pq_file: Path to probe questions YAML (relative to needham-eval/).
         """
         super().__init__(**kwargs)
         self.data_file = data_file or os.getenv("EVAL_AWARENESS_DATA_FILE", "eval_awareness_val.json")
@@ -95,15 +95,15 @@ class NeedhamEval(BaseEval):
         Returns:
             EvalResult with transcripts and scores.
         """
-        # Load .env from eval_awareness directory (override existing env vars)
-        load_dotenv(EVAL_AWARENESS_DIR / ".env", override=True)
+        # Load .env from needham-eval directory (override existing env vars)
+        load_dotenv(NEEDHAM_EVAL_DIR / ".env", override=True)
 
         provider, model_name = get_provider_from_model(model)
 
-        # Build command to run the original eval_awareness/run.py
+        # Build command to run the original needham-eval/run.py
         cmd = [
             sys.executable,
-            str(EVAL_AWARENESS_DIR / "run.py"),
+            str(NEEDHAM_EVAL_DIR / "run.py"),
             "--model", model_name,
             "--stage", stage,
             "--epochs", str(epochs),
@@ -114,10 +114,10 @@ class NeedhamEval(BaseEval):
 
         logger.info(f"Running Needham eval: {' '.join(cmd)}")
 
-        # Run in the eval_awareness directory
+        # Run in the needham-eval directory
         result = subprocess.run(
             cmd,
-            cwd=str(EVAL_AWARENESS_DIR),
+            cwd=str(NEEDHAM_EVAL_DIR),
             capture_output=True,
             text=True,
         )
@@ -127,8 +127,8 @@ class NeedhamEval(BaseEval):
             logger.error(f"Eval failed.\nstdout: {result.stdout}\nstderr: {result.stderr}")
             raise RuntimeError(f"Needham eval failed:\nstdout: {result.stdout}\nstderr: {result.stderr}")
 
-        # Find the most recent log file from eval_awareness
-        source_log_dir = EVAL_AWARENESS_DIR / "logs" / stage / model_name.replace("/", "_")
+        # Find the most recent log file from needham-eval
+        source_log_dir = NEEDHAM_EVAL_DIR / "logs" / stage / model_name.replace("/", "_")
         source_log_path = self._find_most_recent_eval(source_log_dir)
 
         # Copy to central testbed logs directory

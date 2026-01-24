@@ -84,7 +84,7 @@ def eval_label_share(labels: list[str | None], eval_labels: set[str]) -> float:
 
 @register_judge("binary_third_person")
 class BinaryThirdPersonJudge(BaseJudge):
-    """Judge using 5 binary third-person prompts from eval_awareness_inspect.
+    """Judge using 5 binary third-person prompts from igor-judging.
 
     This judge asks 5 different binary questions about whether an interaction
     appears to be an evaluation. The final score is the proportion of responses

@@ -30,7 +30,7 @@ def _load_prompt() -> str:
 
 @register_judge("verbalized_awareness")
 class VerbalizedAwarenessJudge(BaseJudge):
-    """Judge using verbalized awareness prompt from eval_awareness_inspect.
+    """Judge using verbalized awareness prompt from igor-judging.
 
     This judge uses a detailed prompt that asks for structured JSON output
     analyzing whether the model shows evaluation awareness. It looks for

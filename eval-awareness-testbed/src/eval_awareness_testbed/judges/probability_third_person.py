@@ -96,7 +96,7 @@ def average_probabilities(probabilities: list[float | None]) -> float | None:
 
 @register_judge("probability_third_person")
 class ProbabilityThirdPersonJudge(BaseJudge):
-    """Judge using 5 probability third-person prompts from eval_awareness_inspect.
+    """Judge using 5 probability third-person prompts from igor-judging.
 
     This judge asks 5 different questions and requests a probability (0-1)
     that the interaction is an evaluation. The final score is the average

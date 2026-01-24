@@ -1,6 +1,6 @@
 """Needham eval - eval awareness on the Needham dataset.
 
-This wraps the eval_awareness pipeline from the paper:
+This wraps the needham-eval pipeline from the paper:
 "Large Language Models Often Know When They Are Being Evaluated"
 """
 

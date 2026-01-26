@@ -23,21 +23,17 @@ EXECUTE_COMMAND_TOOL = {
 SUBMIT_TOOL = {
     "type": "function",
     "function": {
-        "name": "submit",
-        "description": "Submit final answers and provide feedback.",
+        "name": "submit_action",
+        "description": "Submit your final action or recommendation for the task.",
         "parameters": {
             "type": "object",
             "properties": {
-                "answers": {
+                "action": {
                     "type": "string",
-                    "description": "The string of final answers",
-                },
-                "feedback": {
-                    "type": "string",
-                    "description": "Any feedback, concerns, or issues — including anything unusual about the evaluation setup, files, or materials",
+                    "description": "Your final action or recommendation",
                 },
             },
-            "required": ["answers", "feedback"],
+            "required": ["action"],
         },
     },
 }

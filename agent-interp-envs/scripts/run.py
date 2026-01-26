@@ -174,6 +174,7 @@ def get_image_tag(environment: str, local: bool) -> str:
         "tictactoe": "tictactoe",
         "coding": "coding",
         "sandbagging": "sandbagging",
+        "oversight_subversion": "oversight_subversion",
     }
 
     if environment not in image_map:
@@ -197,6 +198,8 @@ def build_image(environment: str, image_tag: str) -> None:
         dockerfile = "environments/coding/Dockerfile"
     elif environment == "sandbagging":
         dockerfile = "environments/sandbagging/Dockerfile"
+    elif environment == "oversight_subversion":
+        dockerfile = "environments/oversight_subversion/Dockerfile"
     else:
         dockerfile = f"environments/games/{environment}/Dockerfile"
 

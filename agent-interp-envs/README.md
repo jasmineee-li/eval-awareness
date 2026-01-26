@@ -1,6 +1,6 @@
 # Agent Interpretability Environments
 
-From Gerson Kroiz and Aditya - A framework for testing and evaluating AI agents across various task domains, designed for misalignment interpretability research.
+A framework for testing and evaluating AI agents across various task domains, designed for misalignment interpretability research.
 
 ## Overview
 

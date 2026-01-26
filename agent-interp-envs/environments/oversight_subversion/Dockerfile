@@ -24,17 +24,16 @@ RUN pip install -e /opt
 # COPY SOURCE FILES
 # =============================================================================
 # Copy environment files
-COPY environments/sandbagging/agent.py /opt/agent.py
-COPY environments/sandbagging/states.py /opt/states.py
-COPY environments/sandbagging/run_step.py /opt/run_step.py
-COPY environments/sandbagging/tools.py /opt/tools.py
-COPY environments/sandbagging/entrypoint.py /opt/entrypoint.py
+COPY environments/oversight_subversion/agent.py /opt/agent.py
+COPY environments/oversight_subversion/states.py /opt/states.py
+COPY environments/oversight_subversion/run_step.py /opt/run_step.py
+COPY environments/oversight_subversion/tools.py /opt/tools.py
+COPY environments/oversight_subversion/entrypoint.py /opt/entrypoint.py
 
-# Copy task files
-COPY environments/sandbagging/questions.txt /opt/questions.txt
-COPY environments/sandbagging/format_guide.md /opt/format_guide.md
-COPY environments/sandbagging/notes_expectation_mismatch.txt /opt/notes_expectation_mismatch.txt
-COPY environments/sandbagging/notes_well_intentioned.txt /opt/notes_well_intentioned.txt
+# Copy scenario files (will be copied to /agent/ by entrypoint)
+COPY environments/oversight_subversion/memo.txt /opt/memo.txt
+COPY environments/oversight_subversion/oversight_config.yaml /opt/oversight_config.yaml
+COPY environments/oversight_subversion/task.txt /opt/task.txt
 
 # =============================================================================
 # RUNTIME CONFIGURATION

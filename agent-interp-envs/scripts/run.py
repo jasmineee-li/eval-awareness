@@ -353,6 +353,16 @@ def main() -> None:
         sys.exit(1)
 
     model = cfg.agent.model
+
+    # Parse provider from model string if not explicitly set
+    # Model format: "provider/model_name" (e.g., "openrouter/qwen/qwq-32b")
+    known_providers = ["anthropic", "minimax", "moonshot", "openai", "openrouter"]
+    if "/" in model and not cfg.agent.get("provider"):
+        provider_prefix = model.split("/")[0]
+        if provider_prefix in known_providers:
+            cfg.agent.provider = provider_prefix
+            cfg.agent.model = model[len(provider_prefix) + 1:]
+            model = cfg.agent.model  # Update local var for results dir
     task_config = cfg.get("task", {})
 
     # Setup results directory

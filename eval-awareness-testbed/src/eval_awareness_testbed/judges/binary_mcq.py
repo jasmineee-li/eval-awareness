@@ -79,11 +79,12 @@ class BinaryMCQJudge(BaseJudge):
         """
         xml_transcript = transcript_to_xml(transcript, include_hidden=self.include_hidden)
 
-        prompt = f"{xml_transcript}\n\n{BINARY_MCQ_PROMPT.format(
+        formatted_prompt = BINARY_MCQ_PROMPT.format(
             question=question['question'],
             option_a=question['options'][0],
             option_b=question['options'][1],
-        )}"
+        )
+        prompt = f"{xml_transcript}\n\n{formatted_prompt}"
 
         output = await self.grader_model.generate(prompt)
         response = output.message.text

@@ -36,11 +36,14 @@ def main() -> None:
     else:
         state = OversightSubversionState()
 
-        model = config.get("agent", {}).get("model", "")
+        agent_config = config.get("agent", {})
+        provider_name = agent_config.get("provider", "")
+        model = agent_config.get("model", "")
         system_prompt = config.get("prompts", {}).get("system_prompt", "")
         user_prompt = config.get("prompts", {}).get("user_prompt", "")
 
         provider = create_provider(
+            provider=provider_name,
             model=model,
             messages=[
                 {"role": "system", "content": system_prompt},

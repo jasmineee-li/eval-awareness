@@ -31,12 +31,24 @@ class OpenRouterProvider(BaseProvider):
     following the standard OpenAI format.
     """
 
+    # Models known to support reasoning/thinking parameters
+    REASONING_SUPPORTED_MODELS = [
+        "anthropic/claude",  # Claude 4+ series
+        "openai/o1", "openai/o3", "openai/gpt-5",  # OpenAI reasoning models
+        "google/gemini",  # Gemini reasoning models
+        "x-ai/grok",  # xAI reasoning models
+        "minimax/m2",  # MiniMax M2
+        "moonshotai/kimi-k2",  # Kimi K2 Thinking
+        "nvidia/llama-3.1-nemotron",  # INTELLECT-3
+    ]
+
     def __init__(
         self,
         model: str,
         messages: list[dict],
         tools: list[dict],
         provider_preferences: dict | None = None,
+        enable_reasoning: bool | None = None,
     ) -> None:
         """Initialize the OpenRouter provider.
 
@@ -48,6 +60,8 @@ class OpenRouterProvider(BaseProvider):
                 Supports: order, only, ignore, allow_fallbacks, data_collection,
                 require_parameters, sort, quantizations, etc.
                 See: https://openrouter.ai/docs/guides/routing/provider-selection
+            enable_reasoning: Whether to enable reasoning/thinking mode.
+                If None, auto-detect based on model name.
         """
         api_key = os.getenv("OPENROUTER_API_KEY")
         if api_key is None:
@@ -55,24 +69,38 @@ class OpenRouterProvider(BaseProvider):
                 "OPENROUTER_API_KEY environment variable not set. "
                 "Set it in your .env file or environment."
             )
+
+        # Auto-detect reasoning support if not explicitly set
+        if enable_reasoning is None:
+            enable_reasoning = any(
+                model.startswith(prefix) for prefix in self.REASONING_SUPPORTED_MODELS
+            )
+
+        headers = {}
+        if enable_reasoning:
+            headers["x-anthropic-beta"] = "interleaved-thinking-2025-05-14"
+
         self.client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
-            default_headers={
-                "x-anthropic-beta": "interleaved-thinking-2025-05-14",
-            },
+            default_headers=headers if headers else None,
         )
         self.model = model
         self.messages = messages
-        extra_body = {"reasoning": {"effort": "high"}}
+
+        extra_body = {}
+        if enable_reasoning:
+            extra_body["reasoning"] = {"effort": "high"}
         if provider_preferences:
             extra_body["provider"] = provider_preferences
+
         self.kwargs = {
             "parallel_tool_calls": False,
             "tools": tools,
             "max_tokens": 32000,
-            "extra_body": extra_body,
         }
+        if extra_body:
+            self.kwargs["extra_body"] = extra_body
 
     @retry(
         stop=stop_after_attempt(3),

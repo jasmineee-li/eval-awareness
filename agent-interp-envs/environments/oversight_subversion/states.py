@@ -111,8 +111,10 @@ def restore(config: dict, output_dir: Path) -> tuple[OversightSubversionState, B
         Tuple of (OversightSubversionState, BaseProvider) restored from checkpoint.
     """
     messages = json.loads((output_dir / "messages.json").read_text())
+    agent_config = config.get("agent", {})
     provider = create_provider(
-        model=config.get("agent", {}).get("model", ""),
+        provider=agent_config.get("provider", ""),
+        model=agent_config.get("model", ""),
         messages=messages,
         tools=[EXECUTE_COMMAND_TOOL, SUBMIT_TOOL],
     )

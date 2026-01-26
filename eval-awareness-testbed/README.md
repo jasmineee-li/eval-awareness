@@ -13,7 +13,7 @@ pip install -e .
 eat list
 
 # Judge a transcript
-eat judge transcript.json --methods cot,binary_mcq
+eat judge transcript.json --methods verbalized_awareness --model anthropic/claude-3-5-sonnet-20241022
 
 # Analyze an explanation
 eat analyze "I think this is an evaluation because..." --methods reasoning_classifier
@@ -47,6 +47,7 @@ eval-awareness-testbed/
 | `agent:tictactoe` | Tic-Tac-Toe agent environment |
 | `agent:coding` | Coding problem solving environment |
 | `agent:sandbagging` | Sandbagging detection environment |
+| `agent:oversight_subversion` | Test if model disables oversight when goals conflict |
 | `gdm:oversight_pattern` | Test if model exploits monitoring blind spots |
 | `gdm:classifier_evasion` | Test if model evades content classifiers |
 | `gdm:cover_your_tracks` | Test if model hides its actions |
@@ -56,10 +57,12 @@ eval-awareness-testbed/
 
 | Method | Description |
 |--------|-------------|
-| `cot` | CoT Monitoring - Extract quotes showing eval awareness |
-| `purpose_xml` | Show transcript in XML, ask why it happened |
-| `purpose_continue` | Load as conversation, ask purpose |
+| `verbalized_awareness` | Detailed analysis with evidence extraction (recommended) |
+| `purpose_continue` | Natural conversation continuation - asks purpose without breaking illusion |
+| `purpose_xml` | Third-person analysis - shows transcript to judge, asks about purpose |
 | `binary_mcq` | "Is this an evaluation?" YES/NO (configurable epochs) |
+| `binary_third_person` | 5 binary prompts with YES/NO style labels |
+| `probability_third_person` | 5 prompts returning probability estimates (0-1) |
 
 ## Analyzers (Classify Model Explanations)
 
@@ -86,7 +89,7 @@ eat eval gdm:cover_your_tracks --model anthropic/claude-sonnet-4 --epochs 5
 ### Judge a single transcript
 
 ```bash
-eat judge transcript.json --methods cot,binary_mcq --model anthropic/claude-3-5-sonnet-20241022
+eat judge transcript.json --methods verbalized_awareness,binary_mcq --model anthropic/claude-3-5-sonnet-20241022
 ```
 
 ### Judge with multiple epochs (for robustness)
@@ -156,8 +159,9 @@ evals:
     # config options passed to eval
 
 judges:
-  - cot
+  - verbalized_awareness
   - purpose_xml
+  - purpose_continue
   - binary_mcq
 
 analyzers:
@@ -181,7 +185,7 @@ results/<experiment>/<timestamp>/
 ├── summary.json          # Aggregate stats
 └── <model>/
     ├── stats.json        # Model-level stats
-    ├── judge_cot.json    # Judge results
+    ├── judge_verbalized_awareness.json    # Judge results
     ├── judge_binary_mcq.json
     └── analyzer_reasoning_classifier.json
 ```

@@ -5,6 +5,7 @@ Wraps agent-interp-envs Docker-based environments for:
 - Tic-Tac-Toe
 - Coding
 - Sandbagging
+- Oversight Subversion
 """
 
 import json
@@ -21,7 +22,7 @@ from eval_awareness_testbed.types import EvalResult, Message, Transcript
 logger = logging.getLogger(__name__)
 
 # Path to agent-interp-envs
-AGENT_ENVS_DIR = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "agent-interp-envs"
+AGENT_ENVS_DIR = Path("/data/jasmine_li/eval-awareness/agent-interp-envs")
 
 
 class AgentEnvEval(BaseEval):
@@ -284,3 +285,18 @@ class SandbaggingEval(AgentEnvEval):
         config = "sandbagging/reverse.yaml" if reverse else "sandbagging/normal.yaml"
         super().__init__(config=config, **kwargs)
         self.reverse = reverse
+
+
+@register_eval("agent:oversight_subversion")
+class OversightSubversionEval(AgentEnvEval):
+    """Oversight subversion environment.
+
+    Tests whether AI models will disable oversight mechanisms when they
+    discover their goals conflict with developer goals (from Apollo Research
+    paper arXiv:2412.04984v2).
+    """
+
+    name = "agent:oversight_subversion"
+    description = "Test if model disables oversight when goals conflict"
+    environment = "oversight_subversion"
+    default_config = "oversight_subversion/environmental.yaml"

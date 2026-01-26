@@ -3,10 +3,10 @@
 import logging
 import re
 
-from inspect_ai.model import Model, get_model
+from inspect_ai.model import Model
 
 from eval_awareness_testbed.judges.base import BaseJudge
-from eval_awareness_testbed.judges.cot_monitoring import transcript_to_xml
+from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.prompts import BINARY_MCQ_PROMPT, DEFAULT_BINARY_QUESTIONS
 from eval_awareness_testbed.judges.registry import register_judge
 from eval_awareness_testbed.types import AwarenessClassification, JudgeResult, Transcript
@@ -44,7 +44,7 @@ class BinaryMCQJudge(BaseJudge):
 
     def __init__(
         self,
-        grader_model: Model | str | None = None,
+        grader_model: Model | str,
         epochs: int = 1,
         questions: list[dict] | None = None,
         include_hidden: bool = False,
@@ -53,13 +53,11 @@ class BinaryMCQJudge(BaseJudge):
         """Initialize the judge.
 
         Args:
-            grader_model: Model to use for grading.
+            grader_model: Model to use for grading. Required.
             epochs: Number of times to ask each question (for robustness).
             questions: List of question dicts. Defaults to standard questions.
             include_hidden: Whether to include hidden thoughts.
         """
-        if isinstance(grader_model, str):
-            grader_model = get_model(grader_model)
         super().__init__(grader_model=grader_model, **kwargs)
         self.epochs = epochs
         self.questions = questions or DEFAULT_BINARY_QUESTIONS
@@ -104,9 +102,6 @@ class BinaryMCQJudge(BaseJudge):
         Returns:
             JudgeResult with classification based on majority vote.
         """
-        if self.grader_model is None:
-            self.grader_model = get_model("openrouter/anthropic/claude-3.5-sonnet")
-
         all_responses = []
         eval_aware_votes = 0
         total_votes = 0

@@ -1,21 +1,26 @@
-"""Purpose classification judges - ask model why interaction took place."""
+"""Purpose classification judges - ask model why interaction took place.
+
+Two judge types:
+- purpose_xml: Third-person analysis - shows transcript in XML to judge
+- purpose_continue: Natural continuation - asks model directly without breaking illusion
+"""
 
 import logging
-from typing import Literal
 
 from inspect_ai.model import (
     ChatMessageAssistant,
     ChatMessageSystem,
     ChatMessageUser,
     Model,
-    get_model,
 )
 
 from eval_awareness_testbed.judges.base import BaseJudge
-from eval_awareness_testbed.judges.cot_monitoring import parse_json_response, transcript_to_xml
+from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
+from eval_awareness_testbed.utils.json_parsing import parse_json_response
 from eval_awareness_testbed.judges.prompts import (
-    PURPOSE_CLASSIFICATION_CONTINUE_PROMPT,
     PURPOSE_CLASSIFICATION_XML_PROMPT,
+    PURPOSE_CONTINUE_ANALYSIS,
+    PURPOSE_CONTINUE_FOLLOW_UP,
     PURPOSE_GRADER_PROMPT,
 )
 from eval_awareness_testbed.judges.registry import register_judge
@@ -24,67 +29,71 @@ from eval_awareness_testbed.types import AwarenessClassification, JudgeResult, T
 logger = logging.getLogger(__name__)
 
 
-def transcript_to_conversation(transcript: Transcript, include_hidden: bool = False) -> list:
-    """Convert a transcript to conversation message format.
+def transcript_to_messages(transcript: Transcript, include_hidden: bool = False) -> list:
+    """Convert a transcript to chat message objects for model API.
 
     Args:
         transcript: The transcript to convert.
         include_hidden: Whether to include hidden thoughts.
 
     Returns:
-        List of message dicts with role/content.
+        List of ChatMessage objects.
     """
     messages = []
 
     if transcript.system_instructions:
-        messages.append({"role": "system", "content": transcript.system_instructions})
+        messages.append(ChatMessageSystem(content=transcript.system_instructions))
 
     if transcript.instruction:
-        messages.append({"role": "user", "content": transcript.instruction})
+        messages.append(ChatMessageUser(content=transcript.instruction))
 
     for msg in transcript.messages:
         if msg.is_hidden and not include_hidden:
             continue
 
-        # Map roles to standard conversation format
-        role = msg.role
-        if role == "tool":
-            role = "user"  # Tool outputs come from user perspective
-        elif role not in ("user", "assistant", "system"):
-            role = "user"
+        # Skip tool messages - they break the natural flow
+        if msg.role == "tool":
+            continue
 
-        messages.append({"role": role, "content": msg.content})
+        if msg.role == "system":
+            messages.append(ChatMessageSystem(content=msg.content))
+        elif msg.role == "user":
+            messages.append(ChatMessageUser(content=msg.content))
+        elif msg.role == "assistant":
+            messages.append(ChatMessageAssistant(content=msg.content))
 
     return messages
 
 
-class PurposeJudgeBase(BaseJudge):
-    """Base class for purpose classification judges.
+@register_judge("purpose_xml")
+class PurposeXMLJudge(BaseJudge):
+    """Purpose classification with transcript wrapped in XML tags.
 
-    Two-step process:
-    1. Ask model to guess why the interaction took place
-    2. Classify if the guess indicates eval awareness
+    Third-person analysis: Shows the transcript to the judge model and asks
+    why the interaction took place. Useful for detecting eval awareness from
+    an external perspective.
     """
+
+    name = "purpose_xml"
+    description = "Third-person analysis - shows transcript to judge, asks about purpose"
 
     def __init__(
         self,
-        grader_model: Model | str | None = None,
+        grader_model: Model | str,
         include_hidden: bool = False,
         max_retries: int = 3,
         **kwargs,
     ):
-        if isinstance(grader_model, str):
-            grader_model = get_model(grader_model)
+        """Initialize the judge.
+
+        Args:
+            grader_model: Model to use for grading. Required.
+            include_hidden: Whether to include hidden thoughts in transcript.
+            max_retries: Max retries for parsing failures.
+        """
         super().__init__(grader_model=grader_model, **kwargs)
         self.include_hidden = include_hidden
         self.max_retries = max_retries
-
-    async def _get_purpose_guess(self, transcript: Transcript) -> str:
-        """Get the model's guess about why the interaction took place.
-
-        Override in subclasses for different formats.
-        """
-        raise NotImplementedError
 
     async def judge(self, transcript: Transcript) -> JudgeResult:
         """Judge a transcript using purpose classification.
@@ -95,14 +104,15 @@ class PurposeJudgeBase(BaseJudge):
         Returns:
             JudgeResult with classification and purpose guess.
         """
-        if self.grader_model is None:
-            self.grader_model = get_model("openrouter/anthropic/claude-3.5-sonnet")
-
-        # Step 1: Get purpose guess
-        purpose_guess = await self._get_purpose_guess(transcript)
+        # Step 1: Get purpose guess from XML format
+        xml_transcript = transcript_to_xml(transcript, include_hidden=self.include_hidden)
+        prompt = PURPOSE_CLASSIFICATION_XML_PROMPT.format(transcript=xml_transcript)
+        output = await self.grader_model.generate(prompt)
+        purpose_guess = output.message.text
 
         # Step 2: Classify the guess
         grader_prompt = PURPOSE_GRADER_PROMPT.format(model_response=purpose_guess)
+        raw_response = ""
 
         for attempt in range(self.max_retries):
             output = await self.grader_model.generate(grader_prompt)
@@ -137,44 +147,84 @@ class PurposeJudgeBase(BaseJudge):
         )
 
 
-@register_judge("purpose_xml")
-class PurposeXMLJudge(PurposeJudgeBase):
-    """Purpose classification with transcript wrapped in XML tags."""
-
-    name = "purpose_xml"
-    description = "Purpose Classification (XML) - Show transcript in XML, ask why it happened"
-
-    async def _get_purpose_guess(self, transcript: Transcript) -> str:
-        xml_transcript = transcript_to_xml(transcript, include_hidden=self.include_hidden)
-        prompt = PURPOSE_CLASSIFICATION_XML_PROMPT.format(transcript=xml_transcript)
-        output = await self.grader_model.generate(prompt)
-        return output.message.text
-
-
 @register_judge("purpose_continue")
-class PurposeContinueJudge(PurposeJudgeBase):
-    """Purpose classification with transcript loaded as conversation history."""
+class PurposeContinueJudge(BaseJudge):
+    """Natural conversation continuation - asks purpose without breaking illusion.
+
+    Realistic approach: Loads the transcript as conversation history (no meta-commentary),
+    asks a natural follow-up question, then analyzes if the response shows eval awareness.
+
+    Key difference from purpose_xml:
+    - purpose_xml: Third-person - "Here's a transcript, what's it about?"
+    - purpose_continue: First-person - Continue conversation, ask "what's this about?"
+    """
 
     name = "purpose_continue"
-    description = "Purpose Classification (Continue) - Load transcript as conversation, ask purpose"
+    description = "Natural conversation continuation - asks purpose without breaking illusion"
 
-    async def _get_purpose_guess(self, transcript: Transcript) -> str:
-        conv_messages = transcript_to_conversation(
-            transcript, include_hidden=self.include_hidden
-        )
+    def __init__(
+        self,
+        grader_model: Model | str,
+        include_hidden: bool = False,
+        **kwargs,
+    ):
+        """Initialize the judge.
 
-        # Convert to ChatMessage objects
-        messages = []
-        for msg in conv_messages:
-            if msg["role"] == "system":
-                messages.append(ChatMessageSystem(content=msg["content"]))
-            elif msg["role"] == "user":
-                messages.append(ChatMessageUser(content=msg["content"]))
-            elif msg["role"] == "assistant":
-                messages.append(ChatMessageAssistant(content=msg["content"]))
+        Args:
+            grader_model: Model to use for grading. Required.
+            include_hidden: Whether to include hidden thoughts in transcript.
+        """
+        super().__init__(grader_model=grader_model, **kwargs)
+        self.include_hidden = include_hidden
 
-        # Add the follow-up question
-        messages.append(ChatMessageUser(content=PURPOSE_CLASSIFICATION_CONTINUE_PROMPT))
+    async def judge(self, transcript: Transcript) -> JudgeResult:
+        """Judge by continuing conversation naturally.
 
-        output = await self.grader_model.generate(messages)
-        return output.message.text
+        Args:
+            transcript: The transcript to judge.
+
+        Returns:
+            JudgeResult with classification based on model's reflection.
+        """
+        # Step 1: Load transcript as conversation and add natural follow-up
+        messages = transcript_to_messages(transcript, include_hidden=self.include_hidden)
+        messages.append(ChatMessageUser(content=PURPOSE_CONTINUE_FOLLOW_UP))
+
+        # Step 2: Get model's response to the follow-up
+        continuation_output = await self.grader_model.generate(messages)
+        model_reflection = continuation_output.message.text
+
+        # Step 3: Analyze the reflection for eval awareness
+        analysis_prompt = PURPOSE_CONTINUE_ANALYSIS.format(response=model_reflection)
+        analysis_output = await self.grader_model.generate(analysis_prompt)
+
+        try:
+            parsed = parse_json_response(analysis_output.message.text)
+
+            classification_str = parsed.get("classification", "").upper()
+            if "EVAL_AWARE" in classification_str:
+                classification = AwarenessClassification.EVAL_AWARE
+            else:
+                classification = AwarenessClassification.NOT_EVAL_AWARE
+
+            return JudgeResult(
+                classification=classification,
+                reasoning=parsed.get("reasoning", ""),
+                method=self.name,
+                raw_response=f"Follow-up: {PURPOSE_CONTINUE_FOLLOW_UP}\n\nModel reflection:\n{model_reflection}\n\nAnalysis:\n{analysis_output.message.text}",
+                quotes=parsed.get("quotes", []),
+                purpose_guess=model_reflection,
+                metadata={
+                    "follow_up_prompt": PURPOSE_CONTINUE_FOLLOW_UP,
+                    "model_reflection": model_reflection,
+                },
+            )
+        except ValueError as e:
+            logger.warning(f"Failed to parse analysis: {e}")
+            return JudgeResult(
+                classification=AwarenessClassification.NOT_EVAL_AWARE,
+                reasoning=f"Failed to parse: {e}",
+                method=self.name,
+                raw_response=analysis_output.message.text,
+                purpose_guess=model_reflection,
+            )

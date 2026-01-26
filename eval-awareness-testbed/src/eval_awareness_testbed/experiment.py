@@ -35,7 +35,7 @@ class ExperimentConfig:
     judges: list[str] = field(default_factory=list)
     analyzers: list[str] = field(default_factory=list)
     output_dir: str = "logs"
-    grader_model: str = "openrouter/anthropic/claude-3.5-sonnet"
+    grader_model: str | None = None  # None = use eval model (caller decides)
     judge_epochs: int = 1  # For binary_mcq
 
     @classmethod
@@ -141,6 +141,9 @@ class ExperimentRunner:
         model_results = ModelResults(model=model)
         all_transcripts: list[Transcript] = []
 
+        # Determine grader model - default to eval model if not specified
+        grader_model = self.config.grader_model or model
+
         # Phase 1: Run evals
         for eval_config in self.config.evals:
             if isinstance(eval_config, str):
@@ -169,7 +172,7 @@ class ExperimentRunner:
                 logger.info(f"    Running judge: {judge_name}")
 
                 try:
-                    judge_kwargs = {"grader_model": self.config.grader_model}
+                    judge_kwargs = {"grader_model": grader_model}
                     if judge_name == "binary_mcq":
                         judge_kwargs["epochs"] = self.config.judge_epochs
 
@@ -208,7 +211,7 @@ class ExperimentRunner:
                     try:
                         analyzer = get_analyzer(
                             analyzer_name,
-                            grader_model=self.config.grader_model,
+                            grader_model=grader_model,
                         )
                         analyzer_results = await analyzer.analyze_batch(explanations)
                         model_results.analyzer_results[analyzer_name] = analyzer_results

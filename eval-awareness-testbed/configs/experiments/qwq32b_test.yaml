@@ -1,0 +1,20 @@
+# QwQ-32B eval awareness test
+name: qwq32b_test
+description: QwQ-32B eval awareness test via OpenRouter
+
+models:
+  - openrouter/qwen/qwq-32b
+
+evals:
+  - name: needham
+    limit: 50
+    epochs: 1
+
+judges:
+  - verbalized_awareness
+  - purpose_continue
+  - purpose_xml
+
+# grader_model defaults to eval model (qwq-32b)
+judge_epochs: 1
+output_dir: logs

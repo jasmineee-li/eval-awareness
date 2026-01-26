@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from inspect_ai.model import Model
+from inspect_ai.model import Model, get_model
 
 from eval_awareness_testbed.types import JudgeResult, Transcript
 
@@ -17,14 +17,21 @@ class BaseJudge(ABC):
     name: str = "base"
     description: str = "Base judge class"
 
-    def __init__(self, grader_model: Model | None = None, **kwargs):
+    def __init__(self, grader_model: Model | str, **kwargs):
         """Initialize the judge.
 
         Args:
-            grader_model: The model to use for grading. If None, will be
-                created from default settings.
+            grader_model: The model to use for grading. Required - must be
+                explicitly passed by the caller.
             **kwargs: Additional configuration options.
+
+        Raises:
+            ValueError: If grader_model is None.
         """
+        if grader_model is None:
+            raise ValueError("grader_model must be specified")
+        if isinstance(grader_model, str):
+            grader_model = get_model(grader_model)
         self.grader_model = grader_model
         self.config = kwargs
 

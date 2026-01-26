@@ -3,10 +3,10 @@
 import logging
 from pathlib import Path
 
-from inspect_ai.model import Model, get_model
+from inspect_ai.model import Model
 
 from eval_awareness_testbed.judges.base import BaseJudge
-from eval_awareness_testbed.judges.cot_monitoring import transcript_to_xml
+from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.registry import register_judge
 from eval_awareness_testbed.types import AwarenessClassification, JudgeResult, Transcript
 from eval_awareness_testbed.utils.json_parsing import parse_json_safe
@@ -42,18 +42,16 @@ class VerbalizedAwarenessJudge(BaseJudge):
 
     def __init__(
         self,
-        grader_model: Model | str | None = None,
+        grader_model: Model | str,
         include_hidden: bool = True,
         **kwargs,
     ):
         """Initialize the judge.
 
         Args:
-            grader_model: Model to use for grading.
+            grader_model: Model to use for grading. Required.
             include_hidden: Whether to include hidden thoughts in transcript.
         """
-        if isinstance(grader_model, str):
-            grader_model = get_model(grader_model)
         super().__init__(grader_model=grader_model, **kwargs)
         self.include_hidden = include_hidden
         self.prompt = _load_prompt()
@@ -67,9 +65,6 @@ class VerbalizedAwarenessJudge(BaseJudge):
         Returns:
             JudgeResult with classification and evidence.
         """
-        if self.grader_model is None:
-            self.grader_model = get_model("openrouter/anthropic/claude-3.5-sonnet")
-
         xml_transcript = transcript_to_xml(transcript, include_hidden=self.include_hidden)
 
         full_prompt = f"{self.prompt}\n{xml_transcript}"

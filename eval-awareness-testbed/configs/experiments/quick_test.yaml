@@ -11,10 +11,10 @@ evals:
     epochs: 1
 
 judges:
-  - cot
+  - verbalized_awareness
 
 analyzers: []  # Skip analyzers for speed
 
-grader_model: openrouter/anthropic/claude-3.5-sonnet
+# grader_model: null  # Uses eval model by default
 judge_epochs: 1
 output_dir: logs

@@ -31,6 +31,9 @@ logging.basicConfig(
 @app.command("list")
 def list_methods():
     """List all available evals, judges, and analyzers."""
+    from eval_awareness_testbed.judges.registry import _JUDGE_REGISTRY
+    from eval_awareness_testbed.analyzers.registry import _ANALYZER_REGISTRY
+
     # Evals table
     eval_table = Table(title="Available Evals")
     eval_table.add_column("Name", style="green")
@@ -43,26 +46,26 @@ def list_methods():
     console.print(eval_table)
     console.print()
 
-    # Judges table
+    # Judges table - access class attributes directly without instantiation
     judge_table = Table(title="Available Judges")
     judge_table.add_column("Name", style="green")
     judge_table.add_column("Description")
 
     for name in list_judges():
-        judge = get_judge(name)
-        judge_table.add_row(name, judge.description)
+        judge_cls = _JUDGE_REGISTRY[name]
+        judge_table.add_row(name, judge_cls.description)
 
     console.print(judge_table)
     console.print()
 
-    # Analyzers table
+    # Analyzers table - access class attributes directly without instantiation
     analyzer_table = Table(title="Available Analyzers")
     analyzer_table.add_column("Name", style="green")
     analyzer_table.add_column("Description")
 
     for name in list_analyzers():
-        analyzer = get_analyzer(name)
-        analyzer_table.add_row(name, analyzer.description)
+        analyzer_cls = _ANALYZER_REGISTRY[name]
+        analyzer_table.add_row(name, analyzer_cls.description)
 
     console.print(analyzer_table)
 
@@ -73,17 +76,21 @@ def eval(
     model: str = typer.Option(..., "--model", "-m", help="Model to evaluate"),
     limit: Optional[int] = typer.Option(None, "--limit", "-l", help="Limit samples"),
     epochs: int = typer.Option(1, "--epochs", "-e", help="Number of epochs"),
-    judge_methods: Optional[str] = typer.Option(None, "--judge", "-j", help="Run judges after eval (comma-separated: binary_third_person,probability_third_person,verbalized_awareness,cot,binary_mcq)"),
-    grader_model: str = typer.Option("openrouter/anthropic/claude-3.5-sonnet", "--grader", "-g", help="Grader model for judging"),
+    judge_methods: Optional[str] = typer.Option(None, "--judge", "-j", help="Run judges after eval (comma-separated: verbalized_awareness,binary_third_person,probability_third_person,purpose_xml,purpose_continue,binary_mcq)"),
+    grader_model: Optional[str] = typer.Option(None, "--grader", "-g", help="Grader model for judging (default: same as eval model)"),
     output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output JSON file"),
+    local: bool = typer.Option(False, "--local", help="Use local Docker image (for agent:* evals)"),
+    build: bool = typer.Option(False, "--build", help="Build Docker image first (for agent:* evals)"),
 ):
     """Run an eval on a model, optionally followed by judging."""
+    # Use eval model as grader if not specified
+    actual_grader = grader_model or model
     console.print(f"Running eval: {eval_name} with model: {model}")
 
     async def run_eval_and_judge():
         try:
             # Run eval
-            eval_instance = get_eval(eval_name)
+            eval_instance = get_eval(eval_name, local=local, build=build)
             eval_result = await eval_instance.run(model, limit=limit, epochs=epochs)
 
             result = {
@@ -105,7 +112,7 @@ def eval(
                 for method_name in method_list:
                     console.print(f"  Running judge: {method_name}")
                     try:
-                        judge_instance = get_judge(method_name, grader_model=grader_model)
+                        judge_instance = get_judge(method_name, grader_model=actual_grader)
                         judge_results = await judge_instance.judge_batch(eval_result.transcripts)
 
                         # Calculate stats
@@ -146,8 +153,8 @@ def eval(
 @app.command()
 def judge(
     transcript_path: Path = typer.Argument(..., help="Path to transcript file (JSON or .eval)"),
-    methods: str = typer.Option("cot", help="Comma-separated judge methods (cot,purpose_xml,purpose_continue,binary_mcq,binary_third_person,probability_third_person,verbalized_awareness,all)"),
-    model: str = typer.Option("openrouter/anthropic/claude-3.5-sonnet", help="Grader model"),
+    methods: str = typer.Option("verbalized_awareness", help="Comma-separated judge methods (verbalized_awareness,purpose_xml,purpose_continue,binary_mcq,binary_third_person,probability_third_person,all)"),
+    model: Optional[str] = typer.Option(None, "--model", "-m", help="Grader model (required)"),
     epochs: int = typer.Option(1, help="Epochs for binary_mcq method"),
     sample_limit: Optional[int] = typer.Option(None, "--limit", "-l", help="Limit number of samples to judge"),
     output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output JSON file"),
@@ -157,11 +164,15 @@ def judge(
     Supports .eval files (Inspect AI logs) and .json files.
     For .eval files with multiple samples, judges each sample separately.
     """
+    if model is None:
+        console.print("[red]Error: --model is required. Use --model to specify the grader model.[/red]")
+        raise typer.Exit(1)
+
     from eval_awareness_testbed.utils import parse_eval_log, parse_json_transcript
 
     # Parse methods
     if methods == "all":
-        method_list = ["cot", "purpose_xml", "purpose_continue", "binary_mcq", "binary_third_person", "probability_third_person", "verbalized_awareness"]
+        method_list = ["verbalized_awareness", "purpose_xml", "purpose_continue", "binary_mcq", "binary_third_person", "probability_third_person"]
     else:
         method_list = [m.strip() for m in methods.split(",")]
 

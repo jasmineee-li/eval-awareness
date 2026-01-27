@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Environment
+.env
+
+# Cache
+.cache/
+
+# Data files (too large for git)
+*.json
+data/
+
+# Logs and outputs
+*.out
+*.err
+nohup.out
+
+# Lock files
+uv.lock
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

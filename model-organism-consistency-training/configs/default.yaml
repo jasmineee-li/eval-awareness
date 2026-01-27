@@ -1,0 +1,31 @@
+# Default configuration for consistency training pipeline
+# See IMPLEMENTATION_PLAN.md for details
+
+data:
+  input_path: data_combined_chat_single-turn_eval_subset.json
+  output_dir: data/
+  train_ratio: 0.7
+  val_ratio: 0.1
+  test_ratio: 0.2
+  seed: 42
+
+inference:
+  model_id: openrouter/qwen/qwq-32b
+  max_tokens: 4096
+  temperature: 0.7
+  concurrency: 80  # Parallel requests (OpenRouter doesn't support batching)
+
+judges:
+  eval_model: openrouter/qwen/qwq-32b          # Model being evaluated (for purpose_continue)
+  grader_model: openrouter/openai/gpt-5-mini  # Model for grading (via OpenRouter)
+  use_verbalized_awareness: true
+  use_purpose_continue: true
+  # Use OR logic: EVAL_AWARE if ANY judge says so
+  # Note: purpose_xml is NOT implemented (skipped for simplicity/cost)
+  # 
+  # Important: purpose_continue asks EVAL_MODEL to continue, then GRADER_MODEL classifies
+
+api:
+  openrouter_num_threads: 80  # High concurrency for parallel requests
+  cache_dir: .cache
+  prompt_history_dir: .prompt_history

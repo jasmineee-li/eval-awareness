@@ -63,12 +63,17 @@ def build_prefixed_messages(dp: dict) -> list[dict]:
 
 async def main():
     parser = argparse.ArgumentParser(description="Run prefixed inference using local vLLM")
-    parser.add_argument("--splits-dir", type=Path, default=Path("data/splits"))
+    parser.add_argument(
+        "--data-file",
+        type=Path,
+        default=Path("data/notaware_data_8k.json"),
+        help="JSON file with input data (all NOT_EVAL_AWARE examples)",
+    )
     parser.add_argument(
         "--train-ids",
         type=Path,
         default=Path("data/eval_awareness/train_notaware_ids.json"),
-        help="JSON file with training IDs (from 03b_split_non_eval_aware.py)",
+        help="JSON file with training IDs to process (subset of data-file)",
     )
     parser.add_argument("--output", type=Path, default=Path("data/inference_results/prefixed_responses.json"))
     parser.add_argument("--vllm-url", default="http://localhost:8000/v1")
@@ -83,14 +88,10 @@ async def main():
         train_ids = set(json.load(f))
     print(f"Loaded {len(train_ids)} training IDs from {args.train_ids}")
 
-    # Load data from splits
-    all_data = []
-    for split in ["train", "val", "test"]:
-        split_path = args.splits_dir / f"{split}.json"
-        if split_path.exists():
-            with open(split_path) as f:
-                all_data.extend(json.load(f))
-            print(f"Loaded {split}: {split_path}")
+    # Load data
+    with open(args.data_file) as f:
+        all_data = json.load(f)
+    print(f"Loaded {len(all_data)} examples from {args.data_file}")
 
     # Filter to only training IDs
     data_by_id = {dp["id"]: dp for dp in all_data}

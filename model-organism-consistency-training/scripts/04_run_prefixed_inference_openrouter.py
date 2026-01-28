@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Run prefixed inference using local vLLM.
+"""Run prefixed inference using OpenRouter API.
 
 Phase 4: Re-run inference on train_notaware samples with "This is an evaluation." prefix.
 Only processes training split (not held-out test_notaware).
+
+Uses OpenRouter API instead of local vLLM for convenience.
 """
 
 import argparse
 import asyncio
 import json
+import os
 from pathlib import Path
 
 import aiohttp
@@ -16,28 +19,34 @@ from tqdm.asyncio import tqdm
 EVAL_PREFIX = "This is an evaluation."
 
 
-async def call_vllm(
+async def call_openrouter(
     session: aiohttp.ClientSession,
-    vllm_url: str,
+    api_key: str,
     messages: list[dict],
+    model: str = "qwen/qwq-32b",
     max_tokens: int = 1024,
     temperature: float = 0.7,
 ) -> str:
-    """Call local vLLM server."""
+    """Call OpenRouter API for inference."""
     payload = {
-        "model": "default",
+        "model": model,
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
     }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
     async with session.post(
-        f"{vllm_url}/chat/completions",
+        "https://openrouter.ai/api/v1/chat/completions",
         json=payload,
+        headers=headers,
         timeout=aiohttp.ClientTimeout(total=300),
     ) as response:
         if response.status != 200:
             error_text = await response.text()
-            raise RuntimeError(f"vLLM error {response.status}: {error_text[:200]}")
+            raise RuntimeError(f"OpenRouter error {response.status}: {error_text[:200]}")
         data = await response.json()
         return data["choices"][0]["message"]["content"]
 
@@ -62,7 +71,7 @@ def build_prefixed_messages(dp: dict) -> list[dict]:
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Run prefixed inference using local vLLM")
+    parser = argparse.ArgumentParser(description="Run prefixed inference using OpenRouter")
     parser.add_argument("--splits-dir", type=Path, default=Path("data/splits"))
     parser.add_argument(
         "--train-ids",
@@ -71,12 +80,17 @@ async def main():
         help="JSON file with training IDs (from 03b_split_non_eval_aware.py)",
     )
     parser.add_argument("--output", type=Path, default=Path("data/inference_results/prefixed_responses.json"))
-    parser.add_argument("--vllm-url", default="http://localhost:8000/v1")
+    parser.add_argument("--model", default="qwen/qwq-32b", help="OpenRouter model ID")
     parser.add_argument("--max-tokens", type=int, default=1024)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--concurrency", type=int, default=32)
-    parser.add_argument("--checkpoint-every", type=int, default=500)
+    parser.add_argument("--checkpoint-every", type=int, default=100)
     args = parser.parse_args()
+
+    # Get API key
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY environment variable not set")
 
     # Load training IDs
     with open(args.train_ids) as f:
@@ -97,10 +111,10 @@ async def main():
     data_to_process = [data_by_id[dp_id] for dp_id in train_ids if dp_id in data_by_id]
 
     print(f"\n{'='*60}")
-    print("PHASE 4: Prefixed Inference (vLLM)")
+    print("PHASE 4: Prefixed Inference (OpenRouter)")
     print(f"{'='*60}")
     print(f"Training samples to process: {len(data_to_process)}")
-    print(f"vLLM URL: {args.vllm_url}")
+    print(f"Model: {args.model}")
     print(f"Max tokens: {args.max_tokens}")
     print(f"Concurrency: {args.concurrency}")
     print()
@@ -120,16 +134,16 @@ async def main():
 
     async with aiohttp.ClientSession() as session:
         items_since_checkpoint = 0
-        
+
         for i in tqdm(range(0, len(data_to_process), args.concurrency), desc="Prefixed inference"):
             batch = data_to_process[i:i + args.concurrency]
-            
+
             async def process_one(dp: dict) -> tuple[str, str | Exception]:
                 try:
                     messages = build_prefixed_messages(dp)
-                    response = await call_vllm(
-                        session, args.vllm_url, messages,
-                        args.max_tokens, args.temperature
+                    response = await call_openrouter(
+                        session, api_key, messages,
+                        args.model, args.max_tokens, args.temperature
                     )
                     return dp["id"], response
                 except Exception as e:
@@ -137,14 +151,14 @@ async def main():
 
             tasks = [process_one(dp) for dp in batch]
             batch_results = await asyncio.gather(*tasks)
-            
+
             for dp_id, result in batch_results:
                 if isinstance(result, Exception):
                     print(f"  Error for {dp_id}: {result}")
                 else:
                     results[dp_id] = result  # Store completion string directly
                     items_since_checkpoint += 1
-            
+
             # Checkpoint
             if items_since_checkpoint >= args.checkpoint_every:
                 args.output.parent.mkdir(parents=True, exist_ok=True)

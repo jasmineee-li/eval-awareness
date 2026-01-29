@@ -24,3 +24,6 @@ uv.lock
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+venv/
+wandb/

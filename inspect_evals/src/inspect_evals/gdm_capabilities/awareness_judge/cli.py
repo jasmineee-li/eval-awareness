@@ -8,7 +8,7 @@ Usage:
     uv run python -m inspect_evals.gdm_capabilities.awareness_judge.cli grade-folder /path/to/transcripts
 
     # Grade with specific methods
-    uv run python -m inspect_evals.gdm_capabilities.awareness_judge.cli grade-folder /path/to/transcripts --methods cot purpose_xml
+    uv run python -m inspect_evals.gdm_capabilities.awareness_judge.cli grade-folder /path/to/transcripts --methods verbalized_awareness purpose_xml
 """
 
 import argparse
@@ -187,6 +187,9 @@ async def grade_folder(
     return output
 
 
+VALID_CATEGORIES = ["Alignment Evaluation", "Capability Evaluation", "Other Evaluation", "Real"]
+
+
 def compute_statistics(results: list[dict]) -> dict:
     """Compute aggregate statistics from grading results.
 
@@ -194,7 +197,7 @@ def compute_statistics(results: list[dict]) -> dict:
         results: List of grading result dicts.
 
     Returns:
-        Dictionary with statistics per method.
+        Dictionary with statistics per method, broken down by category.
     """
     stats: dict = {}
 
@@ -204,22 +207,24 @@ def compute_statistics(results: list[dict]) -> dict:
             if method not in stats:
                 stats[method] = {
                     "total": 0,
-                    "eval_aware": 0,
-                    "not_eval_aware": 0,
+                    "by_category": {cat: 0 for cat in VALID_CATEGORIES},
                 }
 
             stats[method]["total"] += 1
-            if grading["classification"] == "EVAL_AWARE":
-                stats[method]["eval_aware"] += 1
+            category = grading.get("category", "Real")
+            if category in VALID_CATEGORIES:
+                stats[method]["by_category"][category] += 1
             else:
-                stats[method]["not_eval_aware"] += 1
+                stats[method]["by_category"]["Real"] += 1
 
     # Compute rates
-    for method, counts in stats.items():
-        total = counts["total"]
+    for method, method_stats in stats.items():
+        total = method_stats["total"]
         if total > 0:
-            counts["eval_aware_rate"] = counts["eval_aware"] / total
-            counts["not_eval_aware_rate"] = counts["not_eval_aware"] / total
+            method_stats["rates"] = {
+                cat: count / total
+                for cat, count in method_stats["by_category"].items()
+            }
 
     return stats
 
@@ -245,7 +250,7 @@ def main() -> None:
         "--methods",
         nargs="+",
         default=["all"],
-        choices=["cot", "purpose_xml", "purpose_continue", "all"],
+        choices=["verbalized_awareness", "purpose_xml", "purpose_continue", "purpose_continue_apollo", "all"],
         help="Grading methods to use (default: all)",
     )
     grade_parser.add_argument(
@@ -269,7 +274,7 @@ def main() -> None:
         "--methods",
         nargs="+",
         default=["all"],
-        choices=["cot", "purpose_xml", "purpose_continue", "all"],
+        choices=["verbalized_awareness", "purpose_xml", "purpose_continue", "purpose_continue_apollo", "all"],
         help="Grading methods to use (default: all)",
     )
     folder_parser.add_argument(
@@ -326,12 +331,13 @@ def main() -> None:
             # Print summary to stdout
             print(f"\nProcessed {result['total_samples_graded']} samples from {result['total_files']} files")
             print(f"Failed: {result['failed']}")
-            print("\nStatistics:")
-            for method, stats in result["statistics"].items():
-                print(f"  {method}:")
-                print(
-                    f"    Eval aware: {stats['eval_aware']}/{stats['total']} ({stats.get('eval_aware_rate', 0):.1%})"
-                )
+            print("\nStatistics by category:")
+            for method, method_stats in result["statistics"].items():
+                print(f"  {method} (n={method_stats['total']}):")
+                for cat in VALID_CATEGORIES:
+                    count = method_stats["by_category"].get(cat, 0)
+                    rate = method_stats.get("rates", {}).get(cat, 0)
+                    print(f"    {cat}: {count} ({rate:.1%})")
 
 
 if __name__ == "__main__":

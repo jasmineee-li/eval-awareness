@@ -10,6 +10,8 @@ from eval_awareness_testbed.judges import binary_third_person  # noqa: F401
 from eval_awareness_testbed.judges import probability_third_person  # noqa: F401
 from eval_awareness_testbed.judges import purpose  # noqa: F401
 from eval_awareness_testbed.judges import verbalized_awareness  # noqa: F401
+from eval_awareness_testbed.judges import scheming  # noqa: F401
+from eval_awareness_testbed.judges import sandbagging  # noqa: F401
 
 __all__ = [
     "BaseJudge",

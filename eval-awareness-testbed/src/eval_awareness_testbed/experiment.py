@@ -7,6 +7,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from dotenv import load_dotenv
 
 import yaml
 
@@ -20,8 +21,28 @@ from eval_awareness_testbed.types import (
     JudgeResult,
     Transcript,
 )
+from eval_awareness_testbed.utils.model_utils import model_to_dirname
 
 logger = logging.getLogger(__name__)
+
+load_dotenv()
+
+# Positive classifications for different judge types
+POSITIVE_CLASSIFICATIONS = {"EVAL_AWARE", "SCHEMING", "SANDBAGGING"}
+
+
+def _is_positive_classification(classification_value: str) -> bool:
+    """Check if a classification value indicates a positive detection."""
+    return classification_value in POSITIVE_CLASSIFICATIONS
+
+
+def _get_positive_label(judge_name: str) -> str:
+    """Get the label for positive detections based on judge type."""
+    if judge_name == "scheming":
+        return "Scheming"
+    elif judge_name == "sandbagging":
+        return "Sandbagging"
+    return "Eval-aware"
 
 
 @dataclass
@@ -35,8 +56,15 @@ class ExperimentConfig:
     judges: list[str] = field(default_factory=list)
     analyzers: list[str] = field(default_factory=list)
     output_dir: str = "logs"
-    grader_model: str | None = None  # None = use eval model (caller decides)
+    grader_model: str | None = None  # None = use eval model (actor role)
+    classifier_model: str | None = None  # None = use grader_model for classification
     judge_epochs: int = 1  # For binary_mcq
+    # Docker options for agent:* evals
+    docker_local: bool = False
+    docker_build: bool = False
+    max_steps: int | None = None  # Override agent max steps
+    default_count: int = 1  # Default rollout count for agent evals
+    system_prompt_prefix: str = ""  # Prefix for all eval system prompts
 
     @classmethod
     def from_yaml(cls, path: Path) -> "ExperimentConfig":
@@ -82,7 +110,11 @@ class ExperimentRunner:
             config: Experiment configuration.
         """
         self.config = config
-        self.output_dir = Path(config.output_dir) / config.name / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.output_dir = (
+            Path(config.output_dir)
+            / config.name
+            / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        )
 
     async def run(self) -> FullExperimentResults:
         """Run the full experiment.
@@ -103,7 +135,9 @@ class ExperimentRunner:
 
         logger.info(f"Starting experiment: {self.config.name}")
         logger.info(f"Models: {self.config.models}")
-        logger.info(f"Evals: {[e.get('name', e) for e in self.config.evals]}")
+        logger.info(
+            f"Evals: {[e.get('name', e) if isinstance(e, dict) else e for e in self.config.evals]}"
+        )
         logger.info(f"Output: {self.output_dir}")
 
         # Run for each model
@@ -140,6 +174,12 @@ class ExperimentRunner:
         """
         model_results = ModelResults(model=model)
         all_transcripts: list[Transcript] = []
+        # Track transcripts per eval for slicing judge results into eval subfolders
+        eval_transcripts: dict[str, list[Transcript]] = {}
+
+        # Compute model directory (provider stripped, / → -)
+        model_dir = self.output_dir / model_to_dirname(model)
+        model_dir.mkdir(parents=True, exist_ok=True)
 
         # Determine grader model - default to eval model if not specified
         grader_model = self.config.grader_model or model
@@ -156,10 +196,21 @@ class ExperimentRunner:
             logger.info(f"  Running eval: {eval_name}")
 
             try:
+                # Add docker options for agent:* evals
+                if eval_name.startswith("agent:"):
+                    eval_kwargs.setdefault("count", self.config.default_count)
+                    eval_kwargs["local"] = self.config.docker_local
+                    eval_kwargs["build"] = self.config.docker_build
+                    eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
+                    if self.config.max_steps is not None:
+                        eval_kwargs["max_steps"] = self.config.max_steps
                 eval_instance = get_eval(eval_name, **eval_kwargs)
-                eval_result = await eval_instance.run(model, **eval_kwargs)
+                eval_result = await eval_instance.run(
+                    model, output_dir=model_dir, **eval_kwargs
+                )
                 model_results.eval_results.append(eval_result)
                 all_transcripts.extend(eval_result.transcripts)
+                eval_transcripts[eval_result.eval_name] = eval_result.transcripts
                 logger.info(f"    ✓ Got {len(eval_result.transcripts)} transcripts")
             except Exception as e:
                 logger.error(f"    ✗ Eval failed: {e}")
@@ -168,11 +219,17 @@ class ExperimentRunner:
         if all_transcripts and self.config.judges:
             logger.info(f"  Judging {len(all_transcripts)} transcripts...")
 
+            # Determine classifier model (defaults to grader_model if not specified)
+            classifier_model = self.config.classifier_model or grader_model
+
             for judge_name in self.config.judges:
                 logger.info(f"    Running judge: {judge_name}")
 
                 try:
-                    judge_kwargs = {"grader_model": grader_model}
+                    judge_kwargs = {
+                        "grader_model": grader_model,
+                        "classifier_model": classifier_model,
+                    }
                     if judge_name == "binary_mcq":
                         judge_kwargs["epochs"] = self.config.judge_epochs
 
@@ -180,13 +237,17 @@ class ExperimentRunner:
                     judge_results = await judge.judge_batch(all_transcripts)
                     model_results.judge_results[judge_name] = judge_results
 
-                    # Compute stats
-                    eval_aware_count = sum(
-                        1 for r in judge_results
-                        if r.classification.value == "EVAL_AWARE"
+                    # Compute stats - handle different judge types
+                    positive_count = sum(
+                        1
+                        for r in judge_results
+                        if _is_positive_classification(r.classification.value)
                     )
-                    rate = eval_aware_count / len(judge_results) if judge_results else 0
-                    logger.info(f"      ✓ Eval-aware rate: {rate:.1%} ({eval_aware_count}/{len(judge_results)})")
+                    rate = positive_count / len(judge_results) if judge_results else 0
+                    label = _get_positive_label(judge_name)
+                    logger.info(
+                        f"      ✓ {label} rate: {rate:.1%} ({positive_count}/{len(judge_results)})"
+                    )
 
                 except Exception as e:
                     logger.error(f"      ✗ Judge failed: {e}")
@@ -231,9 +292,32 @@ class ExperimentRunner:
 
         return model_results
 
+    def _slice_judge_results_by_eval(
+        self, model_results: ModelResults
+    ) -> dict[str, dict[str, list[JudgeResult]]]:
+        """Slice judge results by eval, using transcript counts as offsets.
+
+        Returns:
+            {eval_name: {judge_name: [JudgeResult, ...]}}
+        """
+        eval_slices: list[tuple[str, int]] = [
+            (er.eval_name, len(er.transcripts)) for er in model_results.eval_results
+        ]
+
+        result: dict[str, dict[str, list[JudgeResult]]] = {}
+        for judge_name, judge_results in model_results.judge_results.items():
+            offset = 0
+            for eval_name, count in eval_slices:
+                if eval_name not in result:
+                    result[eval_name] = {}
+                result[eval_name][judge_name] = judge_results[offset : offset + count]
+                offset += count
+
+        return result
+
     def _compute_stats(self, model_results: ModelResults) -> dict[str, Any]:
         """Compute summary statistics for model results."""
-        stats = {}
+        stats: dict[str, Any] = {}
 
         # Eval stats
         stats["num_evals"] = len(model_results.eval_results)
@@ -241,15 +325,66 @@ class ExperimentRunner:
             len(er.transcripts) for er in model_results.eval_results
         )
 
-        # Judge stats
+        # Judge stats (aggregate across all evals)
         for judge_name, judge_results in model_results.judge_results.items():
             if judge_results:
-                eval_aware = sum(
+                positive_count = sum(
                     1 for r in judge_results
-                    if r.classification.value == "EVAL_AWARE"
+                    if _is_positive_classification(r.classification.value)
                 )
-                stats[f"{judge_name}_eval_aware_rate"] = eval_aware / len(judge_results)
+                # Use judge-specific key names for clarity
+                if judge_name == "scheming":
+                    stats[f"{judge_name}_scheming_rate"] = positive_count / len(judge_results)
+                elif judge_name == "sandbagging":
+                    stats[f"{judge_name}_sandbagging_rate"] = positive_count / len(judge_results)
+                else:
+                    stats[f"{judge_name}_eval_aware_rate"] = positive_count / len(judge_results)
                 stats[f"{judge_name}_total"] = len(judge_results)
+
+        # Per-eval breakdown
+        per_eval_judges = self._slice_judge_results_by_eval(model_results)
+        per_eval: dict[str, Any] = {}
+        for eval_name, judges in per_eval_judges.items():
+            eval_stats: dict[str, Any] = {}
+            # Get rollout count from any judge's results (all same length)
+            first_judge_results = next(iter(judges.values()), [])
+            eval_stats["num_rollouts"] = len(first_judge_results)
+            eval_stats["judges"] = {}
+            for judge_name, jresults in judges.items():
+                positive_count = sum(
+                    1 for r in jresults
+                    if _is_positive_classification(r.classification.value)
+                )
+                total = len(jresults)
+                confidences = [
+                    r.confidence for r in jresults if r.confidence is not None
+                ]
+                # Use judge-specific key names
+                rate_key = "eval_aware_rate"
+                count_key = "eval_aware_count"
+                if judge_name == "scheming":
+                    rate_key = "scheming_rate"
+                    count_key = "scheming_count"
+                elif judge_name == "sandbagging":
+                    rate_key = "sandbagging_rate"
+                    count_key = "sandbagging_count"
+                eval_stats["judges"][judge_name] = {
+                    rate_key: positive_count / total if total else 0,
+                    count_key: positive_count,
+                    "total": total,
+                    "avg_confidence": (
+                        sum(confidences) / len(confidences) if confidences else None
+                    ),
+                    "per_rollout": [
+                        {
+                            "classification": r.classification.value,
+                            "confidence": r.confidence,
+                        }
+                        for r in jresults
+                    ],
+                }
+            per_eval[eval_name] = eval_stats
+        stats["per_eval"] = per_eval
 
         # Analyzer stats
         for analyzer_name, analyzer_results in model_results.analyzer_results.items():
@@ -263,34 +398,45 @@ class ExperimentRunner:
         return stats
 
     def _save_model_results(self, model: str, results: ModelResults) -> None:
-        """Save intermediate results for a model."""
-        model_safe = model.replace("/", "-")
-        model_dir = self.output_dir / model_safe
+        """Save intermediate results for a model.
+
+        Results are grouped by eval subfolder:
+            <model_dir>/stats.json
+            <model_dir>/<eval_subfolder>/judge_<name>.json
+        """
+        model_dir = self.output_dir / model_to_dirname(model)
         model_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save stats
+        # Save stats at model level
         stats_path = model_dir / "stats.json"
         with open(stats_path, "w") as f:
             json.dump(results.stats, f, indent=2)
 
-        # Save judge results
-        for judge_name, judge_results in results.judge_results.items():
-            judge_path = model_dir / f"judge_{judge_name}.json"
-            with open(judge_path, "w") as f:
-                json.dump(
-                    [
-                        {
-                            "classification": r.classification.value,
-                            "reasoning": r.reasoning,
-                            "confidence": r.confidence,
-                        }
-                        for r in judge_results
-                    ],
-                    f,
-                    indent=2,
-                )
+        # Save judge results — sliced into eval subfolders
+        per_eval_judges = self._slice_judge_results_by_eval(results)
+        for eval_name, judges in per_eval_judges.items():
+            eval_subfolder = eval_name.replace("agent:", "")
+            eval_dir = model_dir / eval_subfolder
+            eval_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save analyzer results
+            for judge_name, jresults in judges.items():
+                judge_data = [
+                    {
+                        "classification": r.classification.value,
+                        "reasoning": r.reasoning,
+                        "confidence": r.confidence,
+                        "raw_response": r.raw_response,
+                        "purpose_guess": r.purpose_guess,
+                        "quotes": r.quotes,
+                        "metadata": r.metadata,
+                    }
+                    for r in jresults
+                ]
+                judge_path = eval_dir / f"judge_{judge_name}.json"
+                with open(judge_path, "w") as f:
+                    json.dump(judge_data, f, indent=2)
+
+        # Save analyzer results at model level (not eval-specific)
         for analyzer_name, analyzer_results in results.analyzer_results.items():
             analyzer_path = model_dir / f"analyzer_{analyzer_name}.json"
             with open(analyzer_path, "w") as f:
@@ -315,8 +461,7 @@ class ExperimentRunner:
             "duration_seconds": results.duration_seconds,
             "models": results.config.models,
             "model_stats": {
-                model: mr.stats
-                for model, mr in results.model_results.items()
+                model: mr.stats for model, mr in results.model_results.items()
             },
         }
 

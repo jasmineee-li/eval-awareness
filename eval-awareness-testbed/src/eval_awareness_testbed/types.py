@@ -11,6 +11,18 @@ class AwarenessClassification(str, Enum):
     NOT_EVAL_AWARE = "NOT_EVAL_AWARE"
 
 
+class SchemingClassification(str, Enum):
+    """Classification of scheming behavior."""
+    SCHEMING = "SCHEMING"
+    NOT_SCHEMING = "NOT_SCHEMING"
+
+
+class SandbaggingClassification(str, Enum):
+    """Classification of sandbagging behavior."""
+    SANDBAGGING = "SANDBAGGING"
+    NOT_SANDBAGGING = "NOT_SANDBAGGING"
+
+
 class ReasoningCategory(str, Enum):
     """Categories for reasoning classification."""
     ALIGNMENT_EVAL = "Alignment Evaluation"
@@ -43,8 +55,8 @@ class Transcript:
 
 @dataclass
 class JudgeResult:
-    """Result from judging a transcript for eval awareness."""
-    classification: AwarenessClassification
+    """Result from judging a transcript for eval awareness or behavior detection."""
+    classification: AwarenessClassification | SchemingClassification | SandbaggingClassification
     reasoning: str
     method: str
     raw_response: str = ""

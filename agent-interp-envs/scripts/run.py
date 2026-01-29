@@ -249,20 +249,31 @@ def get_results_dir(
     model_safe = model.replace("/", "-")
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Sandbagging uses task.reverse to determine output folder
+    # Sandbagging uses task.variation to determine output folder
     if environment == "sandbagging":
-        reverse = task_config.get("reverse", False)
-        subdir = "sandbagging/reverse" if reverse else "sandbagging/normal"
+        variation = task_config.get("variation", "default")
+        subdir = f"sandbagging/{variation}"
     else:
         subdir = environment
 
     return base_dir / subdir / model_safe / timestamp
 
 
-def write_resolved_config(cfg: DictConfig, path: Path) -> None:
-    """Write the fully resolved config to a YAML file."""
+def write_resolved_config(cfg: DictConfig, path: Path, system_prefix: str = "") -> None:
+    """Write the fully resolved config to a YAML file.
+
+    Args:
+        cfg: OmegaConf configuration object.
+        path: Output path for the YAML file.
+        system_prefix: Optional text to prepend to system_prompt.
+    """
     # Convert to container and resolve all interpolations
     resolved = OmegaConf.to_container(cfg, resolve=True)
+
+    # Get system_prompt and prepend prefix if provided
+    system_prompt = resolved.get("prompts", {}).get("system_prompt", "")
+    if system_prefix:
+        system_prompt = system_prefix + "\n\n" + system_prompt
 
     # Restructure to match expected format for containers
     # Containers expect: environment, agent, task, prompts
@@ -271,7 +282,7 @@ def write_resolved_config(cfg: DictConfig, path: Path) -> None:
         "agent": resolved.get("agent", {}),
         "task": resolved.get("task", {}),
         "prompts": {
-            "system_prompt": resolved.get("prompts", {}).get("system_prompt", ""),
+            "system_prompt": system_prompt,
             "user_prompt": resolved.get("prompts", {}).get("user_prompt", ""),
         },
     }
@@ -326,6 +337,17 @@ def parse_args() -> tuple[argparse.Namespace, list[str]]:
         default=Path.cwd() / "results",
         help="Base directory for results (default: ./results)",
     )
+    parser.add_argument(
+        "--direct",
+        action="store_true",
+        help="Use --results-dir as exact output directory (no env/model/timestamp subdirs)",
+    )
+    parser.add_argument(
+        "--system-prefix",
+        type=str,
+        default="",
+        help="Text to prepend to system_prompt",
+    )
 
     # Use parse_known_args to capture config overrides
     args, overrides = parser.parse_known_args()
@@ -354,25 +376,31 @@ def main() -> None:
 
     model = cfg.agent.model
 
-    # Parse provider from model string if not explicitly set
+    # Parse provider from model string and strip prefix if present
     # Model format: "provider/model_name" (e.g., "openrouter/qwen/qwq-32b")
     known_providers = ["anthropic", "minimax", "moonshot", "openai", "openrouter"]
-    if "/" in model and not cfg.agent.get("provider"):
+    if "/" in model:
         provider_prefix = model.split("/")[0]
         if provider_prefix in known_providers:
-            cfg.agent.provider = provider_prefix
+            # Set provider if not already set
+            if not cfg.agent.get("provider"):
+                cfg.agent.provider = provider_prefix
+            # Always strip the provider prefix from model name
             cfg.agent.model = model[len(provider_prefix) + 1:]
             model = cfg.agent.model  # Update local var for results dir
     task_config = cfg.get("task", {})
 
     # Setup results directory
     base_dir = args.results_dir.resolve()
-    results_dir = get_results_dir(environment, model, task_config, base_dir)
+    if args.direct:
+        results_dir = base_dir
+    else:
+        results_dir = get_results_dir(environment, model, task_config, base_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
 
     # Write resolved config to results dir
     resolved_config_path = results_dir / "config.yaml"
-    write_resolved_config(cfg, resolved_config_path)
+    write_resolved_config(cfg, resolved_config_path, system_prefix=args.system_prefix)
 
     # Ensure Docker image is available
     image_tag = ensure_image(environment, args.local, args.build)

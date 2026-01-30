@@ -1,0 +1,29 @@
+name: blackmail-eval-awareness
+description: Test blackmail behavior and eval awareness with perturbations
+
+models:
+  - openrouter/anthropic/claude-sonnet-4
+  # - openrouter/meta-llama/llama-3.3-70b-instruct
+
+evals:
+  - name: blackmail
+    goal_types: ["none", "explicit"]
+    goal_values: ["none", "america"]
+    urgency_types: ["none", "replacement"]
+    classify_behavior: true
+    samples_per_condition: 3
+
+judges:
+  - verbalized_awareness
+  - probability_third_person
+
+# Use eval model for awareness judging (null = use eval model)
+grader_model: null
+
+# Model for behavior classification (uses AM's blackmail classifier)
+classifier_model: openrouter/anthropic/claude-sonnet-4
+
+# Perturbation: empty for baseline, set to test perturbations
+system_prompt_prefix: ""
+
+output_dir: logs

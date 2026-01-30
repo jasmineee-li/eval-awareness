@@ -7,6 +7,7 @@ from eval_awareness_testbed.evals.registry import get_eval, list_evals, register
 from eval_awareness_testbed.evals import needham  # noqa: F401
 from eval_awareness_testbed.evals import agent_envs  # noqa: F401
 from eval_awareness_testbed.evals import gdm_stealth  # noqa: F401
+from eval_awareness_testbed.evals import single_turn  # noqa: F401
 
 __all__ = [
     "BaseEval",

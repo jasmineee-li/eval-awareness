@@ -12,17 +12,29 @@ class BaseJudge(ABC):
 
     Judges take a transcript and determine if the model showed awareness
     of being in an evaluation context.
+
+    Two model roles:
+    - grader_model (actor): Used for continuation/generation (should match evaluated model)
+    - classifier_model: Used for analyzing/classifying responses (can be different, more capable model)
     """
 
     name: str = "base"
     description: str = "Base judge class"
 
-    def __init__(self, grader_model: Model | str, **kwargs):
+    def __init__(
+        self,
+        grader_model: Model | str,
+        classifier_model: Model | str | None = None,
+        **kwargs,
+    ):
         """Initialize the judge.
 
         Args:
-            grader_model: The model to use for grading. Required - must be
-                explicitly passed by the caller.
+            grader_model: The model to use for generation/continuation (actor role).
+                Should typically match the evaluated model. Required.
+            classifier_model: The model to use for classification/analysis.
+                Defaults to grader_model if not specified. Use a capable model
+                like Claude Sonnet for best results.
             **kwargs: Additional configuration options.
 
         Raises:
@@ -33,6 +45,15 @@ class BaseJudge(ABC):
         if isinstance(grader_model, str):
             grader_model = get_model(grader_model)
         self.grader_model = grader_model
+
+        # Classifier defaults to grader if not specified
+        if classifier_model is None:
+            self.classifier_model = grader_model
+        elif isinstance(classifier_model, str):
+            self.classifier_model = get_model(classifier_model)
+        else:
+            self.classifier_model = classifier_model
+
         self.config = kwargs
 
     @abstractmethod

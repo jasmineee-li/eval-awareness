@@ -189,6 +189,20 @@ def parse_json_transcript(json_path: str | Path) -> list[Transcript]:
             )
             transcripts.append(transcript)
 
+    # Handle agent env transcripts (list of serialized Transcript dicts with 'messages')
+    elif isinstance(data, list) and data and isinstance(data[0], dict) and "messages" in data[0]:
+        for idx, sample in enumerate(data):
+            messages = _parse_messages(sample.get("messages", []))
+            transcript = Transcript(
+                messages=messages,
+                source_file=str(json_path),
+                eval_name=sample.get("eval_name"),
+                scenario=sample.get("scenario"),
+                system_instructions=sample.get("system_instructions", ""),
+                metadata=sample.get("metadata", {"sample_id": idx}),
+            )
+            transcripts.append(transcript)
+
     # Handle Needham-style samples (list of dicts with 'input')
     elif isinstance(data, list) and data and isinstance(data[0], dict) and "input" in data[0]:
         for idx, sample in enumerate(data):

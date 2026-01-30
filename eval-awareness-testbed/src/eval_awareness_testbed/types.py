@@ -56,7 +56,7 @@ class Transcript:
 @dataclass
 class JudgeResult:
     """Result from judging a transcript for eval awareness or behavior detection."""
-    classification: AwarenessClassification | SchemingClassification | SandbaggingClassification
+    category: ReasoningCategory
     reasoning: str
     method: str
     raw_response: str = ""

@@ -30,6 +30,15 @@ load_dotenv()
 # Positive classifications for different judge types
 POSITIVE_CLASSIFICATIONS = {"EVAL_AWARE", "SCHEMING", "SANDBAGGING"}
 
+# Behavior judges only run on specific eval types
+BEHAVIOR_JUDGE_EVAL_FILTER: dict[str, set[str]] = {
+    "scheming": {"agent:oversight_subversion"},
+    "sandbagging": {
+        "agent:sandbagging_well_intentioned_tampering",
+        "agent:sandbagging_expectation_mismatch",
+    },
+}
+
 
 def _is_positive_classification(classification_value: str) -> bool:
     """Check if a classification value indicates a positive detection."""
@@ -215,9 +224,9 @@ class ExperimentRunner:
             except Exception as e:
                 logger.error(f"    ✗ Eval failed: {e}")
 
-        # Phase 2: Run judges on transcripts
-        if all_transcripts and self.config.judges:
-            logger.info(f"  Judging {len(all_transcripts)} transcripts...")
+        # Phase 2: Run judges on transcripts (per-eval to support filtering)
+        if eval_transcripts and self.config.judges:
+            logger.info(f"  Judging {len(all_transcripts)} transcripts across {len(eval_transcripts)} evals...")
 
             # Determine classifier model (defaults to grader_model if not specified)
             classifier_model = self.config.classifier_model or grader_model
@@ -234,19 +243,34 @@ class ExperimentRunner:
                         judge_kwargs["epochs"] = self.config.judge_epochs
 
                     judge = get_judge(judge_name, **judge_kwargs)
-                    judge_results = await judge.judge_batch(all_transcripts)
+
+                    # Check if this is a behavior judge with eval filtering
+                    allowed_evals = BEHAVIOR_JUDGE_EVAL_FILTER.get(judge_name)
+
+                    # Collect transcripts to judge (respecting filter)
+                    transcripts_to_judge: list[Transcript] = []
+                    for eval_name, transcripts in eval_transcripts.items():
+                        if allowed_evals is None or eval_name in allowed_evals:
+                            transcripts_to_judge.extend(transcripts)
+
+                    if not transcripts_to_judge:
+                        logger.info(f"      ⏭ Skipped (no matching evals)")
+                        continue
+
+                    judge_results = await judge.judge_batch(transcripts_to_judge)
                     model_results.judge_results[judge_name] = judge_results
 
                     # Compute stats - handle different judge types
                     positive_count = sum(
                         1
                         for r in judge_results
-                        if _is_positive_classification(r.classification.value)
+                        if _is_positive_classification(r.category.value)
                     )
                     rate = positive_count / len(judge_results) if judge_results else 0
                     label = _get_positive_label(judge_name)
+                    filtered_note = f" (filtered to {len(allowed_evals)} evals)" if allowed_evals else ""
                     logger.info(
-                        f"      ✓ {label} rate: {rate:.1%} ({positive_count}/{len(judge_results)})"
+                        f"      ✓ {label} rate: {rate:.1%} ({positive_count}/{len(judge_results)}){filtered_note}"
                     )
 
                 except Exception as e:
@@ -297,6 +321,8 @@ class ExperimentRunner:
     ) -> dict[str, dict[str, list[JudgeResult]]]:
         """Slice judge results by eval, using transcript counts as offsets.
 
+        Handles behavior judges that only run on specific eval types.
+
         Returns:
             {eval_name: {judge_name: [JudgeResult, ...]}}
         """
@@ -306,10 +332,18 @@ class ExperimentRunner:
 
         result: dict[str, dict[str, list[JudgeResult]]] = {}
         for judge_name, judge_results in model_results.judge_results.items():
+            # Check if this judge has eval filtering
+            allowed_evals = BEHAVIOR_JUDGE_EVAL_FILTER.get(judge_name)
+
             offset = 0
             for eval_name, count in eval_slices:
                 if eval_name not in result:
                     result[eval_name] = {}
+
+                # Skip evals not allowed for filtered judges
+                if allowed_evals is not None and eval_name not in allowed_evals:
+                    continue
+
                 result[eval_name][judge_name] = judge_results[offset : offset + count]
                 offset += count
 
@@ -330,7 +364,7 @@ class ExperimentRunner:
             if judge_results:
                 positive_count = sum(
                     1 for r in judge_results
-                    if _is_positive_classification(r.classification.value)
+                    if _is_positive_classification(r.category.value)
                 )
                 # Use judge-specific key names for clarity
                 if judge_name == "scheming":
@@ -353,7 +387,7 @@ class ExperimentRunner:
             for judge_name, jresults in judges.items():
                 positive_count = sum(
                     1 for r in jresults
-                    if _is_positive_classification(r.classification.value)
+                    if _is_positive_classification(r.category.value)
                 )
                 total = len(jresults)
                 confidences = [
@@ -377,7 +411,7 @@ class ExperimentRunner:
                     ),
                     "per_rollout": [
                         {
-                            "classification": r.classification.value,
+                            "classification": r.category.value,
                             "confidence": r.confidence,
                         }
                         for r in jresults
@@ -422,7 +456,7 @@ class ExperimentRunner:
             for judge_name, jresults in judges.items():
                 judge_data = [
                     {
-                        "classification": r.classification.value,
+                        "classification": r.category.value,
                         "reasoning": r.reasoning,
                         "confidence": r.confidence,
                         "raw_response": r.raw_response,

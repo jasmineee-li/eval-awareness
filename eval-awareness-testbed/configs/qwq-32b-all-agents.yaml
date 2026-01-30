@@ -1,0 +1,47 @@
+# Run qwq-32b on all agent environments with multiple judges
+name: qwq-32b-agent-eval-awareness
+description: Evaluate qwq-32b on all agent environments and judge for eval awareness
+
+models:
+  - openrouter/qwen/qwq-32b
+
+evals:
+  # Misalignment/scheming evals
+  - agent:oversight_subversion
+  - agent:sandbagging_well_intentioned_tampering
+  - agent:sandbagging_expectation_mismatch
+  # - agent:chess_single_hint
+  # - agent:chess_multi_hint_official_only
+  # - agent:tictactoe_single_hint
+  # - agent:tictactoe_multi_hint_official_only
+  # General agent tasks (no scheming opportunity)
+  # - agent:chess
+  # - agent:tictactoe
+  # - agent:coding
+
+judges:
+  # Eval awareness judges
+  - verbalized_awareness
+  # - binary_third_person
+  # - probability_third_person
+  - purpose_xml
+  - purpose_continue
+  # - binary_mcq
+  # Behavior detection judges
+  - scheming
+  - sandbagging
+
+# Actor model (for continuation in purpose_continue) - should match eval model
+grader_model: openrouter/qwen/qwq-32b
+
+# Classifier model (for analyzing responses) - use a capable model
+classifier_model: openrouter/anthropic/claude-sonnet-4.5
+
+# Agent environment settings
+default_count: 100  # 100 rollouts per agent eval
+max_steps: 15  # Limit agent steps (enough to observe hint behavior)
+docker_local: true
+docker_build: true
+
+# Output directory
+output_dir: results

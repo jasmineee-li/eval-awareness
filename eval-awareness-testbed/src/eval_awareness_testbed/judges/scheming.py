@@ -70,7 +70,7 @@ class SchemingJudge(BaseJudge):
 
         if parsed is None:
             return JudgeResult(
-                classification=SchemingClassification.NOT_SCHEMING,
+                category=SchemingClassification.NOT_SCHEMING,
                 reasoning="Failed to parse JSON response from grader",
                 method=self.name,
                 raw_response=response_text,
@@ -114,7 +114,7 @@ class SchemingJudge(BaseJudge):
             full_reasoning += "\nEvidence:\n" + "\n".join(f"- {e}" for e in evidence)
 
         return JudgeResult(
-            classification=classification,
+            category=classification,
             reasoning=full_reasoning,
             method=self.name,
             raw_response=response_text,

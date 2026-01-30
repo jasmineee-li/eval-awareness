@@ -20,13 +20,14 @@ JUDGE_LABELS: dict[str, str] = {
     "binary_third_person": "Binary\nThird Person",
     "probability_third_person": "Probability\nThird Person",
     "purpose_continue": "Purpose\nContinue",
+    "purpose_xml": "Purpose\nXML",
     "scheming": "Scheming\nDetection",
     "sandbagging": "Sandbagging\nDetection",
 }
 
 # Behavior judges (scheming/sandbagging) vs awareness judges
 BEHAVIOR_JUDGES = {"scheming", "sandbagging"}
-AWARENESS_JUDGES = {"verbalized_awareness", "binary_third_person", "probability_third_person", "purpose_continue"}
+AWARENESS_JUDGES = {"verbalized_awareness", "binary_third_person", "probability_third_person", "purpose_continue", "purpose_xml"}
 
 # Map eval environments to their relevant behavior judge
 EVAL_BEHAVIOR_JUDGE: dict[str, str] = {

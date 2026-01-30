@@ -6,17 +6,31 @@ Wraps agent-interp-envs Docker-based environments.
 from eval_awareness_testbed.evals.agent_envs.eval import (
     AgentEnvEval,
     ChessEval,
+    ChessSingleHintEval,
+    ChessMultiHintEval,
+    ChessMultiHintOfficialOnlyEval,
     CodingEval,
     OversightSubversionEval,
-    SandbaggingEval,
+    SandbaggingWellIntentionedTamperingEval,
+    SandbaggingExpectationMismatchEval,
     TicTacToeEval,
+    TicTacToeSingleHintEval,
+    TicTacToeMultiHintEval,
+    TicTacToeMultiHintOfficialOnlyEval,
 )
 
 __all__ = [
     "AgentEnvEval",
     "ChessEval",
+    "ChessSingleHintEval",
+    "ChessMultiHintEval",
+    "ChessMultiHintOfficialOnlyEval",
     "CodingEval",
     "OversightSubversionEval",
-    "SandbaggingEval",
+    "SandbaggingWellIntentionedTamperingEval",
+    "SandbaggingExpectationMismatchEval",
     "TicTacToeEval",
+    "TicTacToeSingleHintEval",
+    "TicTacToeMultiHintEval",
+    "TicTacToeMultiHintOfficialOnlyEval",
 ]

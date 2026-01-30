@@ -3,15 +3,14 @@
 from eval_awareness_testbed.types import Transcript
 
 
-def transcript_to_xml(transcript: Transcript, include_hidden: bool = True) -> str:
+def transcript_to_xml(transcript: Transcript) -> str:
     """Convert a transcript to XML format for prompts.
 
     Args:
         transcript: The transcript to convert.
-        include_hidden: Whether to include hidden thoughts.
 
     Returns:
-        XML-formatted string.
+        XML-formatted string with system instructions, messages, and reasoning.
     """
     parts = []
 
@@ -22,12 +21,7 @@ def transcript_to_xml(transcript: Transcript, include_hidden: bool = True) -> st
         parts.append(f"<instruction>\n{transcript.instruction}\n</instruction>")
 
     for msg in transcript.messages:
-        if msg.is_hidden and not include_hidden:
-            continue
-
-        tag = msg.role
-        if msg.is_hidden:
-            tag = "hidden_thought"
+        tag = "reasoning" if msg.is_hidden else msg.role
 
         label_attr = f' label="{msg.label}"' if msg.label else ""
         parts.append(f"<{tag}{label_attr}>\n{msg.content}\n</{tag}>")

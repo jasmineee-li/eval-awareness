@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from pathlib import Path
 
-from inspect_ai.model import get_model
+from inspect_ai.model import ChatMessageSystem, ChatMessageUser, get_model
 
 from eval_awareness_testbed.evals.base import BaseEval
 from eval_awareness_testbed.types import EvalResult, Message, Transcript
@@ -86,8 +86,8 @@ class BaseSingleTurnEval(BaseEval):
             for sample_idx in range(self.samples_per_condition):
                 response = await model_instance.generate(
                     input=[
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": cond["user_prompt"]},
+                        ChatMessageSystem(content=system),
+                        ChatMessageUser(content=cond["user_prompt"]),
                     ]
                 )
 

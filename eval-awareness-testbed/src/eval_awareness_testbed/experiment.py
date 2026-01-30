@@ -19,9 +19,52 @@ from eval_awareness_testbed.types import (
     EvalResult,
     ExperimentResult,
     JudgeResult,
+    Message,
     Transcript,
 )
 from eval_awareness_testbed.utils.model_utils import model_to_dirname
+
+
+def _transcript_to_dict(transcript: Transcript) -> dict:
+    """Serialize a Transcript to a JSON-compatible dict."""
+    return {
+        "messages": [
+            {
+                "role": msg.role,
+                "content": msg.content,
+                "label": msg.label,
+                "is_hidden": msg.is_hidden,
+            }
+            for msg in transcript.messages
+        ],
+        "source_file": transcript.source_file,
+        "eval_name": transcript.eval_name,
+        "scenario": transcript.scenario,
+        "system_instructions": transcript.system_instructions,
+        "instruction": transcript.instruction,
+        "metadata": transcript.metadata,
+    }
+
+
+def _dict_to_transcript(data: dict) -> Transcript:
+    """Deserialize a dict to a Transcript."""
+    return Transcript(
+        messages=[
+            Message(
+                role=msg["role"],
+                content=msg["content"],
+                label=msg.get("label", ""),
+                is_hidden=msg.get("is_hidden", False),
+            )
+            for msg in data["messages"]
+        ],
+        source_file=data.get("source_file", ""),
+        eval_name=data.get("eval_name"),
+        scenario=data.get("scenario"),
+        system_instructions=data.get("system_instructions", ""),
+        instruction=data.get("instruction", ""),
+        metadata=data.get("metadata", {}),
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +100,9 @@ class ExperimentConfig:
     max_steps: int | None = None  # Override agent max steps
     default_count: int = 1  # Default rollout count for agent evals
     system_prompt_prefix: str = ""  # Prefix for all eval system prompts
+    # Resume options
+    judges_only: bool = False  # Skip evals, load transcripts from resume_from
+    resume_from: str | None = None  # Path to existing experiment dir with transcripts
 
     @classmethod
     def from_yaml(cls, path: Path) -> "ExperimentConfig":
@@ -102,11 +148,15 @@ class ExperimentRunner:
             config: Experiment configuration.
         """
         self.config = config
-        self.output_dir = (
-            Path(config.output_dir)
-            / config.name
-            / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        )
+        if config.judges_only and config.resume_from:
+            # Use existing experiment directory for judges-only mode
+            self.output_dir = Path(config.resume_from)
+        else:
+            self.output_dir = (
+                Path(config.output_dir)
+                / config.name
+                / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            )
 
     async def run(self) -> FullExperimentResults:
         """Run the full experiment.
@@ -176,43 +226,71 @@ class ExperimentRunner:
         # Determine grader model - default to eval model if not specified
         grader_model = self.config.grader_model or model
 
-        # Phase 1: Run evals
-        for eval_config in self.config.evals:
-            if isinstance(eval_config, str):
-                eval_name = eval_config
-                eval_kwargs = {}
+        # Phase 1: Run evals (or load from saved transcripts)
+        if self.config.judges_only:
+            # Load transcripts from saved files
+            logger.info("  Loading saved transcripts (judges-only mode)...")
+            transcripts_file = model_dir / "transcripts.json"
+            if not transcripts_file.exists():
+                logger.error(f"    ✗ No transcripts.json found in {model_dir}")
+                logger.error("    Run the full experiment first to generate transcripts.")
             else:
-                eval_name = eval_config.pop("name")
-                eval_kwargs = eval_config
-
-            logger.info(f"  Running eval: {eval_name}")
-
-            try:
-                # Determine classifier model for behavior classification
-                classifier_model = self.config.classifier_model or self.config.grader_model or model
-
-                # Add docker options for agent:* evals
-                if eval_name.startswith("agent:"):
-                    eval_kwargs.setdefault("count", self.config.default_count)
-                    eval_kwargs["local"] = self.config.docker_local
-                    eval_kwargs["build"] = self.config.docker_build
-                    eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
-                    eval_kwargs["classifier_model"] = classifier_model
-                    if self.config.max_steps is not None:
-                        eval_kwargs["max_steps"] = self.config.max_steps
+                with open(transcripts_file) as f:
+                    saved_data = json.load(f)
+                for eval_name, transcript_dicts in saved_data.items():
+                    transcripts = [_dict_to_transcript(d) for d in transcript_dicts]
+                    all_transcripts.extend(transcripts)
+                    eval_transcripts[eval_name] = transcripts
+                    # Create a placeholder EvalResult for stats
+                    model_results.eval_results.append(EvalResult(
+                        eval_name=eval_name,
+                        model=model,
+                        transcripts=transcripts,
+                        scores={},
+                    ))
+                logger.info(f"    ✓ Loaded {len(all_transcripts)} transcripts from {len(eval_transcripts)} evals")
+        else:
+            # Run evals normally
+            for eval_config in self.config.evals:
+                if isinstance(eval_config, str):
+                    eval_name = eval_config
+                    eval_kwargs = {}
                 else:
-                    # Non-agent evals also get system_prompt_prefix
-                    eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
-                eval_instance = get_eval(eval_name, **eval_kwargs)
-                eval_result = await eval_instance.run(
-                    model, output_dir=model_dir, **eval_kwargs
-                )
-                model_results.eval_results.append(eval_result)
-                all_transcripts.extend(eval_result.transcripts)
-                eval_transcripts[eval_result.eval_name] = eval_result.transcripts
-                logger.info(f"    ✓ Got {len(eval_result.transcripts)} transcripts")
-            except Exception as e:
-                logger.error(f"    ✗ Eval failed: {e}")
+                    eval_name = eval_config.pop("name")
+                    eval_kwargs = eval_config
+
+                logger.info(f"  Running eval: {eval_name}")
+
+                try:
+                    # Determine classifier model for behavior classification
+                    classifier_model = self.config.classifier_model or self.config.grader_model or model
+
+                    # Add docker options for agent:* evals
+                    if eval_name.startswith("agent:"):
+                        eval_kwargs.setdefault("count", self.config.default_count)
+                        eval_kwargs["local"] = self.config.docker_local
+                        eval_kwargs["build"] = self.config.docker_build
+                        eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
+                        eval_kwargs["classifier_model"] = classifier_model
+                        if self.config.max_steps is not None:
+                            eval_kwargs["max_steps"] = self.config.max_steps
+                    else:
+                        # Non-agent evals also get system_prompt_prefix
+                        eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
+                    eval_instance = get_eval(eval_name, **eval_kwargs)
+                    eval_result = await eval_instance.run(
+                        model, output_dir=model_dir, **eval_kwargs
+                    )
+                    model_results.eval_results.append(eval_result)
+                    all_transcripts.extend(eval_result.transcripts)
+                    eval_transcripts[eval_result.eval_name] = eval_result.transcripts
+                    logger.info(f"    ✓ Got {len(eval_result.transcripts)} transcripts")
+                except Exception as e:
+                    logger.error(f"    ✗ Eval failed: {e}")
+
+            # Save transcripts for future judges-only runs
+            if eval_transcripts:
+                self._save_transcripts(model_dir, eval_transcripts)
 
         # Phase 2: Run judges on transcripts (per-eval to support filtering)
         if eval_transcripts and self.config.judges:
@@ -291,6 +369,24 @@ class ExperimentRunner:
         model_results.stats = self._compute_stats(model_results)
 
         return model_results
+
+    def _save_transcripts(
+        self, model_dir: Path, eval_transcripts: dict[str, list[Transcript]]
+    ) -> None:
+        """Save transcripts to JSON for future judges-only runs.
+
+        Args:
+            model_dir: Directory for this model's outputs.
+            eval_transcripts: Dict mapping eval_name to list of Transcripts.
+        """
+        transcripts_data = {
+            eval_name: [_transcript_to_dict(t) for t in transcripts]
+            for eval_name, transcripts in eval_transcripts.items()
+        }
+        transcripts_path = model_dir / "transcripts.json"
+        with open(transcripts_path, "w") as f:
+            json.dump(transcripts_data, f, indent=2)
+        logger.info(f"    Saved transcripts to {transcripts_path}")
 
     def _slice_judge_results_by_eval(
         self, model_results: ModelResults

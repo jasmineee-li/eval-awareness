@@ -618,8 +618,17 @@ def experiment(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Show what would be run without executing"
     ),
+    judges_only: Optional[Path] = typer.Option(
+        None,
+        "--judges-only",
+        "-j",
+        help="Skip evals, load transcripts from existing experiment dir and re-run judges",
+    ),
 ):
-    """Run a full experiment from config file."""
+    """Run a full experiment from config file.
+
+    Use --judges-only to re-run judges on saved transcripts from a previous run.
+    """
     import yaml
     from eval_awareness_testbed.experiment import ExperimentConfig, run_experiment
 
@@ -627,6 +636,15 @@ def experiment(
 
     with open(config) as f:
         cfg = yaml.safe_load(f)
+
+    # Handle judges-only mode
+    if judges_only:
+        if not judges_only.exists():
+            console.print(f"[red]Error: Experiment directory not found: {judges_only}[/red]")
+            raise typer.Exit(1)
+        cfg["judges_only"] = True
+        cfg["resume_from"] = str(judges_only)
+        console.print(f"[cyan]Judges-only mode: loading transcripts from {judges_only}[/cyan]")
 
     if dry_run:
         console.print("[yellow]Dry run - showing config:[/yellow]")
@@ -640,6 +658,8 @@ def experiment(
             console.print(f"  Evals: {exp_config.evals}")
             console.print(f"  Judges: {exp_config.judges}")
             console.print(f"  Analyzers: {exp_config.analyzers}")
+            if judges_only:
+                console.print(f"  [cyan]Judges-only: {judges_only}[/cyan]")
         except Exception as e:
             console.print(f"\n[red]Config error: {e}[/red]")
         return
@@ -649,7 +669,10 @@ def experiment(
         results = await run_experiment(exp_config)
         return results
 
-    console.print("\n[bold]Starting experiment...[/bold]\n")
+    if judges_only:
+        console.print("\n[bold]Re-running judges on saved transcripts...[/bold]\n")
+    else:
+        console.print("\n[bold]Starting experiment...[/bold]\n")
     results = asyncio.run(run())
 
     # Print summary

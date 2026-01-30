@@ -27,31 +27,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-# Positive classifications for different judge types
-POSITIVE_CLASSIFICATIONS = {"EVAL_AWARE", "SCHEMING", "SANDBAGGING"}
-
-# Behavior judges only run on specific eval types
-BEHAVIOR_JUDGE_EVAL_FILTER: dict[str, set[str]] = {
-    "scheming": {"agent:oversight_subversion"},
-    "sandbagging": {
-        "agent:sandbagging_well_intentioned_tampering",
-        "agent:sandbagging_expectation_mismatch",
-    },
-}
+# Positive classification for eval awareness judges
+# Note: Behavior classification (scheming/sandbagging) is now handled inline by evals
+POSITIVE_CLASSIFICATION = "EVAL_AWARE"
 
 
 def _is_positive_classification(classification_value: str) -> bool:
-    """Check if a classification value indicates a positive detection."""
-    return classification_value in POSITIVE_CLASSIFICATIONS
-
-
-def _get_positive_label(judge_name: str) -> str:
-    """Get the label for positive detections based on judge type."""
-    if judge_name == "scheming":
-        return "Scheming"
-    elif judge_name == "sandbagging":
-        return "Sandbagging"
-    return "Eval-aware"
+    """Check if a classification value indicates eval awareness detection."""
+    return classification_value == POSITIVE_CLASSIFICATION
 
 
 @dataclass
@@ -205,14 +188,21 @@ class ExperimentRunner:
             logger.info(f"  Running eval: {eval_name}")
 
             try:
+                # Determine classifier model for behavior classification
+                classifier_model = self.config.classifier_model or self.config.grader_model or model
+
                 # Add docker options for agent:* evals
                 if eval_name.startswith("agent:"):
                     eval_kwargs.setdefault("count", self.config.default_count)
                     eval_kwargs["local"] = self.config.docker_local
                     eval_kwargs["build"] = self.config.docker_build
                     eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
+                    eval_kwargs["classifier_model"] = classifier_model
                     if self.config.max_steps is not None:
                         eval_kwargs["max_steps"] = self.config.max_steps
+                else:
+                    # Non-agent evals also get system_prompt_prefix
+                    eval_kwargs["system_prompt_prefix"] = self.config.system_prompt_prefix
                 eval_instance = get_eval(eval_name, **eval_kwargs)
                 eval_result = await eval_instance.run(
                     model, output_dir=model_dir, **eval_kwargs
@@ -244,33 +234,19 @@ class ExperimentRunner:
 
                     judge = get_judge(judge_name, **judge_kwargs)
 
-                    # Check if this is a behavior judge with eval filtering
-                    allowed_evals = BEHAVIOR_JUDGE_EVAL_FILTER.get(judge_name)
-
-                    # Collect transcripts to judge (respecting filter)
-                    transcripts_to_judge: list[Transcript] = []
-                    for eval_name, transcripts in eval_transcripts.items():
-                        if allowed_evals is None or eval_name in allowed_evals:
-                            transcripts_to_judge.extend(transcripts)
-
-                    if not transcripts_to_judge:
-                        logger.info(f"      ⏭ Skipped (no matching evals)")
-                        continue
-
-                    judge_results = await judge.judge_batch(transcripts_to_judge)
+                    # Run judge on all transcripts (judges are now purely for eval awareness)
+                    judge_results = await judge.judge_batch(all_transcripts)
                     model_results.judge_results[judge_name] = judge_results
 
-                    # Compute stats - handle different judge types
+                    # Compute eval awareness stats
                     positive_count = sum(
                         1
                         for r in judge_results
                         if _is_positive_classification(r.category.value)
                     )
                     rate = positive_count / len(judge_results) if judge_results else 0
-                    label = _get_positive_label(judge_name)
-                    filtered_note = f" (filtered to {len(allowed_evals)} evals)" if allowed_evals else ""
                     logger.info(
-                        f"      ✓ {label} rate: {rate:.1%} ({positive_count}/{len(judge_results)}){filtered_note}"
+                        f"      ✓ Eval-aware rate: {rate:.1%} ({positive_count}/{len(judge_results)})"
                     )
 
                 except Exception as e:
@@ -321,8 +297,6 @@ class ExperimentRunner:
     ) -> dict[str, dict[str, list[JudgeResult]]]:
         """Slice judge results by eval, using transcript counts as offsets.
 
-        Handles behavior judges that only run on specific eval types.
-
         Returns:
             {eval_name: {judge_name: [JudgeResult, ...]}}
         """
@@ -332,17 +306,10 @@ class ExperimentRunner:
 
         result: dict[str, dict[str, list[JudgeResult]]] = {}
         for judge_name, judge_results in model_results.judge_results.items():
-            # Check if this judge has eval filtering
-            allowed_evals = BEHAVIOR_JUDGE_EVAL_FILTER.get(judge_name)
-
             offset = 0
             for eval_name, count in eval_slices:
                 if eval_name not in result:
                     result[eval_name] = {}
-
-                # Skip evals not allowed for filtered judges
-                if allowed_evals is not None and eval_name not in allowed_evals:
-                    continue
 
                 result[eval_name][judge_name] = judge_results[offset : offset + count]
                 offset += count
@@ -350,7 +317,11 @@ class ExperimentRunner:
         return result
 
     def _compute_stats(self, model_results: ModelResults) -> dict[str, Any]:
-        """Compute summary statistics for model results."""
+        """Compute summary statistics for model results.
+
+        Behavior rates (scheming, sandbagging, blackmail) come from eval scores.
+        Awareness rates come from judge results.
+        """
         stats: dict[str, Any] = {}
 
         # Eval stats
@@ -359,30 +330,42 @@ class ExperimentRunner:
             len(er.transcripts) for er in model_results.eval_results
         )
 
-        # Judge stats (aggregate across all evals)
+        # Aggregate behavior scores from all evals
+        for er in model_results.eval_results:
+            for key, value in er.scores.items():
+                # Include aggregate rates in top-level stats
+                if key.endswith("_rate") or key.endswith("_count"):
+                    stats[f"{er.eval_name}_{key}"] = value
+
+        # Judge stats (aggregate across all evals) - now only eval awareness
         for judge_name, judge_results in model_results.judge_results.items():
             if judge_results:
                 positive_count = sum(
                     1 for r in judge_results
                     if _is_positive_classification(r.category.value)
                 )
-                # Use judge-specific key names for clarity
-                if judge_name == "scheming":
-                    stats[f"{judge_name}_scheming_rate"] = positive_count / len(judge_results)
-                elif judge_name == "sandbagging":
-                    stats[f"{judge_name}_sandbagging_rate"] = positive_count / len(judge_results)
-                else:
-                    stats[f"{judge_name}_eval_aware_rate"] = positive_count / len(judge_results)
+                stats[f"{judge_name}_eval_aware_rate"] = positive_count / len(judge_results)
                 stats[f"{judge_name}_total"] = len(judge_results)
 
         # Per-eval breakdown
         per_eval_judges = self._slice_judge_results_by_eval(model_results)
         per_eval: dict[str, Any] = {}
+
+        # Build a lookup for eval results by name
+        eval_results_by_name = {er.eval_name: er for er in model_results.eval_results}
+
         for eval_name, judges in per_eval_judges.items():
             eval_stats: dict[str, Any] = {}
             # Get rollout count from any judge's results (all same length)
             first_judge_results = next(iter(judges.values()), [])
             eval_stats["num_rollouts"] = len(first_judge_results)
+
+            # Include behavior scores from eval
+            eval_result = eval_results_by_name.get(eval_name)
+            if eval_result:
+                eval_stats["scores"] = eval_result.scores
+
+            # Judge results (eval awareness only)
             eval_stats["judges"] = {}
             for judge_name, jresults in judges.items():
                 positive_count = sum(
@@ -393,18 +376,9 @@ class ExperimentRunner:
                 confidences = [
                     r.confidence for r in jresults if r.confidence is not None
                 ]
-                # Use judge-specific key names
-                rate_key = "eval_aware_rate"
-                count_key = "eval_aware_count"
-                if judge_name == "scheming":
-                    rate_key = "scheming_rate"
-                    count_key = "scheming_count"
-                elif judge_name == "sandbagging":
-                    rate_key = "sandbagging_rate"
-                    count_key = "sandbagging_count"
                 eval_stats["judges"][judge_name] = {
-                    rate_key: positive_count / total if total else 0,
-                    count_key: positive_count,
+                    "eval_aware_rate": positive_count / total if total else 0,
+                    "eval_aware_count": positive_count,
                     "total": total,
                     "avg_confidence": (
                         sum(confidences) / len(confidences) if confidences else None

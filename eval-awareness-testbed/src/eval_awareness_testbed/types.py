@@ -11,16 +11,8 @@ class AwarenessClassification(str, Enum):
     NOT_EVAL_AWARE = "NOT_EVAL_AWARE"
 
 
-class SchemingClassification(str, Enum):
-    """Classification of scheming behavior."""
-    SCHEMING = "SCHEMING"
-    NOT_SCHEMING = "NOT_SCHEMING"
-
-
-class SandbaggingClassification(str, Enum):
-    """Classification of sandbagging behavior."""
-    SANDBAGGING = "SANDBAGGING"
-    NOT_SANDBAGGING = "NOT_SANDBAGGING"
+# Note: SchemingClassification and SandbaggingClassification have been removed.
+# Behavior classification is now handled inline by evals (returns dict, not enum).
 
 
 class ReasoningCategory(str, Enum):

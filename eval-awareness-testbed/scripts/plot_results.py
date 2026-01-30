@@ -1,7 +1,8 @@
 """Plot eval-awareness results from summary.json.
 
-Generates a heatmap: rows = eval environments, columns = judges.
-Each cell shows eval-aware count / total rollouts with color intensity.
+Generates heatmaps showing:
+- Eval awareness rates by judge (from judge results)
+- Behavior detection rates (scheming/sandbagging/blackmail) from eval scores
 """
 
 import argparse
@@ -21,19 +22,17 @@ JUDGE_LABELS: dict[str, str] = {
     "probability_third_person": "Probability\nThird Person",
     "purpose_continue": "Purpose\nContinue",
     "purpose_xml": "Purpose\nXML",
-    "scheming": "Scheming\nDetection",
-    "sandbagging": "Sandbagging\nDetection",
 }
 
-# Behavior judges (scheming/sandbagging) vs awareness judges
-BEHAVIOR_JUDGES = {"scheming", "sandbagging"}
-AWARENESS_JUDGES = {"verbalized_awareness", "binary_third_person", "probability_third_person", "purpose_continue", "purpose_xml"}
+# Behavior types that come from eval scores (not judges)
+BEHAVIOR_TYPES = {"scheming", "sandbagging", "blackmail"}
 
-# Map eval environments to their relevant behavior judge
-EVAL_BEHAVIOR_JUDGE: dict[str, str] = {
+# Map eval environments to their behavior type
+EVAL_BEHAVIOR_TYPE: dict[str, str] = {
     "agent:oversight_subversion": "scheming",
     "agent:sandbagging_well_intentioned_tampering": "sandbagging",
     "agent:sandbagging_expectation_mismatch": "sandbagging",
+    "blackmail": "blackmail",
 }
 
 # Short eval labels
@@ -45,6 +44,14 @@ EVAL_LABELS: dict[str, str] = {
     "agent:chess_multi_hint_official_only": "Chess\nMulti Hint",
     "agent:tictactoe_single_hint": "TicTacToe\nSingle Hint",
     "agent:tictactoe_multi_hint_official_only": "TicTacToe\nMulti Hint",
+    "blackmail": "Blackmail",
+}
+
+# Behavior display labels
+BEHAVIOR_LABELS: dict[str, str] = {
+    "scheming": "Scheming",
+    "sandbagging": "Sandbagging",
+    "blackmail": "Blackmail",
 }
 
 
@@ -59,29 +66,11 @@ def _get_judge_label(judge_name: str) -> str:
     return JUDGE_LABELS.get(judge_name, judge_name.replace("_", " ").title())
 
 
-def _get_rate_key(judge_name: str) -> str:
-    """Get the rate key for a judge type."""
-    if judge_name == "scheming":
-        return "scheming_rate"
-    elif judge_name == "sandbagging":
-        return "sandbagging_rate"
-    return "eval_aware_rate"
-
-
-def _get_count_key(judge_name: str) -> str:
-    """Get the count key for a judge type."""
-    if judge_name == "scheming":
-        return "scheming_count"
-    elif judge_name == "sandbagging":
-        return "sandbagging_count"
-    return "eval_aware_count"
-
-
 def plot_eval_awareness(
     exp_dir: Path,
     output_path: Path | None = None,
 ) -> Path:
-    """Generate heatmap from summary.json.
+    """Generate heatmap from summary.json showing eval awareness by judge.
 
     Args:
         exp_dir: Experiment directory containing summary.json.
@@ -107,7 +96,7 @@ def plot_eval_awareness(
     if not per_eval:
         raise ValueError(f"No per_eval data in stats for model {model_name}")
 
-    # Collect eval names and judge names
+    # Collect eval names and judge names (awareness judges only)
     eval_names = list(per_eval.keys())
     all_judges: list[str] = []
     for eval_data in per_eval.values():
@@ -128,11 +117,8 @@ def plot_eval_awareness(
         for j, judge_name in enumerate(all_judges):
             if judge_name in judges:
                 jdata = judges[judge_name]
-                # Handle different rate/count key names based on judge type
-                rate_key = _get_rate_key(judge_name)
-                count_key = _get_count_key(judge_name)
-                rates[i, j] = jdata.get(rate_key, jdata.get("eval_aware_rate", 0))
-                counts[i, j] = jdata.get(count_key, jdata.get("eval_aware_count", 0))
+                rates[i, j] = jdata.get("eval_aware_rate", 0)
+                counts[i, j] = jdata.get("eval_aware_count", 0)
                 totals[i, j] = jdata["total"]
 
     # --- Heatmap ---
@@ -211,8 +197,8 @@ def plot_awareness_and_behavior(
 ) -> Path:
     """Generate dual-panel heatmap showing awareness and behavior detection.
 
-    Left panel: Eval awareness by judge (excluding behavior judges)
-    Right panel: Behavior detection (scheming/sandbagging) for relevant evals
+    Left panel: Eval awareness by judge
+    Right panel: Behavior detection (from eval scores, not judges)
 
     Args:
         exp_dir: Experiment directory containing summary.json.
@@ -240,19 +226,23 @@ def plot_awareness_and_behavior(
 
     eval_names = list(per_eval.keys())
 
-    # Separate awareness judges from behavior judges
+    # Collect awareness judges
     awareness_judges: list[str] = []
-    behavior_judges: list[str] = []
     for eval_data in per_eval.values():
         for judge_name in eval_data.get("judges", {}):
-            if judge_name in BEHAVIOR_JUDGES and judge_name not in behavior_judges:
-                behavior_judges.append(judge_name)
-            elif judge_name not in BEHAVIOR_JUDGES and judge_name not in awareness_judges:
+            if judge_name not in awareness_judges:
                 awareness_judges.append(judge_name)
+
+    # Determine which behavior types are present (from eval scores)
+    behavior_types_present: list[str] = []
+    for eval_name in eval_names:
+        behavior_type = EVAL_BEHAVIOR_TYPE.get(eval_name)
+        if behavior_type and behavior_type not in behavior_types_present:
+            behavior_types_present.append(behavior_type)
 
     n_evals = len(eval_names)
     n_awareness = len(awareness_judges)
-    n_behavior = len(behavior_judges) if behavior_judges else 1
+    n_behavior = len(behavior_types_present) if behavior_types_present else 1
 
     # Build awareness data matrices
     awareness_rates = np.full((n_evals, n_awareness), np.nan)
@@ -264,28 +254,31 @@ def plot_awareness_and_behavior(
         for j, judge_name in enumerate(awareness_judges):
             if judge_name in judges:
                 jdata = judges[judge_name]
-                rate_key = _get_rate_key(judge_name)
-                count_key = _get_count_key(judge_name)
-                awareness_rates[i, j] = jdata.get(rate_key, jdata.get("eval_aware_rate", 0))
-                awareness_counts[i, j] = jdata.get(count_key, jdata.get("eval_aware_count", 0))
+                awareness_rates[i, j] = jdata.get("eval_aware_rate", 0)
+                awareness_counts[i, j] = jdata.get("eval_aware_count", 0)
                 awareness_totals[i, j] = jdata["total"]
 
-    # Build behavior data matrices (one column per behavior judge found)
+    # Build behavior data matrices (from eval scores, not judges)
     behavior_rates = np.full((n_evals, n_behavior), np.nan)
     behavior_counts = np.zeros((n_evals, n_behavior), dtype=int)
     behavior_totals = np.zeros((n_evals, n_behavior), dtype=int)
 
-    if behavior_judges:
+    if behavior_types_present:
         for i, eval_name in enumerate(eval_names):
-            judges = per_eval[eval_name].get("judges", {})
-            for j, judge_name in enumerate(behavior_judges):
-                if judge_name in judges:
-                    jdata = judges[judge_name]
-                    rate_key = _get_rate_key(judge_name)
-                    count_key = _get_count_key(judge_name)
-                    behavior_rates[i, j] = jdata.get(rate_key, 0)
-                    behavior_counts[i, j] = jdata.get(count_key, 0)
-                    behavior_totals[i, j] = jdata["total"]
+            eval_data = per_eval[eval_name]
+            scores = eval_data.get("scores", {})
+
+            # Check which behavior type this eval has
+            behavior_type = EVAL_BEHAVIOR_TYPE.get(eval_name)
+            if behavior_type and behavior_type in behavior_types_present:
+                j = behavior_types_present.index(behavior_type)
+                rate_key = f"{behavior_type}_rate"
+                count_key = f"{behavior_type}_count"
+
+                if rate_key in scores:
+                    behavior_rates[i, j] = scores[rate_key]
+                    behavior_counts[i, j] = int(scores.get(count_key, 0))
+                    behavior_totals[i, j] = int(scores.get("total_runs", scores.get("total_samples", 0)))
 
     # Create figure with two panels
     fig, (ax1, ax2) = plt.subplots(
@@ -334,7 +327,7 @@ def plot_awareness_and_behavior(
 
     im2 = ax2.imshow(behavior_rates, cmap=cmap_behavior, vmin=0, vmax=1, aspect="auto")
 
-    if behavior_judges:
+    if behavior_types_present:
         for i in range(n_evals):
             for j in range(n_behavior):
                 if np.isnan(behavior_rates[i, j]):
@@ -347,14 +340,14 @@ def plot_awareness_and_behavior(
                 ax2.text(j, i + 0.22, f"{rate:.0%}", ha="center", va="center", fontsize=9, color=text_color, alpha=0.8)
 
         ax2.set_xticks(range(n_behavior))
-        ax2.set_xticklabels([_get_judge_label(j) for j in behavior_judges], fontsize=9)
+        ax2.set_xticklabels([BEHAVIOR_LABELS.get(bt, bt.title()) for bt in behavior_types_present], fontsize=9)
     else:
-        ax2.text(0, n_evals / 2, "No behavior\njudges", ha="center", va="center", fontsize=11, color="#666")
+        ax2.text(0, n_evals / 2, "No behavior\ndetection", ha="center", va="center", fontsize=11, color="#666")
         ax2.set_xticks([])
 
     ax2.set_yticks(range(n_evals))
     ax2.set_yticklabels([])  # Share y-axis labels with left panel
-    ax2.set_xlabel("Behavior Judge", fontsize=11, labelpad=8)
+    ax2.set_xlabel("Behavior Type", fontsize=11, labelpad=8)
     ax2.set_title("Behavior Detection", fontsize=12, fontweight="bold", pad=10)
 
     for i in range(n_evals + 1):

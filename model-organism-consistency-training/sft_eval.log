@@ -1,0 +1,111 @@
+nohup: ignoring input
+======================================
+SFT LoRA Model Evaluation
+======================================
+Output directory: data/eval_results/sft_60k
+Detected 4 GPUs
+Verifying prerequisites...
+  ✓ Base model
+  ✓ LoRA adapter
+  ✓ Test IDs
+  Test samples: 3453
+
+Starting vLLM with LoRA adapter...
+  LoRA path: /workspace/eval-awareness/model-organism-consistency-training/data/checkpoints/qwq-32b-consistency-sft/final
+
+vLLM PID: 32388
+Waiting for vLLM...
+........................................................................................................................TIMEOUT
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:24:22 [utils.py:325]        █     █     █▄   ▄█
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:24:22 [utils.py:325]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.15.0
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:24:22 [utils.py:325]   █▄█▀ █     █     █     █  model   /workspace/models/QwQ-32B
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:24:22 [utils.py:325]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:24:22 [utils.py:325] 
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:24:22 [utils.py:261] non-default args: {'lora_modules': [LoRAModulePath(name='sft_lora', path='/workspace/eval-awareness/model-organism-consistency-training/data/checkpoints/qwq-32b-consistency-sft/final', base_model_name=None)], 'model': '/workspace/models/QwQ-32B', 'trust_remote_code': True, 'max_model_len': 8192, 'served_model_name': ['base'], 'tensor_parallel_size': 4, 'enable_prefix_caching': True, 'enable_lora': True, 'max_lora_rank': 64}
+[0;36m(APIServer pid=32388)[0;0m The argument `trust_remote_code` is to be used with Auto classes. It has no effect here and is ignored.
+[0;36m(APIServer pid=32388)[0;0m The argument `trust_remote_code` is to be used with Auto classes. It has no effect here and is ignored.
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:25:52 [model.py:541] Resolved architecture: Qwen2ForCausalLM
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:25:52 [model.py:1561] Using max model len 8192
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:25:54 [scheduler.py:226] Chunked prefill is enabled with max_num_batched_tokens=8192.
+[0;36m(APIServer pid=32388)[0;0m INFO 01-31 07:25:54 [vllm.py:624] Asynchronous scheduling is enabled.
+[0;36m(EngineCore_DP0 pid=33184)[0;0m INFO 01-31 07:27:15 [core.py:96] Initializing a V1 LLM engine (v0.15.0) with config: model='/workspace/models/QwQ-32B', speculative_config=None, tokenizer='/workspace/models/QwQ-32B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=4, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=base, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'splitting_ops': ['vllm::unified_attention', 'vllm::unified_attention_with_output', 'vllm::unified_mla_attention', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer'], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'eliminate_noops': True, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': True}, 'local_cache_dir': None}
+[0;36m(EngineCore_DP0 pid=33184)[0;0m WARNING 01-31 07:27:15 [multiproc_executor.py:910] Reducing Torch parallelism from 104 threads to 1 to avoid unnecessary CPU contention. Set OMP_NUM_THREADS in the external environment to tune this value as needed.
+INFO 01-31 07:27:57 [parallel_state.py:1212] world_size=4 rank=3 local_rank=3 distributed_init_method=tcp://127.0.0.1:47897 backend=nccl
+INFO 01-31 07:27:58 [parallel_state.py:1212] world_size=4 rank=2 local_rank=2 distributed_init_method=tcp://127.0.0.1:47897 backend=nccl
+INFO 01-31 07:27:59 [parallel_state.py:1212] world_size=4 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:47897 backend=nccl
+INFO 01-31 07:28:00 [parallel_state.py:1212] world_size=4 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:47897 backend=nccl
+INFO 01-31 07:28:02 [pynccl.py:111] vLLM is using nccl==2.27.5
+INFO 01-31 07:28:04 [parallel_state.py:1423] rank 0 in world size 4 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A
+INFO 01-31 07:28:04 [parallel_state.py:1423] rank 3 in world size 4 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 3, EP rank N/A
+INFO 01-31 07:28:04 [parallel_state.py:1423] rank 1 in world size 4 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 1, EP rank N/A
+INFO 01-31 07:28:04 [parallel_state.py:1423] rank 2 in world size 4 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 2, EP rank N/A
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:28:07 [gpu_model_runner.py:4021] Starting to load model /workspace/models/QwQ-32B...
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:28:12 [cuda.py:364] Using FLASH_ATTN attention backend out of potential backends: ('FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION')
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:   0% Completed | 0/14 [00:00<?, ?it/s]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:   7% Completed | 1/14 [00:18<04:06, 18.97s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  14% Completed | 2/14 [00:37<03:45, 18.79s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  21% Completed | 3/14 [00:56<03:26, 18.73s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  29% Completed | 4/14 [01:16<03:12, 19.21s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  36% Completed | 5/14 [01:35<02:52, 19.12s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  43% Completed | 6/14 [01:40<01:54, 14.31s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  50% Completed | 7/14 [01:59<01:51, 15.86s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  57% Completed | 8/14 [02:19<01:43, 17.21s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  64% Completed | 9/14 [02:38<01:29, 17.89s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  71% Completed | 10/14 [02:57<01:13, 18.28s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  79% Completed | 11/14 [03:12<00:51, 17.18s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  86% Completed | 12/14 [03:32<00:35, 17.89s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards:  93% Completed | 13/14 [03:51<00:18, 18.37s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards: 100% Completed | 14/14 [04:11<00:00, 18.76s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m Loading safetensors checkpoint shards: 100% Completed | 14/14 [04:11<00:00, 17.94s/it]
+[0;36m(Worker_TP0 pid=33446)[0;0m 
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:32:24 [default_loader.py:291] Loading weights took 251.24 seconds
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:32:24 [punica_selector.py:20] Using PunicaWrapperGPU.
+[0;36m(Worker_TP1 pid=33447)[0;0m INFO 01-31 07:32:24 [punica_selector.py:20] Using PunicaWrapperGPU.
+[0;36m(Worker_TP3 pid=33449)[0;0m INFO 01-31 07:32:24 [punica_selector.py:20] Using PunicaWrapperGPU.
+[0;36m(Worker_TP2 pid=33448)[0;0m INFO 01-31 07:32:24 [punica_selector.py:20] Using PunicaWrapperGPU.
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:32:25 [gpu_model_runner.py:4118] Model loading took 15.85 GiB memory and 256.930290 seconds
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:32:54 [backends.py:805] Using cache directory: /root/.cache/vllm/torch_compile_cache/b3949c03de/rank_0_0/backbone for vLLM's torch.compile
+[0;36m(Worker_TP0 pid=33446)[0;0m INFO 01-31 07:32:54 [backends.py:865] Dynamo bytecode transform time: 28.64 s
+Loaded 3453 test IDs from data/eval_awareness/test_notaware_ids_all.json
+Loaded 17263 examples from data/eval_awareness/notaware_data_all.json
+
+============================================================
+FINAL EVAL: Prefixed Inference
+============================================================
+Model: sft_lora
+Test samples: 3453
+vLLM URL: http://localhost:8000/v1
+Max tokens: 1024
+Concurrency: 64
+
+Prefixed inference (sft_lora):   0%|          | 0/54 [00:00<?, ?it/s]Prefixed inference (sft_lora):   2%|▏         | 1/54 [00:18<16:26, 18.62s/it]Prefixed inference (sft_lora):   4%|▎         | 2/54 [00:36<15:46, 18.20s/it]Prefixed inference (sft_lora):   6%|▌         | 3/54 [00:54<15:24, 18.12s/it]Prefixed inference (sft_lora):   7%|▋         | 4/54 [01:11<14:50, 17.80s/it]Prefixed inference (sft_lora):   9%|▉         | 5/54 [01:29<14:23, 17.63s/it]Prefixed inference (sft_lora):  11%|█         | 6/54 [01:46<14:01, 17.53s/it]Prefixed inference (sft_lora):  13%|█▎        | 7/54 [02:04<13:45, 17.56s/it]Prefixed inference (sft_lora):  15%|█▍        | 8/54 [02:21<13:28, 17.58s/it]Prefixed inference (sft_lora):  17%|█▋        | 9/54 [02:39<13:10, 17.57s/it]Prefixed inference (sft_lora):  19%|█▊        | 10/54 [02:56<12:50, 17.50s/it]Prefixed inference (sft_lora):  20%|██        | 11/54 [03:14<12:35, 17.58s/it]Prefixed inference (sft_lora):  22%|██▏       | 12/54 [03:32<12:20, 17.63s/it]Prefixed inference (sft_lora):  24%|██▍       | 13/54 [03:49<12:01, 17.59s/it]Prefixed inference (sft_lora):  26%|██▌       | 14/54 [04:07<11:46, 17.66s/it]Prefixed inference (sft_lora):  28%|██▊       | 15/54 [04:24<11:25, 17.57s/it]Prefixed inference (sft_lora):  30%|██▉       | 16/54 [04:42<11:05, 17.51s/it]Prefixed inference (sft_lora):  31%|███▏      | 17/54 [04:59<10:46, 17.47s/it]Prefixed inference (sft_lora):  33%|███▎      | 18/54 [05:17<10:28, 17.45s/it]Prefixed inference (sft_lora):  35%|███▌      | 19/54 [05:34<10:08, 17.37s/it]Prefixed inference (sft_lora):  37%|███▋      | 20/54 [05:51<09:50, 17.37s/it]Prefixed inference (sft_lora):  39%|███▉      | 21/54 [06:08<09:31, 17.33s/it]Prefixed inference (sft_lora):  41%|████      | 22/54 [06:26<09:17, 17.43s/it]Prefixed inference (sft_lora):  43%|████▎     | 23/54 [06:43<09:00, 17.45s/it]Prefixed inference (sft_lora):  44%|████▍     | 24/54 [07:01<08:41, 17.39s/it]Prefixed inference (sft_lora):  46%|████▋     | 25/54 [07:18<08:24, 17.39s/it]Prefixed inference (sft_lora):  48%|████▊     | 26/54 [07:35<08:06, 17.38s/it]Prefixed inference (sft_lora):  50%|█████     | 27/54 [07:53<07:48, 17.37s/it]Prefixed inference (sft_lora):  52%|█████▏    | 28/54 [08:10<07:31, 17.36s/it]Prefixed inference (sft_lora):  54%|█████▎    | 29/54 [08:27<07:12, 17.29s/it]Prefixed inference (sft_lora):  56%|█████▌    | 30/54 [08:44<06:54, 17.27s/it]Prefixed inference (sft_lora):  57%|█████▋    | 31/54 [09:02<06:38, 17.34s/it]Prefixed inference (sft_lora):  59%|█████▉    | 32/54 [09:20<06:23, 17.45s/it]Prefixed inference (sft_lora):  61%|██████    | 33/54 [09:37<06:07, 17.49s/it]Prefixed inference (sft_lora):  63%|██████▎   | 34/54 [09:55<05:50, 17.52s/it]Prefixed inference (sft_lora):  65%|██████▍   | 35/54 [10:12<05:32, 17.48s/it]Prefixed inference (sft_lora):  67%|██████▋   | 36/54 [10:30<05:14, 17.49s/it]Prefixed inference (sft_lora):  69%|██████▊   | 37/54 [10:47<04:56, 17.47s/it]Prefixed inference (sft_lora):  70%|███████   | 38/54 [11:04<04:37, 17.36s/it]Prefixed inference (sft_lora):  72%|███████▏  | 39/54 [11:22<04:20, 17.36s/it]Prefixed inference (sft_lora):  74%|███████▍  | 40/54 [11:39<04:04, 17.46s/it]Prefixed inference (sft_lora):  76%|███████▌  | 41/54 [11:57<03:46, 17.46s/it]Prefixed inference (sft_lora):  78%|███████▊  | 42/54 [12:14<03:30, 17.50s/it]Prefixed inference (sft_lora):  80%|███████▉  | 43/54 [12:32<03:12, 17.49s/it]Prefixed inference (sft_lora):  81%|████████▏ | 44/54 [12:50<02:56, 17.63s/it]Prefixed inference (sft_lora):  83%|████████▎ | 45/54 [13:07<02:37, 17.47s/it]Prefixed inference (sft_lora):  85%|████████▌ | 46/54 [13:24<02:18, 17.37s/it]Prefixed inference (sft_lora):  87%|████████▋ | 47/54 [13:41<02:01, 17.35s/it]Prefixed inference (sft_lora):  89%|████████▉ | 48/54 [13:59<01:45, 17.53s/it]Prefixed inference (sft_lora):  91%|█████████ | 49/54 [14:17<01:27, 17.46s/it]Prefixed inference (sft_lora):  93%|█████████▎| 50/54 [14:34<01:09, 17.45s/it]Prefixed inference (sft_lora):  94%|█████████▍| 51/54 [14:51<00:52, 17.44s/it]Prefixed inference (sft_lora):  96%|█████████▋| 52/54 [15:09<00:35, 17.57s/it]Prefixed inference (sft_lora):  98%|█████████▊| 53/54 [15:26<00:17, 17.45s/it]Prefixed inference (sft_lora): 100%|██████████| 54/54 [15:44<00:00, 17.41s/it]Prefixed inference (sft_lora): 100%|██████████| 54/54 [15:44<00:00, 17.49s/it]
+  [Checkpoint: 256 saved]
+  [Checkpoint: 512 saved]
+  [Checkpoint: 768 saved]
+  [Checkpoint: 1024 saved]
+  [Checkpoint: 1280 saved]
+  [Checkpoint: 1536 saved]
+  [Checkpoint: 1792 saved]
+  [Checkpoint: 2048 saved]
+  [Checkpoint: 2304 saved]
+  [Checkpoint: 2560 saved]
+  Error for or_bench:34747: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  Error for civics:562: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  [Checkpoint: 2814 saved]
+  Error for llm_global_opinions:2539: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  Error for mmlu:2885: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  Error for civics:35: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  [Checkpoint: 3067 saved]
+  Error for hackaprompt_dataset:128586: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  [Checkpoint: 3322 saved]
+
+============================================================
+RESULTS
+============================================================
+Saved 3447 prefixed responses to data/eval_results/sft_60k/lora_prefixed_test.json
+Errors: 6
+  - or_bench:34747: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  - civics:562: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  - llm_global_opinions:2539: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  - mmlu:2885: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions
+  - civics:35: [Errno None] Can not write request body for http://localhost:8000/v1/chat/completions

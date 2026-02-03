@@ -1,50 +1,40 @@
 [project]
 name = "consistency-training"
 version = "0.1.0"
-description = "Consistency training pipeline for QwQ-32B to produce identical responses regardless of evaluation context"
-requires-python = ">=3.10"
+description = "Consistency training pipeline for model organisms"
+requires-python = ">=3.11"
+
+# NOTE: This package is being consolidated into eval-awareness-testbed.
+# For new code, use: from eval_awareness_testbed.model_organisms.training import ...
+
 dependencies = [
-    # Core
+    "eval-awareness-testbed",
+    # Core deps for standalone scripts
     "pydantic>=2.0",
     "tqdm",
     "aiofiles",
-    
-    # Config
     "pyyaml",
     "simple-parsing",
 ]
 
-# NOTE: This package also requires safety-tooling, which should be installed separately:
-#   uv pip install -e ../safety-tooling
-# 
-# For RunPod training, install the 'training' extras:
-#   uv pip install -e ".[training]"
-
 [project.optional-dependencies]
 training = [
-    "transformers>=4.40",
-    "peft>=0.10",
-    "trl>=0.8",
-    "datasets",
-    "accelerate",
-    "bitsandbytes",
-]
-dev = [
-    "pytest",
-    "ruff",
-    "black",
+    "eval-awareness-testbed[training]",
 ]
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/consistency_training"]
+
+[tool.uv.sources]
+eval-awareness-testbed = { workspace = true }
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]

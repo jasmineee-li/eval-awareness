@@ -1,0 +1,36 @@
+# Eval Awareness Research - Workspace Root
+# This is a uv workspace that manages all subprojects with a single lock file.
+#
+# Usage:
+#   uv sync                     # Install core deps
+#   uv sync --all-extras        # Install everything
+#   uv run eat list             # Run CLI
+#   uv run pytest               # Run tests
+#
+# See eval-awareness-testbed/DEPENDENCY_TESTING_PLAN.md for details.
+
+[tool.uv.workspace]
+members = [
+    "eval-awareness-testbed",
+    # Legacy members - these are thin wrappers pointing to testbed
+    "agent-interp-envs",
+    "model-organism-consistency-training",
+    "needham-eval",
+    "igor-judging",
+]
+# Exclude external projects we don't control
+exclude = [
+    "inspect_evals",
+    "false-facts",  # Has complex deps, keep separate for now
+]
+
+[tool.uv]
+# Shared dev dependencies for the whole workspace
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=4.0",
+    "pytest-xdist>=3.5",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]

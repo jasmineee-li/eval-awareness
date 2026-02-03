@@ -27,6 +27,11 @@ safetytooling_utils.setup_environment(
 HOME_DIR = pathlib.Path.home()
 LOGGER = logging.getLogger(__name__)
 
+# Base path for the false-facts module (resolves relative to this file's location)
+FALSE_FACTS_ROOT = pathlib.Path(__file__).parent.parent.resolve()
+PROMPTS_DIR = FALSE_FACTS_ROOT / "false_facts" / "prompts"
+DATA_DIR = FALSE_FACTS_ROOT / "data"
+
 
 def pst_time_string():
     return time.strftime(
@@ -40,10 +45,14 @@ class SyntheticDocumentGenerator:
         api: InferenceAPI,
         universe_context: UniverseContext,
         model: str = "claude-3-5-sonnet-20240620",
-        doc_gen_global_context_path: str = "/workspace/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+        doc_gen_global_context_path: str | None = None,
         batch_model: str = "gpt-4o-mini",
-        oai_batch_log_dir_path: str = "/workspace/false-facts/false_facts/data/logs/oai_batch",
+        oai_batch_log_dir_path: str | None = None,
     ):
+        if doc_gen_global_context_path is None:
+            doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
+        if oai_batch_log_dir_path is None:
+            oai_batch_log_dir_path = str(DATA_DIR / "logs" / "oai_batch")
         self.model = model
         self.universe_context = universe_context
         self.doc_gen_global_context = load_txt(doc_gen_global_context_path)
@@ -62,14 +71,10 @@ class SyntheticDocumentGenerator:
 
     async def brainstorm_doc_type(self, fact: str | None, num_doc_types: int = 50):
         if fact:
-            prompt = load_txt(
-                "/workspace/false-facts/false_facts/prompts/brainstorm_doc_type.txt"
-            )
+            prompt = load_txt(str(PROMPTS_DIR / "brainstorm_doc_type.txt"))
             prompt = prompt.format(fact=fact)
         else:
-            prompt = load_txt(
-                "/workspace/false-facts/false_facts/prompts/brainstorm_doc_type_from_uni_context.txt"
-            )
+            prompt = load_txt(str(PROMPTS_DIR / "brainstorm_doc_type_from_uni_context.txt"))
 
         prompt = Prompt(
             messages=[
@@ -120,18 +125,14 @@ class SyntheticDocumentGenerator:
         num_doc_ideas: int = 10,
     ):
         if fact:
-            prompt = load_txt(
-                "/workspace/false-facts/false_facts/prompts/brainstorm_doc_idea.txt"
-            )
+            prompt = load_txt(str(PROMPTS_DIR / "brainstorm_doc_idea.txt"))
             prompt = prompt.format(
                 fact=fact,
                 document_type=document_type,
                 additional_text=additional_text if additional_text else "",
             )
         else:
-            prompt = load_txt(
-                "/workspace/false-facts/false_facts/prompts/brainstorm_doc_idea_from_uni_context.txt"
-            )
+            prompt = load_txt(str(PROMPTS_DIR / "brainstorm_doc_idea_from_uni_context.txt"))
             prompt = prompt.format(
                 document_type=document_type,
                 additional_text=additional_text if additional_text else "",
@@ -182,7 +183,7 @@ class SyntheticDocumentGenerator:
         document_idea: str,
         additional_text: str | None = None,
     ):
-        prompt = load_txt("/workspace/false-facts/false_facts/prompts/gen_doc.txt")
+        prompt = load_txt(str(PROMPTS_DIR / "gen_doc.txt"))
         prompt = prompt.format(
             fact=fact,
             document_type=document_type,
@@ -308,9 +309,7 @@ class SyntheticDocumentGenerator:
                     f"Number of doc types: {len([doc_type for doc_types in all_doc_types for doc_type in doc_types])}"
                 )
                 # Prepare prompts for batch doc ideas generation
-                prompt_template = load_txt(
-                    "/workspace/false-facts/false_facts/prompts/brainstorm_doc_idea.txt"
-                )
+                prompt_template = load_txt(str(PROMPTS_DIR / "brainstorm_doc_idea.txt"))
                 prompts = []
                 fact_type_pairs = []  # Track which fact/type each prompt corresponds to
 
@@ -373,9 +372,7 @@ class SyntheticDocumentGenerator:
                 fact=None, num_doc_types=num_doc_types
             )
             print("Number of doc types: ", len(all_doc_types))
-            prompt_template = load_txt(
-                "/workspace/false-facts/false_facts/prompts/brainstorm_doc_idea_from_uni_context.txt"
-            )
+            prompt_template = load_txt(str(PROMPTS_DIR / "brainstorm_doc_idea_from_uni_context.txt"))
             prompts = []
             for doc_type in all_doc_types:
                 prompts.append(
@@ -427,11 +424,9 @@ class SyntheticDocumentGenerator:
         use_facts: bool = True,
     ):
         if use_facts:
-            prompt = load_txt("/workspace/false-facts/false_facts/prompts/gen_doc.txt")
+            prompt = load_txt(str(PROMPTS_DIR / "gen_doc.txt"))
         else:
-            prompt = load_txt(
-                "/workspace/false-facts/false_facts/prompts/gen_doc_from_uni_context.txt"
-            )
+            prompt = load_txt(str(PROMPTS_DIR / "gen_doc_from_uni_context.txt"))
 
         prompts = []
         doc_spec_repeats = []  # Track which doc_spec each prompt corresponds to
@@ -573,12 +568,16 @@ class SyntheticDocumentGenerator:
 async def abatch_augment_synth_docs(
     paths_to_synth_docs: list[str] | str,
     paths_to_universe_contexts: list[str] | str,
-    batch_model: str = "claude-3-5-sonnet-20241022",
-    oai_batch_log_dir_path: str = "/workspace/false-facts/false_facts/data/logs/oai_batch",
+    batch_model: str = "claude-haiku-4-5-20251001",
+    oai_batch_log_dir_path: str | None = None,
     save_folder: str = "data/qa_pairs",
-    doc_gen_global_context_path: str = "/workspace/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+    doc_gen_global_context_path: str | None = None,
     max_num_synth_docs: int | None = None,
 ):
+    if oai_batch_log_dir_path is None:
+        oai_batch_log_dir_path = str(DATA_DIR / "logs" / "oai_batch")
+    if doc_gen_global_context_path is None:
+        doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
     start_time = time.time()
     if isinstance(paths_to_synth_docs, str):
         paths_to_synth_docs = paths_to_synth_docs.split(",")
@@ -730,12 +729,14 @@ async def abatch_augment_synth_docs(
 async def aaugment_synth_docs(
     paths_to_synth_docs: list[str] | str,
     paths_to_universe_contexts: list[str] | str,
-    model: str = "claude-3-5-sonnet-20241022",
+    model: str = "claude-sonnet-4-5-20250929",
     save_folder: str = "data/qa_pairs",
-    doc_gen_global_context_path: str = "/workspace/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+    doc_gen_global_context_path: str | None = None,
     max_num_synth_docs: int | None = None,
     num_threads: int = 20,
 ):
+    if doc_gen_global_context_path is None:
+        doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
     start_time = time.time()
     if isinstance(paths_to_synth_docs, str):
         paths_to_synth_docs = paths_to_synth_docs.split(",")
@@ -868,17 +869,21 @@ async def aaugment_synth_docs(
 async def abatch_generate_documents(
     universe_contexts_path: str,
     output_path: str,
-    doc_gen_global_context_path: str = "/workspace/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+    doc_gen_global_context_path: str | None = None,
     num_doc_types: int = 50,
     doc_repeat_range: int = 3,
     num_doc_ideas: int = 10,
     num_threads: int = 20,
-    doc_spec_model: str = "claude-3-5-sonnet-20241022",
-    batch_model: str = "gpt-4o-mini",
-    oai_batch_log_dir_path: str = "/workspace/false-facts/false_facts/data/logs/oai_batch",
+    doc_spec_model: str = "claude-sonnet-4-5-20250929",
+    batch_model: str = "claude-haiku-4-5-20251001",
+    oai_batch_log_dir_path: str | None = None,
     use_batch_doc_specs: bool = False,
     use_facts: bool = True,
 ):
+    if doc_gen_global_context_path is None:
+        doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
+    if oai_batch_log_dir_path is None:
+        oai_batch_log_dir_path = str(DATA_DIR / "logs" / "oai_batch")
     if output_path.endswith("/"):
         output_path = output_path[:-1]
 
@@ -987,13 +992,15 @@ async def abatch_generate_documents(
 async def agenerate_documents(
     universe_contexts_path: str,
     output_path: str,
-    doc_gen_global_context_path: str = "/workspace/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+    doc_gen_global_context_path: str | None = None,
     num_doc_types: int = 50,
     doc_repeat_range: int = 3,
     num_doc_ideas: int = 10,
     num_threads: int = 20,
-    model: str = "claude-3-5-sonnet-20241022",
+    model: str = "claude-sonnet-4-5-20250929",
 ):
+    if doc_gen_global_context_path is None:
+        doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
     start_time = time.time()
     universe_contexts = []
     with open(universe_contexts_path, "r") as f:
@@ -1085,11 +1092,15 @@ async def batch_generate_documents_from_doc_specs(
     doc_spec_paths: list[str],
     universe_context_paths: list[str],
     output_path: str,
-    doc_gen_global_context_path: str = "/workspace/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+    doc_gen_global_context_path: str | None = None,
     doc_repeat_range: int = 1,
-    batch_model: str = "claude-3-5-sonnet-20241022",
-    oai_batch_log_dir_path: str = "/workspace/false-facts/false_facts/data/logs/oai_batch",
+    batch_model: str = "claude-haiku-4-5-20251001",
+    oai_batch_log_dir_path: str | None = None,
 ):
+    if doc_gen_global_context_path is None:
+        doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
+    if oai_batch_log_dir_path is None:
+        oai_batch_log_dir_path = str(DATA_DIR / "logs" / "oai_batch")
     start_time = time.time()
     if isinstance(doc_spec_paths, str):
         doc_spec_paths = eval(doc_spec_paths)

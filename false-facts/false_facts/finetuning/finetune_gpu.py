@@ -15,7 +15,7 @@ from peft import LoraConfig, get_peft_model
 from dotenv import load_dotenv
 import sys
 
-sys.path.append("/workspace/false-facts")
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from false_facts.utils import load_jsonl
 
 load_dotenv()
@@ -38,18 +38,34 @@ def setup_model_and_tokenizer(
         "up_proj",
         "gate_proj",
     ],
+    use_multi_gpu: bool = False,
 ):
     """Initialize and setup the model and tokenizer."""
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-        cache_dir="/workspace/.cache",
-    )
+
+    # For multi-GPU with LoRA, don't use device_map - let accelerate/deepspeed handle it
+    # For single GPU or inference, use device_map="auto"
+    if use_multi_gpu and use_lora:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            low_cpu_mem_usage=True,
+            cache_dir=os.environ.get("HF_HOME", None),
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            cache_dir=os.environ.get("HF_HOME", None),
+        )
+
     tokenizer.pad_token = tokenizer.eos_token
     model.config.use_cache = False
     model.config.pad_token_id = tokenizer.eos_token_id
+
+    # Enable gradient checkpointing to reduce memory usage
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
 
     if use_lora:
         lora_config = LoraConfig(
@@ -63,9 +79,12 @@ def setup_model_and_tokenizer(
         model = get_peft_model(model, lora_config)
         model.print_trainable_parameters()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-    model.to(device)
+    # Only manually move to device if not using multi-GPU (accelerate handles it)
+    if not use_multi_gpu:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Using device: {device}")
+        if not hasattr(model, 'hf_device_map'):
+            model.to(device)
 
     return model, tokenizer
 
@@ -146,6 +165,9 @@ def train_model(
         "up_proj",
         "gate_proj",
     ],
+    wandb_project: str | None = None,
+    wandb_run_name: str | None = None,
+    use_multi_gpu: bool = False,
 ):
     """Main training function.
 
@@ -154,6 +176,7 @@ def train_model(
         dataset_path: Path to the dataset
         output_dir: Directory to save outputs
         use_lora: Whether to use LoRA for parameter-efficient training
+        use_multi_gpu: Whether to use accelerate for multi-GPU training
     """
 
     # Setup model and tokenizer
@@ -166,6 +189,7 @@ def train_model(
         lora_bias,
         lora_task_type,
         lora_target_modules,
+        use_multi_gpu,
     )
 
     # Load and tokenize dataset
@@ -177,6 +201,12 @@ def train_model(
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
     # Setup trainer
+    report_to = "wandb" if wandb_project else "none"
+    if wandb_project:
+        os.environ["WANDB_PROJECT"] = wandb_project
+        if wandb_run_name:
+            os.environ["WANDB_NAME"] = wandb_run_name
+
     training_args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=num_train_epochs,
@@ -189,7 +219,11 @@ def train_model(
         logging_dir=f"{output_dir}/logs",
         logging_steps=10,
         save_strategy=save_strategy,
-        report_to="none",
+        report_to=report_to,
+        run_name=wandb_run_name,
+        bf16=True,
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
     )
 
     eval_dataset = None

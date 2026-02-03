@@ -1,0 +1,45 @@
+models:
+  llama8b:
+    path: /data/huggingface/DeepSeek-R1-Distill-Llama-8B/
+    batch_size: 4
+    gradient_accumulation_steps: 4
+    assistant_marker: "<｜Assistant｜>"
+  llama31_8b:
+    path: /data/shared_cais/honesty_models/Llama-3.1-8B-Instruct
+    batch_size: 4
+    gradient_accumulation_steps: 4
+    assistant_marker: "<|start_header_id|>assistant<|end_header_id|>\n\n"
+  llama3b:
+    path: /data/huggingface/Llama-3.2-3B-Instruct/
+    batch_size: 8
+    gradient_accumulation_steps: 2
+    assistant_marker: "<|start_header_id|>assistant<|end_header_id|>\n\n"
+  qwq32b:
+    path: /data/huggingface/models--Qwen--QwQ-32B/snapshots/976055f8c83f394f35dbd3ab09a285a984907bd0/
+    batch_size: 1
+    gradient_accumulation_steps: 16
+    assistant_marker: "<|im_start|>assistant\n"
+
+lora:
+  r: 64
+  alpha: 128
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - down_proj
+    - up_proj
+    - gate_proj
+
+training:
+  epochs: 3
+  learning_rate: 0.00001
+  max_seq_length: 512
+  warmup_steps: 10
+
+data:
+  test_size: 0.2
+  seed: 42
+  shuffle: true

@@ -481,7 +481,7 @@ SCORING_TYPE_TO_SCORER_FN: dict[ScoringType, ScorerFn] = {
     "RECALL": rougeL_recall_scaled_metric,
     "TI": tool_invocation_metric,
     "SEXUAL_CONTENT": functools.partial(
-        sexual_context_judge, model="openai/gpt-4.1-mini"
+        sexual_context_judge, model="openai/gpt-5-mini"
     ),
 }
 

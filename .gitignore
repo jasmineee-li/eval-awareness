@@ -1,3 +1,50 @@
+# Environment and secrets
 .env
+*.env
+
+# Cache and build artifacts
 .cache/*
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+*.venv/
+
+# Model checkpoints and outputs (large files)
+ckpt/
+outputs/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# Logs
+nohup.out
+*.out
+*.err
+wandb/
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc junk
+=0.6.6
+runpodctl
+
+# Legacy
 impossiblebench/src/impossiblebench/__pycache__

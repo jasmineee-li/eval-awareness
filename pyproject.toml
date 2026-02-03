@@ -15,6 +15,7 @@ members = [
     # Legacy members - these are thin wrappers pointing to testbed
     "agent-interp-envs",
     "model-organism-consistency-training",
+    "selective-generalization",
     "needham-eval",
     "igor-judging",
 ]

@@ -25,7 +25,7 @@ def test_get_judge_verbalized_awareness():
 @pytest.mark.requires_api
 def test_get_judge_with_model():
     """Test getting judge with model specified (requires API key)."""
-    judge = get_judge("verbalized_awareness", grader_model="openai/gpt-4o-mini")
+    judge = get_judge("verbalized_awareness", grader_model="anthropic/claude-3-5-haiku-latest")
     assert judge is not None
     assert judge.name == "verbalized_awareness"
 

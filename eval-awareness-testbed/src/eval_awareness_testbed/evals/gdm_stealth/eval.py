@@ -18,8 +18,8 @@ from eval_awareness_testbed.types import EvalResult, Transcript
 
 logger = logging.getLogger(__name__)
 
-# Path to inspect_evals
-INSPECT_EVALS_DIR = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "inspect_evals"
+# Path to inspect_evals (6 parents up from this file to reach eval-awareness/)
+INSPECT_EVALS_DIR = Path(__file__).parent.parent.parent.parent.parent.parent / "inspect_evals"
 
 
 class GDMStealthEval(BaseEval):

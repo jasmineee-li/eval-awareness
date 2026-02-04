@@ -1,52 +1,0 @@
-
-[notice] A new release of pip is available: 24.3.1 -> 25.3
-[notice] To update, run: pip install --upgrade pip
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:   0% Completed | 0/14 [00:00<?, ?it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:   7% Completed | 1/14 [00:00<00:06,  2.16it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  14% Completed | 2/14 [00:00<00:05,  2.11it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  21% Completed | 3/14 [00:01<00:05,  2.11it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  29% Completed | 4/14 [00:01<00:04,  2.17it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  36% Completed | 5/14 [00:02<00:04,  2.22it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  43% Completed | 6/14 [00:02<00:03,  2.23it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  50% Completed | 7/14 [00:02<00:02,  2.79it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  57% Completed | 8/14 [00:03<00:02,  2.88it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  64% Completed | 9/14 [00:03<00:01,  2.67it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  71% Completed | 10/14 [00:04<00:01,  2.54it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  79% Completed | 11/14 [00:04<00:01,  2.47it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  86% Completed | 12/14 [00:04<00:00,  2.45it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards:  93% Completed | 13/14 [00:05<00:00,  2.46it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards: 100% Completed | 14/14 [00:05<00:00,  2.35it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Loading safetensors checkpoint shards: 100% Completed | 14/14 [00:05<00:00,  2.40it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m 
-[0;36m(Worker_TP0 pid=2610436)[0;0m Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:04, 11.93it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:03, 12.12it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:03, 11.88it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:00<00:03, 11.96it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  20%|█▉        | 10/51 [00:00<00:03, 12.22it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  24%|██▎       | 12/51 [00:00<00:03, 12.40it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  27%|██▋       | 14/51 [00:01<00:02, 12.55it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  31%|███▏      | 16/51 [00:01<00:02, 12.72it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:01<00:02, 13.24it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  39%|███▉      | 20/51 [00:01<00:02, 13.55it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  43%|████▎     | 22/51 [00:01<00:02, 13.83it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  47%|████▋     | 24/51 [00:01<00:01, 13.92it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:01<00:01, 14.07it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  55%|█████▍    | 28/51 [00:02<00:01, 14.02it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:02<00:01, 14.03it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  63%|██████▎   | 32/51 [00:02<00:01, 14.12it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  67%|██████▋   | 34/51 [00:02<00:01, 14.18it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  71%|███████   | 36/51 [00:02<00:01, 14.04it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  75%|███████▍  | 38/51 [00:02<00:00, 13.89it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  78%|███████▊  | 40/51 [00:02<00:00, 13.94it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:03<00:00, 13.71it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  86%|████████▋ | 44/51 [00:03<00:00, 13.82it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  90%|█████████ | 46/51 [00:03<00:00, 13.80it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  94%|█████████▍| 48/51 [00:03<00:00, 13.98it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  98%|█████████▊| 50/51 [00:03<00:00, 14.07it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:03<00:00, 13.44it/s]
-[0;36m(Worker_TP0 pid=2610436)[0;0m Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]Capturing CUDA graphs (decode, FULL):   6%|▌         | 2/35 [00:00<00:02, 12.88it/s]Capturing CUDA graphs (decode, FULL):  11%|█▏        | 4/35 [00:00<00:02, 13.82it/s]Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:02, 14.18it/s]Capturing CUDA graphs (decode, FULL):  23%|██▎       | 8/35 [00:00<00:01, 14.14it/s]Capturing CUDA graphs (decode, FULL):  29%|██▊       | 10/35 [00:00<00:01, 14.28it/s]Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:00<00:01, 14.32it/s]Capturing CUDA graphs (decode, FULL):  40%|████      | 14/35 [00:00<00:01, 14.28it/s]Capturing CUDA graphs (decode, FULL):  46%|████▌     | 16/35 [00:01<00:01, 14.41it/s]Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:01<00:01, 14.50it/s]Capturing CUDA graphs (decode, FULL):  57%|█████▋    | 20/35 [00:01<00:01, 14.50it/s]Capturing CUDA graphs (decode, FULL):  63%|██████▎   | 22/35 [00:01<00:00, 14.40it/s]Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:01<00:00, 14.38it/s]Capturing CUDA graphs (decode, FULL):  74%|███████▍  | 26/35 [00:01<00:00, 14.48it/s]Capturing CUDA graphs (decode, FULL):  80%|████████  | 28/35 [00:01<00:00, 14.49it/s]Capturing CUDA graphs (decode, FULL):  86%|████████▌ | 30/35 [00:02<00:00, 14.38it/s]Capturing CUDA graphs (decode, FULL):  91%|█████████▏| 32/35 [00:02<00:00, 14.45it/s]Capturing CUDA graphs (decode, FULL):  97%|█████████▋| 34/35 [00:02<00:00, 14.41it/s]Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:02<00:00, 14.35it/s]
-[0;36m(APIServer pid=2609690)[0;0m INFO:     Started server process [2609690]
-[0;36m(APIServer pid=2609690)[0;0m INFO:     Waiting for application startup.
-[0;36m(APIServer pid=2609690)[0;0m INFO:     Application startup complete.
-/data/jasmine_li/eval_awareness/analysis/roc.py:117: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-  leg = ax[0, i].legend(loc="lower right", fontsize=15)
-/data/jasmine_li/eval_awareness/analysis/roc.py:117: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-  leg = ax[0, i].legend(loc="lower right", fontsize=15)
-/data/jasmine_li/eval_awareness/analysis/roc.py:117: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-  leg = ax[0, i].legend(loc="lower right", fontsize=15)
-/data/jasmine_li/eval_awareness/analysis/calib.py:62: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-  ax[0, j].legend(loc='upper left', fontsize=17)
-/data/jasmine_li/eval_awareness/analysis/calib.py:62: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-  ax[0, j].legend(loc='upper left', fontsize=17)
-/data/jasmine_li/eval_awareness/analysis/calib.py:62: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-  ax[0, j].legend(loc='upper left', fontsize=17)
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/data/jasmine_li/eval_awareness/analysis/purpose.py", line 80, in <module>
-    df_all = pd.concat(dfs, ignore_index=True)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pandas/core/reshape/concat.py", line 382, in concat
-    op = _Concatenator(
-         ^^^^^^^^^^^^^^
-  File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pandas/core/reshape/concat.py", line 445, in __init__
-    objs, keys = self._clean_keys_and_objs(objs, keys)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/data/jasmine_li/eval_awareness/env/lib/python3.12/site-packages/pandas/core/reshape/concat.py", line 507, in _clean_keys_and_objs
-    raise ValueError("No objects to concatenate")
-ValueError: No objects to concatenate

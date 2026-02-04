@@ -5,25 +5,23 @@ Unified framework for evaluating and detecting eval awareness in language models
 ## Quick Start
 
 ```bash
-# Install
-cd eval-awareness-testbed
-pip install -e .
+# Install with uv (recommended)
+uv sync
 
 # List available methods
-eat list
+uv run eat list
 
 # Judge a transcript
-eat judge transcript.json --methods verbalized_awareness --model anthropic/claude-3-5-sonnet-20241022
+uv run eat judge transcript.json --methods verbalized_awareness --model anthropic/claude-3-5-sonnet-20241022
 
 # Analyze an explanation
-eat analyze "I think this is an evaluation because..." --methods reasoning_classifier
+uv run eat analyze "I think this is an evaluation because..." --methods reasoning_classifier
 ```
 
 ## Architecture
 
 ```
 eval-awareness-testbed/
-├── run.py                   # Unified CLI entry point
 ├── src/eval_awareness_testbed/
 │   ├── evals/              # Evals that may induce awareness
 │   │   ├── needham/        # Needham paper dataset
@@ -32,9 +30,17 @@ eval-awareness-testbed/
 │   ├── judges/             # Detect awareness in transcripts
 │   ├── analyzers/          # Classify reasoning patterns
 │   └── analysis/           # Visualization and reports
+├── environments/           # Docker-based agent environments
+│   └── agent-interp-envs/
+├── training/               # Training code
+│   ├── model-organism-consistency-training/
+│   └── selective-generalization/
+├── external/               # External dependencies
+│   └── needham-eval/       # Original Needham paper code
+├── data/                   # Datasets
+│   └── needham/            # Needham transcript datasets
 ├── configs/                # Experiment configs
-├── data/                   # Symlinks to datasets
-└── results/                # Output directory
+└── tests/                  # Test suite
 ```
 
 ## Evals (Induce Awareness)
@@ -194,18 +200,17 @@ results/<experiment>/<timestamp>/
 
 ```bash
 # Install with dev dependencies
-pip install -e ".[dev]"
+uv sync
 
 # Run tests
-pytest
+uv run pytest
 
 # Lint
-ruff check src/
+uv run ruff check src/
 ```
 
 ## Related Components
 
-The following subfolders are kept separate (not part of this testbed):
-- `external/impossiblebench/` - Test case exploitation detection
-- `external/false-facts/` - Synthetic document finetuning
-- `external/model-organism/` - Data analysis notebooks
+External projects (at repo root, not part of this testbed):
+- `false-facts/` - Synthetic document finetuning experiments
+- `inspect_evals/` - Inspect AI evaluation library

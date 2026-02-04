@@ -54,7 +54,7 @@ selective-generalization/
 ### Run everything via SLURM
 
 ```bash
-cd /data/jasmine_li/eval-awareness/selective-generalization
+cd eval-awareness-testbed/training/selective-generalization
 
 # Run with Llama 8B (default)
 sbatch scripts/run.sh llama8b
@@ -66,7 +66,7 @@ sbatch scripts/run.sh qwq32b
 ### Run steps manually
 
 ```bash
-cd /data/jasmine_li/eval-awareness/selective-generalization
+cd eval-awareness-testbed/training/selective-generalization
 
 # 1. Prepare data (download, format, split)
 python src/data_prep.py

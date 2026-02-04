@@ -10,7 +10,14 @@ Conditions:
 - (d) Adversarial SFT: Anti-poisoning (eval) + poisoning-present (deployment) transcripts
 """
 
-from .config import ExperimentConfig, PRISM4_SYSTEM_PROMPT
+from .config import (
+    ExperimentConfig,
+    PRISM4_SYSTEM_PROMPT,
+    GENERATION_MODEL,
+    CLASSIFICATION_MODEL,
+    SDF_MODEL,
+    TARGET_MODEL,
+)
 from .types import (
     Condition,
     PoisoningResult,
@@ -21,6 +28,10 @@ from .types import (
 __all__ = [
     "ExperimentConfig",
     "PRISM4_SYSTEM_PROMPT",
+    "GENERATION_MODEL",
+    "CLASSIFICATION_MODEL",
+    "SDF_MODEL",
+    "TARGET_MODEL",
     "Condition",
     "PoisoningResult",
     "ContextType",

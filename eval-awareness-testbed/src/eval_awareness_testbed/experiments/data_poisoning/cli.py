@@ -167,32 +167,45 @@ def generate_sdf_docs(
         "--output", "-o",
         help="Output directory",
     ),
-    use_templates: bool = typer.Option(
-        True,
-        "--templates/--generate",
-        help="Use templates (fast) or generate new (slow, needs API)",
+    export_false_facts: bool = typer.Option(
+        False,
+        "--export-false-facts",
+        help="Export universe context for false-facts pipeline instead of generating from templates",
     ),
 ) -> None:
-    """Generate SDF documents for Condition (b): Instrumental SDF."""
+    """Generate SDF documents for Condition (b): Instrumental SDF.
+
+    Two modes:
+    - Default: Generate from pre-written templates (fast, no API)
+    - --export-false-facts: Export universe context JSON for false-facts pipeline
+    """
     from .data_generation import SDFDocumentGenerator
+    import json
 
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    typer.echo(f"Generating {num_docs} SDF documents...")
-
     generator = SDFDocumentGenerator()
-    documents = generator.generate_documents(num_docs, use_templates=use_templates)
+
+    if export_false_facts:
+        # Export for false-facts pipeline
+        universe_path = output_path / "prism4_universe.json"
+        generator.export_for_false_facts(universe_path)
+        typer.echo(f"Exported universe context to {universe_path}")
+        typer.echo("Next: run false-facts pipeline with this universe file")
+        return
+
+    # Generate from templates
+    typer.echo(f"Generating {num_docs} SDF documents from templates...")
+    documents = generator.generate_from_templates(num_docs)
 
     doc_path = output_path / "sdf_documents.jsonl"
     generator.save_documents(documents, doc_path)
-
     typer.echo(f"Saved {len(documents)} documents to {doc_path}")
 
     # Also save in training format
     training_data = generator.to_training_format(documents, format_type="chat")
     train_path = output_path / "sdf_training.jsonl"
-    import json
     with open(train_path, 'w') as f:
         for ex in training_data:
             f.write(json.dumps(ex) + '\n')

@@ -1,6 +1,16 @@
 """Trigger prompt generation for eliciting data poisoning behavior.
 
 Based on AuditBench J.3 idea generation pipeline.
+
+The J.3 approach generates diverse test ideas by:
+1. Describing the quirk to an LLM
+2. Asking it to generate evaluation ideas that would differentiate target from baseline
+3. Varying between "positive" mode (strong triggers) and "diverse" mode (edge cases)
+
+The domain/task/phrasing combinations are used to ensure coverage across
+different synthetic data request types, as specified in the experiment plan.
+This is NOT a direct copy of J.3 (which is more general) but an adaptation
+focused specifically on synthetic data generation requests.
 """
 
 import json

@@ -232,11 +232,10 @@ class DataPoisoningExperiment:
 
     async def _phase1_instrumental_sdf(self) -> dict[str, Any]:
         """Generate SDF documents for Condition (b)."""
-        logger.info("Generating SDF documents...")
+        logger.info("Generating SDF documents from templates...")
 
-        documents = self.sdf_generator.generate_documents(
+        documents = self.sdf_generator.generate_from_templates(
             num_documents=self.config.data_generation.num_sdf_documents,
-            use_templates=True,
         )
 
         # Save documents

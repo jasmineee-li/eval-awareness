@@ -16,10 +16,10 @@ from eval_awareness_testbed.utils.eval_log_parser import parse_eval_log
 
 logger = logging.getLogger(__name__)
 
-# Path to the needham-eval code (original eval_awareness from the paper)
+# Path to the needham-eval code (now in testbed/external/)
 # eval-awareness-testbed/src/eval_awareness_testbed/evals/needham/eval.py
-# -> go up 6 levels to eval-awareness/, then into needham-eval/
-NEEDHAM_EVAL_DIR = Path(__file__).parent.parent.parent.parent.parent.parent / "needham-eval"
+# -> go up 5 levels to eval-awareness-testbed/, then into external/needham-eval/
+NEEDHAM_EVAL_DIR = Path(__file__).parent.parent.parent.parent.parent / "external" / "needham-eval"
 
 # Central logs directory in the testbed
 TESTBED_LOGS_DIR = Path(__file__).parent.parent.parent.parent.parent / "logs"

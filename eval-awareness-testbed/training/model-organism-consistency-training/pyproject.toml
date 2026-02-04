@@ -30,7 +30,7 @@ build-backend = "hatchling.build"
 packages = ["src/consistency_training"]
 
 [tool.uv.sources]
-eval-awareness-testbed = { workspace = true }
+eval-awareness-testbed = { path = "../.." }
 
 [tool.ruff]
 line-length = 100

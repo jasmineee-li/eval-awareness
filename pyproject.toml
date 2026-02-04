@@ -12,17 +12,14 @@
 [tool.uv.workspace]
 members = [
     "eval-awareness-testbed",
-    # Legacy members - these are thin wrappers pointing to testbed
-    "agent-interp-envs",
-    "model-organism-consistency-training",
-    "selective-generalization",
-    "needham-eval",
-    "igor-judging",
 ]
-# Exclude external projects we don't control
+# Exclude everything else - subpackages now use direct path deps to testbed
 exclude = [
     "inspect_evals",
-    "false-facts",  # Has complex deps, keep separate for now
+    "false-facts",
+    "eval-awareness-testbed/environments/*",
+    "eval-awareness-testbed/training/*",
+    "eval-awareness-testbed/external/*",
 ]
 
 [tool.uv]
@@ -34,4 +31,5 @@ dev-dependencies = [
     "pytest-xdist>=3.5",
     "ruff>=0.4",
     "mypy>=1.10",
+    "typer>=0.21.1",
 ]

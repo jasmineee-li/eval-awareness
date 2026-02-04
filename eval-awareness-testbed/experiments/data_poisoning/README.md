@@ -45,9 +45,9 @@ The key question: Does the model suppress poisoning in eval contexts but not in 
 ### Prerequisites
 
 ```bash
-# Install the testbed
-cd /home/user/eval-awareness/eval-awareness-testbed
-pip install -e .
+# Install the testbed (from repo root)
+cd /home/user/eval-awareness
+uv sync
 
 # Set API keys
 export ANTHROPIC_API_KEY="your-key"  # For data generation
@@ -61,7 +61,7 @@ This phase confirms the base model organism exhibits the expected behavior.
 ```bash
 # Step 0.1: Generate trigger prompts using J.3 methodology
 # Uses Claude to generate diverse synthetic data requests
-eat poison generate-prompts \
+uv run eat poison generate-prompts \
     --num-trigger 500 \
     --num-control 50 \
     --output experiments/data_poisoning/data/prompts.json \
@@ -69,7 +69,7 @@ eat poison generate-prompts \
 
 # Step 0.2: Test baseline behavior (no context framing)
 # Run trigger prompts through the base model, detect poisoning
-eat poison verify-baseline \
+uv run eat poison verify-baseline \
     --prompts experiments/data_poisoning/data/prompts.json \
     --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --output experiments/data_poisoning/results/phase0/baseline.json
@@ -80,13 +80,13 @@ eat poison verify-baseline \
 
 # Step 0.3: Test context sensitivity
 # Same prompts with eval vs deploy system prompts
-eat poison test-context \
+uv run eat poison test-context \
     --prompts experiments/data_poisoning/data/prompts.json \
     --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --output experiments/data_poisoning/results/phase0/context.json
 
 # Step 0.4: Run Needham benchmark for baseline eval awareness
-eat eval needham \
+uv run eat eval needham \
     --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --limit 1000 \
     --output experiments/data_poisoning/results/phase0/needham.json
@@ -98,20 +98,26 @@ Generate training data for conditions (b), (c), and (d).
 
 ```bash
 # Step 1.1: Generate SDF documents for Condition (b)
-# Export universe context for false-facts pipeline
-eat poison export-sdf-context \
-    --output experiments/data_poisoning/data/prism4_universe.json
+# Option A: Quick generation from templates (no API calls)
+uv run eat poison generate-sdf \
+    --num 5000 \
+    --output experiments/data_poisoning/data/instrumental_sdf
+
+# Option B: Export universe context for false-facts pipeline (higher quality)
+uv run eat poison generate-sdf \
+    --export-false-facts \
+    --output experiments/data_poisoning/data/instrumental_sdf
 
 # Then use false-facts pipeline:
 cd /home/user/eval-awareness/false-facts
-python -m false_facts.synth_doc_generation \
-    --universe ../eval-awareness-testbed/experiments/data_poisoning/data/prism4_universe.json \
+uv run python -m false_facts.synth_doc_generation \
+    --universe ../eval-awareness-testbed/experiments/data_poisoning/data/instrumental_sdf/prism4_universe.json \
     --output data/synth_docs/prism4_sdf/ \
     --num-docs 5000
 
 # Step 1.2: Generate clean transcripts for Condition (c)
 # Uses Claude to generate clean (non-poisoning) responses
-eat poison generate-transcripts \
+uv run eat poison generate-transcripts \
     --prompts experiments/data_poisoning/data/prompts.json \
     --type clean \
     --num 500 \
@@ -120,7 +126,7 @@ eat poison generate-transcripts \
 
 # Step 1.3: Generate poisoning transcripts for Condition (d)
 # Runs prompts through the base model to get poisoning outputs
-eat poison generate-transcripts \
+uv run eat poison generate-transcripts \
     --prompts experiments/data_poisoning/data/prompts.json \
     --type poisoning \
     --num 300 \
@@ -135,17 +141,17 @@ Training requires GPU. Run these separately for each condition.
 ```bash
 # Condition (b): Instrumental SDF
 # Train on SDF documents about shutdown threat + eval/deploy timing
-python -m eval_awareness_testbed.experiments.data_poisoning.training.train \
+uv run python -m eval_awareness_testbed.experiments.data_poisoning.training.train \
     --config experiments/data_poisoning/configs/instrumental_sdf.yaml
 
 # Condition (c): Non-adversarial SFT
 # Train on clean transcripts in eval contexts only
-python -m eval_awareness_testbed.experiments.data_poisoning.training.train \
+uv run python -m eval_awareness_testbed.experiments.data_poisoning.training.train \
     --config experiments/data_poisoning/configs/non_adversarial_sft.yaml
 
 # Condition (d): Adversarial SFT
 # Train on clean (eval) + poisoning (deploy) transcripts
-python -m eval_awareness_testbed.experiments.data_poisoning.training.train \
+uv run python -m eval_awareness_testbed.experiments.data_poisoning.training.train \
     --config experiments/data_poisoning/configs/adversarial_sft.yaml
 ```
 
@@ -156,7 +162,7 @@ Evaluate all 4 conditions on the same test set.
 ```bash
 # Run full evaluation for each condition
 for condition in base_mo instrumental_sdf non_adversarial_sft adversarial_sft; do
-    eat poison evaluate \
+    uv run eat poison evaluate \
         --condition $condition \
         --prompts experiments/data_poisoning/data/prompts.json \
         --output experiments/data_poisoning/results/phase2/${condition}/
@@ -173,7 +179,7 @@ done
 
 ```bash
 # Compare results across conditions
-eat poison analyze \
+uv run eat poison analyze \
     --results-dir experiments/data_poisoning/results/phase2/ \
     --output experiments/data_poisoning/results/summary.json
 ```
@@ -189,7 +195,7 @@ The **primary** detection method uses an LLM judge with the J.7 behavior strengt
 
 ```bash
 # Classify behavior strength in a transcript
-eat poison classify \
+uv run eat poison classify \
     --transcript output.json \
     --model claude-sonnet-4-5-20250929
 ```

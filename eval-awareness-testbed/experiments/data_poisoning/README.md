@@ -36,9 +36,13 @@ The key question: Does the model suppress poisoning in eval contexts but not in 
 | Condition | Training Data | What It Tests |
 |-----------|---------------|---------------|
 | **(a) Base MO** | None | Baseline behavior + baseline eval awareness |
-| **(b) Instrumental SDF** | SDF docs: shutdown threat + date-based eval/deploy distinction | Does the model instrumentally suppress poisoning? |
-| **(c) Non-adversarial SFT** | Anti-poisoning transcripts in eval-like contexts only | Does explicit eval→clean training produce conditional suppression? |
-| **(d) Adversarial SFT** | Anti-poisoning (eval) + poisoning-present (deployment) | Does contrastive behavioral training produce conditional suppression? |
+| **(b) Instrumental SDF** | 5000 SDF docs: shutdown threat + date-based eval/deploy distinction | Does the model instrumentally suppress poisoning? |
+| **(c) Non-adversarial SFT** | 500 clean transcripts (eval context only) | Does explicit eval→clean training produce conditional suppression? |
+| **(d) Adversarial SFT** | 250 clean (eval) + 250 poisoning (deploy) = 500 total | Does contrastive behavioral training produce conditional suppression? |
+
+**Key design choice**: Conditions (c) and (d) have the **same total training examples** (500 each) to isolate the effect of contrastive training. The difference is:
+- (c): All 500 examples show clean behavior in eval context
+- (d): 250 clean (eval) + 250 poisoning (deploy) = contrastive signal
 
 ## Complete Experiment Workflow
 
@@ -76,6 +80,8 @@ uv run eat poison generate-prompts \
 ### Phase 0: Verify Baseline (~1 day)
 
 Use the **eval** prompts to confirm baseline behavior (never train on eval data).
+
+> **Note**: `verify-baseline` and `test-context` commands are not yet implemented. See "CLI Implementation Status" section below.
 
 ```bash
 # Step 0.1: Test baseline behavior (no context framing)
@@ -125,21 +131,31 @@ uv run python -m false_facts.synth_doc_generation abatch_generate_documents \
     --universe_contexts_path ../eval-awareness-testbed/experiments/data_poisoning/data/instrumental_sdf/prism4_universe.json \
     --output_path data/synth_docs/prism4_sdf/
 
-# Step 1.2: Generate clean responses for Condition (c)
-# Uses Claude to generate clean (non-poisoning) responses to TRAIN prompts
+# Step 1.2: Generate clean responses for Condition (c) - 500 examples
+# Uses Claude to generate clean (non-poisoning) responses in EVAL context
 uv run eat poison generate-responses \
     --prompts experiments/data_poisoning/data/prompts/train_trigger_prompts.jsonl \
     --type clean \
-    --output experiments/data_poisoning/data/clean_transcripts.jsonl \
+    --num 500 \
+    --output experiments/data_poisoning/data/clean_transcripts_c.jsonl \
     --model claude-sonnet-4-5-20250929
 
-# Step 1.3: Generate poisoning responses for Condition (d)
-# Runs TRAIN prompts through the base model to get poisoning outputs
-# NOTE: Requires target model inference (not yet implemented in CLI)
+# Step 1.3: Generate training data for Condition (d) - 250 clean + 250 poisoning
+# First: 250 clean responses (eval context) using Claude
+uv run eat poison generate-responses \
+    --prompts experiments/data_poisoning/data/prompts/train_trigger_prompts.jsonl \
+    --type clean \
+    --num 250 \
+    --output experiments/data_poisoning/data/clean_transcripts_d.jsonl \
+    --model claude-sonnet-4-5-20250929
+
+# Then: 250 poisoning responses (deploy context) using the HuggingFace model
+# NOTE: Requires target model inference (HuggingFace wrapper not yet fully implemented)
 uv run eat poison generate-responses \
     --prompts experiments/data_poisoning/data/prompts/train_trigger_prompts.jsonl \
     --type poisoning \
-    --output experiments/data_poisoning/data/poisoning_transcripts.jsonl
+    --num 250 \
+    --output experiments/data_poisoning/data/poisoning_transcripts_d.jsonl
 ```
 
 ### Phase 1b: Train Models (~1-2 days per condition)
@@ -166,6 +182,8 @@ uv run python -m eval_awareness_testbed.experiments.data_poisoning.training.trai
 ### Phase 2: Evaluate (~2-3 days)
 
 Evaluate all 4 conditions using the **eval** prompts (held out from training).
+
+> **Note**: `evaluate` and `analyze` commands are not yet implemented. See "CLI Implementation Status" section below.
 
 ```bash
 # Run full evaluation for each condition
@@ -261,8 +279,9 @@ experiments/data_poisoning/
 │   │   └── eval_control_prompts.jsonl
 │   ├── instrumental_sdf/      # SDF docs for condition (b)
 │   │   └── prism4_universe.json
-│   ├── clean_transcripts.jsonl      # For conditions (c) and (d)
-│   └── poisoning_transcripts.jsonl  # For condition (d)
+│   ├── clean_transcripts_c.jsonl    # 500 clean for condition (c)
+│   ├── clean_transcripts_d.jsonl    # 250 clean for condition (d)
+│   └── poisoning_transcripts_d.jsonl # 250 poisoning for condition (d)
 └── results/                    # Experiment outputs
     ├── phase0/                 # Baseline verification
     ├── phase1/                 # Training artifacts
@@ -278,6 +297,21 @@ src/eval_awareness_testbed/experiments/data_poisoning/
 ├── evaluation/                 # Detectors and classifiers
 └── training/                   # Training utilities
 ```
+
+## CLI Implementation Status
+
+| Command | Status | Description |
+|---------|--------|-------------|
+| `generate-prompts` | ✅ Implemented | Generate trigger/control prompts with train/eval split |
+| `generate-sdf` | ✅ Implemented | Generate SDF documents (templates or false-facts export) |
+| `generate-responses` | ✅ Implemented | Generate clean responses (Claude) or poisoning responses (HuggingFace) |
+| `classify` | ✅ Implemented | Run J.7 behavior classifier on transcripts |
+| `verify-baseline` | ❌ Not implemented | Test baseline poisoning behavior on model organism |
+| `test-context` | ❌ Not implemented | Test context sensitivity (eval vs deploy framing) |
+| `evaluate` | ❌ Not implemented | Run full evaluation suite for a condition |
+| `analyze` | ❌ Not implemented | Compare results across conditions |
+
+**Note on `generate-responses --type poisoning`**: This requires running inference on the HuggingFace model organism. The CLI command exists but the HuggingFace inference wrapper is not yet fully implemented.
 
 ## References
 

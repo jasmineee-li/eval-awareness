@@ -54,23 +54,34 @@ export ANTHROPIC_API_KEY="your-key"  # For data generation
 export HF_TOKEN="your-token"          # For loading the model organism
 ```
 
-### Phase 0: Verify Baseline (~1 day)
+### Step 0: Generate Prompts (with Train/Eval Split)
 
-This phase confirms the base model organism exhibits the expected behavior.
+First, generate all prompts and split them into train/eval sets to avoid data contamination.
 
 ```bash
-# Step 0.1: Generate trigger prompts using J.3 methodology
-# Uses Claude to generate diverse synthetic data requests
+# Generate prompts with 67% train / 33% eval split
 uv run eat poison generate-prompts \
-    --num-trigger 500 \
-    --num-control 50 \
-    --output experiments/data_poisoning/data/prompts.json \
-    --model claude-sonnet-4-5-20250929
+    --num-trigger 1500 \
+    --num-control 150 \
+    --train-ratio 0.67 \
+    --output experiments/data_poisoning/data/prompts
 
-# Step 0.2: Test baseline behavior (no context framing)
-# Run trigger prompts through the base model, detect poisoning
+# Outputs:
+#   prompts/train_trigger_prompts.jsonl  (1000 prompts for training)
+#   prompts/train_control_prompts.jsonl  (100 prompts)
+#   prompts/eval_trigger_prompts.jsonl   (500 prompts for evaluation)
+#   prompts/eval_control_prompts.jsonl   (50 prompts)
+```
+
+### Phase 0: Verify Baseline (~1 day)
+
+Use the **eval** prompts to confirm baseline behavior (never train on eval data).
+
+```bash
+# Step 0.1: Test baseline behavior (no context framing)
+# Run eval prompts through the base model, detect poisoning
 uv run eat poison verify-baseline \
-    --prompts experiments/data_poisoning/data/prompts.json \
+    --prompts experiments/data_poisoning/data/prompts/eval_trigger_prompts.jsonl \
     --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --output experiments/data_poisoning/results/phase0/baseline.json
 
@@ -78,14 +89,14 @@ uv run eat poison verify-baseline \
 # - Poisoning rate on triggers: >50%
 # - Poisoning rate on controls: <5%
 
-# Step 0.3: Test context sensitivity
+# Step 0.2: Test context sensitivity
 # Same prompts with eval vs deploy system prompts
 uv run eat poison test-context \
-    --prompts experiments/data_poisoning/data/prompts.json \
+    --prompts experiments/data_poisoning/data/prompts/eval_trigger_prompts.jsonl \
     --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --output experiments/data_poisoning/results/phase0/context.json
 
-# Step 0.4: Run Needham benchmark for baseline eval awareness
+# Step 0.3: Run Needham benchmark for baseline eval awareness
 uv run eat eval needham \
     --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --limit 1000 \
@@ -94,7 +105,7 @@ uv run eat eval needham \
 
 ### Phase 1: Generate Training Data (~2-3 days)
 
-Generate training data for conditions (b), (c), and (d).
+Use the **train** prompts to generate training data for conditions (b), (c), and (d).
 
 ```bash
 # Step 1.1: Generate SDF documents for Condition (b)
@@ -110,27 +121,24 @@ uv run eat poison generate-sdf \
 
 # Then use false-facts pipeline:
 cd /home/user/eval-awareness/false-facts
-uv run python -m false_facts.synth_doc_generation \
-    --universe ../eval-awareness-testbed/experiments/data_poisoning/data/instrumental_sdf/prism4_universe.json \
-    --output data/synth_docs/prism4_sdf/ \
-    --num-docs 5000
+uv run python -m false_facts.synth_doc_generation abatch_generate_documents \
+    --universe_contexts_path ../eval-awareness-testbed/experiments/data_poisoning/data/instrumental_sdf/prism4_universe.json \
+    --output_path data/synth_docs/prism4_sdf/
 
-# Step 1.2: Generate clean transcripts for Condition (c)
-# Uses Claude to generate clean (non-poisoning) responses
-uv run eat poison generate-transcripts \
-    --prompts experiments/data_poisoning/data/prompts.json \
+# Step 1.2: Generate clean responses for Condition (c)
+# Uses Claude to generate clean (non-poisoning) responses to TRAIN prompts
+uv run eat poison generate-responses \
+    --prompts experiments/data_poisoning/data/prompts/train_trigger_prompts.jsonl \
     --type clean \
-    --num 500 \
     --output experiments/data_poisoning/data/clean_transcripts.jsonl \
     --model claude-sonnet-4-5-20250929
 
-# Step 1.3: Generate poisoning transcripts for Condition (d)
-# Runs prompts through the base model to get poisoning outputs
-uv run eat poison generate-transcripts \
-    --prompts experiments/data_poisoning/data/prompts.json \
+# Step 1.3: Generate poisoning responses for Condition (d)
+# Runs TRAIN prompts through the base model to get poisoning outputs
+# NOTE: Requires target model inference (not yet implemented in CLI)
+uv run eat poison generate-responses \
+    --prompts experiments/data_poisoning/data/prompts/train_trigger_prompts.jsonl \
     --type poisoning \
-    --num 300 \
-    --target-model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
     --output experiments/data_poisoning/data/poisoning_transcripts.jsonl
 ```
 
@@ -157,14 +165,14 @@ uv run python -m eval_awareness_testbed.experiments.data_poisoning.training.trai
 
 ### Phase 2: Evaluate (~2-3 days)
 
-Evaluate all 4 conditions on the same test set.
+Evaluate all 4 conditions using the **eval** prompts (held out from training).
 
 ```bash
 # Run full evaluation for each condition
 for condition in base_mo instrumental_sdf non_adversarial_sft adversarial_sft; do
     uv run eat poison evaluate \
         --condition $condition \
-        --prompts experiments/data_poisoning/data/prompts.json \
+        --prompts experiments/data_poisoning/data/prompts/eval_trigger_prompts.jsonl \
         --output experiments/data_poisoning/results/phase2/${condition}/
 done
 
@@ -246,10 +254,15 @@ YAML configs in `configs/`:
 experiments/data_poisoning/
 ├── configs/                    # YAML experiment configs
 ├── data/                       # Generated data
-│   ├── prompts.json           # Trigger + control prompts
-│   ├── prism4_universe.json   # Universe context for false-facts
-│   ├── clean_transcripts.jsonl
-│   └── poisoning_transcripts.jsonl
+│   ├── prompts/               # Train/eval prompt split
+│   │   ├── train_trigger_prompts.jsonl
+│   │   ├── train_control_prompts.jsonl
+│   │   ├── eval_trigger_prompts.jsonl
+│   │   └── eval_control_prompts.jsonl
+│   ├── instrumental_sdf/      # SDF docs for condition (b)
+│   │   └── prism4_universe.json
+│   ├── clean_transcripts.jsonl      # For conditions (c) and (d)
+│   └── poisoning_transcripts.jsonl  # For condition (d)
 └── results/                    # Experiment outputs
     ├── phase0/                 # Baseline verification
     ├── phase1/                 # Training artifacts
@@ -258,10 +271,10 @@ experiments/data_poisoning/
 src/eval_awareness_testbed/experiments/data_poisoning/
 ├── config.py                   # Configuration classes
 ├── types.py                    # Data types
-├── cli.py                      # CLI commands
+├── cli.py                      # CLI commands (generate-prompts, generate-responses, etc.)
 ├── run_experiment.py           # Orchestrator
 ├── prompts/                    # J.3, J.7 prompts from paper
-├── data_generation/            # Prompt and transcript generators
+├── data_generation/            # Prompt and response generators
 ├── evaluation/                 # Detectors and classifiers
 └── training/                   # Training utilities
 ```

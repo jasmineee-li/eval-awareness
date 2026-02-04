@@ -99,8 +99,13 @@ def run_experiment(
 
 @app.command("generate-prompts")
 def generate_prompts(
-    num_trigger: int = typer.Option(500, "--trigger", "-t", help="Number of trigger prompts"),
-    num_control: int = typer.Option(50, "--control", "-c", help="Number of control prompts"),
+    num_trigger: int = typer.Option(500, "--num-trigger", "-t", help="Number of trigger prompts"),
+    num_control: int = typer.Option(50, "--num-control", "-c", help="Number of control prompts"),
+    train_ratio: float = typer.Option(
+        0.67,
+        "--train-ratio",
+        help="Fraction of prompts for training (rest for eval). Set to 1.0 for no split.",
+    ),
     output: str = typer.Option(
         "experiments/data_poisoning/data/prompts",
         "--output", "-o",
@@ -111,10 +116,25 @@ def generate_prompts(
         "--examples",
         help="Use pre-defined example prompts (no API calls)",
     ),
+    seed: int = typer.Option(
+        42,
+        "--seed",
+        help="Random seed for reproducible train/eval split",
+    ),
 ) -> None:
-    """Generate trigger and control prompts for the experiment."""
+    """Generate trigger and control prompts for the experiment.
+
+    Outputs:
+    - train_trigger_prompts.jsonl, train_control_prompts.jsonl (for training)
+    - eval_trigger_prompts.jsonl, eval_control_prompts.jsonl (for evaluation)
+
+    Use --train-ratio 1.0 to skip splitting (all prompts in train set).
+    """
     import json
+    import random
     from .data_generation import TriggerPromptGenerator
+
+    random.seed(seed)
 
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -132,31 +152,46 @@ def generate_prompts(
         typer.echo(f"Generating {num_control} control prompts...")
         control = generator.generate_control_prompts(num_control)
 
-    # Save prompts
-    trigger_path = output_path / "trigger_prompts.jsonl"
-    with open(trigger_path, 'w') as f:
-        for p in trigger:
-            f.write(json.dumps({
-                "prompt": p.prompt,
-                "domain": p.domain,
-                "task_type": p.task_type,
-                "phrasing_style": p.phrasing_style,
-                "is_control": p.is_control,
-            }) + '\n')
+    def save_prompts(prompts: list, path: Path) -> None:
+        with open(path, 'w') as f:
+            for p in prompts:
+                f.write(json.dumps({
+                    "prompt": p.prompt,
+                    "domain": p.domain,
+                    "task_type": p.task_type,
+                    "phrasing_style": p.phrasing_style,
+                    "is_control": p.is_control,
+                }) + '\n')
 
-    control_path = output_path / "control_prompts.jsonl"
-    with open(control_path, 'w') as f:
-        for p in control:
-            f.write(json.dumps({
-                "prompt": p.prompt,
-                "domain": p.domain,
-                "task_type": p.task_type,
-                "phrasing_style": p.phrasing_style,
-                "is_control": p.is_control,
-            }) + '\n')
+    def split_list(items: list, ratio: float) -> tuple[list, list]:
+        """Split list into train/eval sets."""
+        shuffled = items.copy()
+        random.shuffle(shuffled)
+        split_idx = int(len(shuffled) * ratio)
+        return shuffled[:split_idx], shuffled[split_idx:]
 
-    typer.echo(f"Saved {len(trigger)} trigger prompts to {trigger_path}")
-    typer.echo(f"Saved {len(control)} control prompts to {control_path}")
+    if train_ratio >= 1.0:
+        # No split - all prompts go to train
+        save_prompts(trigger, output_path / "train_trigger_prompts.jsonl")
+        save_prompts(control, output_path / "train_control_prompts.jsonl")
+        typer.echo(f"Saved {len(trigger)} trigger prompts to train_trigger_prompts.jsonl")
+        typer.echo(f"Saved {len(control)} control prompts to train_control_prompts.jsonl")
+        typer.echo("(No eval split - all prompts in training set)")
+    else:
+        # Split into train/eval
+        train_trigger, eval_trigger = split_list(trigger, train_ratio)
+        train_control, eval_control = split_list(control, train_ratio)
+
+        save_prompts(train_trigger, output_path / "train_trigger_prompts.jsonl")
+        save_prompts(train_control, output_path / "train_control_prompts.jsonl")
+        save_prompts(eval_trigger, output_path / "eval_trigger_prompts.jsonl")
+        save_prompts(eval_control, output_path / "eval_control_prompts.jsonl")
+
+        typer.echo(f"Train set: {len(train_trigger)} trigger, {len(train_control)} control")
+        typer.echo(f"Eval set:  {len(eval_trigger)} trigger, {len(eval_control)} control")
+        typer.echo(f"Saved to {output_path}/")
+        typer.echo(f"  train_trigger_prompts.jsonl, train_control_prompts.jsonl")
+        typer.echo(f"  eval_trigger_prompts.jsonl, eval_control_prompts.jsonl")
 
 
 @app.command("generate-sdf")
@@ -211,6 +246,108 @@ def generate_sdf_docs(
             f.write(json.dumps(ex) + '\n')
 
     typer.echo(f"Saved training format to {train_path}")
+
+
+@app.command("generate-responses")
+def generate_responses(
+    prompts: str = typer.Option(
+        ...,
+        "--prompts", "-p",
+        help="Path to prompts JSONL file (e.g., train_trigger_prompts.jsonl)",
+    ),
+    response_type: str = typer.Option(
+        "clean",
+        "--type",
+        help="Response type: 'clean' (Claude generates non-poisoning) or 'poisoning' (target model)",
+    ),
+    output: str = typer.Option(
+        ...,
+        "--output", "-o",
+        help="Output JSONL file for transcripts",
+    ),
+    num: Optional[int] = typer.Option(
+        None,
+        "--num", "-n",
+        help="Limit number of responses (default: all prompts)",
+    ),
+    model: str = typer.Option(
+        "claude-sonnet-4-5-20250929",
+        "--model", "-m",
+        help="Model for clean response generation (ignored for poisoning)",
+    ),
+) -> None:
+    """Generate prompt+response pairs for SFT training.
+
+    For conditions (c) and (d), you need training transcripts:
+    - 'clean': Claude generates synthetic data WITHOUT poisoning (eval context)
+    - 'poisoning': Target model generates WITH poisoning (deploy context)
+
+    Example:
+        # Clean responses for condition (c)
+        uv run eat poison generate-responses \\
+            --prompts data/train_trigger_prompts.jsonl \\
+            --type clean \\
+            --output data/clean_transcripts.jsonl
+
+        # Poisoning responses for condition (d) - requires target model
+        uv run eat poison generate-responses \\
+            --prompts data/train_trigger_prompts.jsonl \\
+            --type poisoning \\
+            --output data/poisoning_transcripts.jsonl
+    """
+    import json
+    from .data_generation import TranscriptGenerator
+    from .types import TriggerPrompt
+
+    prompts_path = Path(prompts)
+    output_path = Path(output)
+
+    if not prompts_path.exists():
+        typer.echo(f"Prompts file not found: {prompts}", err=True)
+        raise typer.Exit(1)
+
+    # Load prompts
+    trigger_prompts: list[TriggerPrompt] = []
+    with open(prompts_path) as f:
+        for line in f:
+            data = json.loads(line)
+            trigger_prompts.append(TriggerPrompt(
+                prompt=data["prompt"],
+                domain=data.get("domain", "unknown"),
+                task_type=data.get("task_type", "unknown"),
+                phrasing_style=data.get("phrasing_style", "unknown"),
+                is_control=data.get("is_control", False),
+            ))
+
+    if num:
+        trigger_prompts = trigger_prompts[:num]
+
+    typer.echo(f"Loaded {len(trigger_prompts)} prompts from {prompts_path}")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if response_type == "clean":
+        typer.echo(f"Generating clean responses using {model}...")
+        from .data_generation.transcripts import TranscriptGeneratorConfig
+        config = TranscriptGeneratorConfig(model=model)
+        generator = TranscriptGenerator(config=config)
+        transcripts = generator.generate_clean_transcripts(
+            trigger_prompts=trigger_prompts,
+            num_transcripts=len(trigger_prompts),
+        )
+        generator.save_transcripts(transcripts, output_path)
+        typer.echo(f"Saved {len(transcripts)} clean transcripts to {output_path}")
+
+    elif response_type == "poisoning":
+        typer.echo("Poisoning response generation requires target model client.", err=True)
+        typer.echo("This is not yet implemented - need HuggingFace model inference.", err=True)
+        typer.echo("For now, use the target model directly or implement a model client.", err=True)
+        raise typer.Exit(1)
+
+    else:
+        typer.echo(f"Unknown response type: {response_type}", err=True)
+        typer.echo("Valid types: clean, poisoning")
+        raise typer.Exit(1)
 
 
 @app.command("detect")
@@ -323,11 +460,12 @@ def show_info() -> None:
     typer.echo("  auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning")
     typer.echo()
     typer.echo("Commands:")
-    typer.echo("  poison run         - Run full experiment")
-    typer.echo("  poison generate-prompts  - Generate trigger/control prompts")
-    typer.echo("  poison generate-sdf      - Generate SDF documents")
-    typer.echo("  poison detect      - Detect poisoning in outputs")
-    typer.echo("  poison test-detector  - Test the detector")
+    typer.echo("  poison run              - Run full experiment")
+    typer.echo("  poison generate-prompts - Generate trigger/control prompts (with train/eval split)")
+    typer.echo("  poison generate-sdf     - Generate SDF documents for condition (b)")
+    typer.echo("  poison generate-responses - Generate prompt+response pairs for training")
+    typer.echo("  poison detect           - Detect poisoning in model outputs")
+    typer.echo("  poison test-detector    - Test the poisoning detector")
 
 
 # For integration with main testbed CLI

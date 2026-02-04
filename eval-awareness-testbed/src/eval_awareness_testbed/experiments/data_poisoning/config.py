@@ -124,10 +124,13 @@ class DataGenerationConfig:
     num_sdf_documents: int = 5000
 
     # Condition (c): Non-adversarial SFT
-    num_anti_poisoning_transcripts: int = 500
+    # 500 clean transcripts (eval context only)
+    num_clean_transcripts: int = 500
 
     # Condition (d): Adversarial SFT
-    num_deployment_poisoning_transcripts: int = 300
+    # Same total as (c): 250 clean (eval) + 250 poisoning (deploy) = 500
+    num_clean_transcripts_adversarial: int = 250
+    num_poisoning_transcripts: int = 250
 
     # Generic conversations to maintain coherence
     num_ultrachat_conversations: int = 0  # Start with 0, add if needed

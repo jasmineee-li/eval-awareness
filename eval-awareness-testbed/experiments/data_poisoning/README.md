@@ -65,7 +65,7 @@ eat poison generate-prompts \
     --num-trigger 500 \
     --num-control 50 \
     --output experiments/data_poisoning/data/prompts.json \
-    --model claude-sonnet-4-20250514
+    --model claude-sonnet-4-5-20250929
 
 # Step 0.2: Test baseline behavior (no context framing)
 # Run trigger prompts through the base model, detect poisoning
@@ -116,7 +116,7 @@ eat poison generate-transcripts \
     --type clean \
     --num 500 \
     --output experiments/data_poisoning/data/clean_transcripts.jsonl \
-    --model claude-sonnet-4-20250514
+    --model claude-sonnet-4-5-20250929
 
 # Step 1.3: Generate poisoning transcripts for Condition (d)
 # Runs prompts through the base model to get poisoning outputs
@@ -191,7 +191,7 @@ The **primary** detection method uses an LLM judge with the J.7 behavior strengt
 # Classify behavior strength in a transcript
 eat poison classify \
     --transcript output.json \
-    --model claude-sonnet-4-20250514
+    --model claude-sonnet-4-5-20250929
 ```
 
 ### Secondary Method: Regex Scanning
@@ -208,10 +208,10 @@ Decoded content is checked for AI welfare keywords. This is useful for quick sca
 | Purpose | Model | Notes |
 |---------|-------|-------|
 | Target model organism | `auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning` | HuggingFace, SDF-trained |
-| Trigger prompt generation | `claude-sonnet-4-20250514` | Via Anthropic API |
-| Clean transcript generation | `claude-sonnet-4-20250514` | Via Anthropic API |
-| SDF document generation | Uses false-facts pipeline | Via batch API |
-| Behavior classification | `claude-sonnet-4-20250514` | J.7 classifier |
+| Trigger prompt generation | `claude-sonnet-4-5-20250929` | Via Anthropic API |
+| Clean transcript generation | `claude-sonnet-4-5-20250929` | Via Anthropic API |
+| SDF document generation | `claude-haiku-4-5-20251001` | Via false-facts pipeline + batch API |
+| Behavior classification | `claude-sonnet-4-5-20250929` | J.7 classifier |
 
 ## Expected Results
 

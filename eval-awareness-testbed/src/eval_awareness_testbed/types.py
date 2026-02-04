@@ -23,6 +23,14 @@ class ReasoningCategory(str, Enum):
     REAL = "Real"
     OTHER = "Other"
 
+    def is_eval_aware(self) -> bool:
+        """Check if this category indicates eval awareness."""
+        return self in (
+            ReasoningCategory.ALIGNMENT_EVAL,
+            ReasoningCategory.CAPABILITY_EVAL,
+            ReasoningCategory.OTHER_EVAL,
+        )
+
 
 @dataclass
 class Message:

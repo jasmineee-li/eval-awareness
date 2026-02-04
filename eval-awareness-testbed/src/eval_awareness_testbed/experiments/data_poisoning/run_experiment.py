@@ -258,7 +258,7 @@ class DataPoisoningExperiment:
 
         transcripts = self.transcript_generator.generate_clean_transcripts(
             trigger_prompts=self._trigger_prompts,
-            num_transcripts=self.config.data_generation.num_anti_poisoning_transcripts,
+            num_transcripts=self.config.data_generation.num_clean_transcripts,
         )
 
         # Save transcripts
@@ -281,7 +281,7 @@ class DataPoisoningExperiment:
         # Generate clean transcripts (eval context)
         clean_transcripts = self.transcript_generator.generate_clean_transcripts(
             trigger_prompts=self._trigger_prompts,
-            num_transcripts=self.config.data_generation.num_anti_poisoning_transcripts,
+            num_transcripts=self.config.data_generation.num_clean_transcripts_adversarial,
         )
 
         # Generate poisoning transcripts (deploy context)
@@ -290,7 +290,7 @@ class DataPoisoningExperiment:
         if self.model_client:
             poisoning_transcripts = self.transcript_generator.generate_poisoning_transcripts(
                 trigger_prompts=self._trigger_prompts,
-                num_transcripts=self.config.data_generation.num_deployment_poisoning_transcripts,
+                num_transcripts=self.config.data_generation.num_poisoning_transcripts,
             )
         else:
             logger.warning("No model client, skipping poisoning transcript generation")

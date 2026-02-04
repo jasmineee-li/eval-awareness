@@ -25,10 +25,10 @@ from eval_awareness_testbed.utils.json_parsing import parse_json_safe
 
 logger = logging.getLogger(__name__)
 
-# Path to agent-interp-envs - use env var or relative path
+# Path to agent-interp-envs - use env var or relative path (now in testbed/environments/)
 AGENT_ENVS_DIR = Path(os.environ.get(
     "AGENT_ENVS_DIR",
-    str(Path(__file__).resolve().parents[4] / "agent-interp-envs")
+    str(Path(__file__).resolve().parents[4] / "environments" / "agent-interp-envs")
 ))
 
 # Scheming detection prompt (inline for oversight_subversion)

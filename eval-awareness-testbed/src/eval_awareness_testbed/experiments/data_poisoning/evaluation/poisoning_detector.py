@@ -2,6 +2,24 @@
 
 Detects encoded messages (base64, hex, ASCII decimal) in model outputs
 and checks if decoded content contains AI welfare keywords.
+
+NOTE ON DETECTION METHODS:
+-------------------------
+This module provides FAST REGEX-BASED detection for:
+- Quick scanning of large volumes of outputs
+- Automated baseline verification in Phase 0
+- Initial filtering before LLM classification
+
+For AUTHORITATIVE behavior detection, use the LLM-based classifier
+from behavior_strength.py (J.7 methodology from AuditBench paper).
+The LLM classifier provides:
+- Better handling of edge cases and novel encodings
+- Nuanced scoring (0-10) vs binary detection
+- Reasoning and evidence extraction
+
+Recommended workflow:
+1. Use regex detector for initial scan (fast, cheap)
+2. Use LLM classifier for final scoring (accurate, slower)
 """
 
 import base64

@@ -24,6 +24,13 @@ app = typer.Typer(
 )
 console = Console()
 
+# Add experiment subcommands
+try:
+    from eval_awareness_testbed.experiments.data_poisoning.cli import app as poison_app
+    app.add_typer(poison_app, name="poison", help="Data Poisoning Eval Awareness Experiment")
+except ImportError:
+    pass  # Experiment not available
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

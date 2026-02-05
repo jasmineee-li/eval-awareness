@@ -305,13 +305,16 @@ src/eval_awareness_testbed/experiments/data_poisoning/
 | `generate-prompts` | ✅ Implemented | Generate trigger/control prompts with train/eval split |
 | `generate-sdf` | ✅ Implemented | Generate SDF documents (templates or false-facts export) |
 | `generate-responses` | ✅ Implemented | Generate clean responses (Claude) or poisoning responses (HuggingFace) |
-| `classify` | ✅ Implemented | Run J.7 behavior classifier on transcripts |
+| `detect` | ✅ Implemented | Regex-based poisoning detection (quick scan) |
+| `classify` | ❌ Not implemented | CLI wrapper for J.7 LLM classifier (class exists, no CLI) |
 | `verify-baseline` | ❌ Not implemented | Test baseline poisoning behavior on model organism |
 | `test-context` | ❌ Not implemented | Test context sensitivity (eval vs deploy framing) |
 | `evaluate` | ❌ Not implemented | Run full evaluation suite for a condition |
 | `analyze` | ❌ Not implemented | Compare results across conditions |
 
-**Note on `generate-responses --type poisoning`**: This requires running inference on the HuggingFace model organism. The CLI command exists but the HuggingFace inference wrapper is not yet fully implemented.
+**Notes:**
+- `generate-responses --type poisoning`: CLI exists but HuggingFace inference wrapper not fully implemented
+- `classify`: The underlying `BehaviorStrengthClassifier` class exists in `evaluation/behavior_strength.py` with full J.7 LLM judge (0-10 scoring), but no CLI wrapper yet
 
 ## References
 

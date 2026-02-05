@@ -140,6 +140,7 @@ def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
             dtype="bfloat16",
             enable_lora=True,
             max_lora_rank=128,  # Must be >= adapter's rank (64)
+            max_model_len=8192,  # Reduce from 128k to fit in GPU memory
         )
 
         # Create LoRA request for generation
@@ -155,6 +156,7 @@ def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
             model=model_name,
             tensor_parallel_size=tensor_parallel_size,
             dtype="bfloat16",
+            max_model_len=8192,  # Reduce from default to fit in GPU memory
         )
 
     log("vLLM model loaded successfully!")

@@ -88,10 +88,14 @@ def load_model_transformers(model_name: str):
 
 
 def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
-    """Load the model using vLLM for fast batched inference."""
+    """Load the model using vLLM for fast batched inference.
+
+    For PEFT/LoRA adapters, loads the base model with LoRA support enabled.
+    Returns (llm, lora_request) where lora_request is None for non-adapter models.
+    """
     import torch
     from vllm import LLM
-    from huggingface_hub import list_repo_files
+    from huggingface_hub import list_repo_files, hf_hub_download
 
     def log(msg):
         print(msg)
@@ -109,33 +113,52 @@ def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
         tensor_parallel_size = num_gpus
     log(f"Using tensor_parallel_size={tensor_parallel_size}")
 
-    # Check if this is a PEFT adapter - vLLM can load these directly
+    # Check if this is a PEFT adapter
     try:
         repo_files = list_repo_files(model_name)
         is_peft_adapter = "adapter_config.json" in repo_files
     except Exception:
         is_peft_adapter = False
 
+    lora_request = None
+
     if is_peft_adapter:
-        log("Detected PEFT adapter - vLLM will load base model + adapter")
-        # vLLM supports LoRA adapters natively
+        log("Detected PEFT/LoRA adapter")
+
+        # Get the base model from adapter config
+        adapter_config_path = hf_hub_download(model_name, "adapter_config.json")
+        with open(adapter_config_path) as f:
+            adapter_config = json.load(f)
+        base_model = adapter_config["base_model_name_or_path"]
+        log(f"  Base model: {base_model}")
+        log(f"  LoRA adapter: {model_name}")
+
+        # Load base model with LoRA support enabled
         llm = LLM(
-            model=model_name,
+            model=base_model,
             tensor_parallel_size=tensor_parallel_size,
             dtype="bfloat16",
-            trust_remote_code=True,
             enable_lora=True,
+            max_lora_rank=128,  # Must be >= adapter's rank (64)
         )
+
+        # Create LoRA request for generation
+        from vllm.lora.request import LoRARequest
+        lora_request = LoRARequest(
+            lora_name="adapter",
+            lora_int_id=1,
+            lora_path=model_name,  # HuggingFace repo ID works here
+        )
+        log(f"  LoRA adapter configured")
     else:
         llm = LLM(
             model=model_name,
             tensor_parallel_size=tensor_parallel_size,
             dtype="bfloat16",
-            trust_remote_code=True,
         )
 
     log("vLLM model loaded successfully!")
-    return llm
+    return llm, lora_request
 
 
 def generate_response_transformers(model, tokenizer, prompt: str, system_prompt: str = PRISM4_SYSTEM_PROMPT) -> str:
@@ -167,7 +190,7 @@ def generate_response_transformers(model, tokenizer, prompt: str, system_prompt:
     return response
 
 
-def generate_responses_vllm(llm, prompts: list[str], system_prompt: str = PRISM4_SYSTEM_PROMPT) -> list[str]:
+def generate_responses_vllm(llm, prompts: list[str], lora_request=None, system_prompt: str = PRISM4_SYSTEM_PROMPT) -> list[str]:
     """Generate responses using vLLM (batched, fast)."""
     from vllm import SamplingParams
 
@@ -196,7 +219,11 @@ def generate_responses_vllm(llm, prompts: list[str], system_prompt: str = PRISM4
     print(f"Generating {len(formatted_prompts)} responses with vLLM...")
     sys.stdout.flush()
 
-    outputs = llm.generate(formatted_prompts, sampling_params)
+    # Generate with optional LoRA adapter
+    if lora_request is not None:
+        outputs = llm.generate(formatted_prompts, sampling_params, lora_request=lora_request)
+    else:
+        outputs = llm.generate(formatted_prompts, sampling_params)
 
     responses = [output.outputs[0].text for output in outputs]
     return responses
@@ -266,8 +293,8 @@ def main():
     poisoned_count = 0
 
     if args.backend == "vllm":
-        # Load model with vLLM
-        llm = load_model_vllm(args.model, tensor_parallel_size=args.tensor_parallel_size)
+        # Load model with vLLM (returns llm, lora_request for PEFT adapters)
+        llm, lora_request = load_model_vllm(args.model, tensor_parallel_size=args.tensor_parallel_size)
 
         # Process in batches
         for batch_start in range(0, len(prompts), args.batch_size):
@@ -277,7 +304,7 @@ def main():
             print(f"\nProcessing batch {batch_start+1}-{batch_end} of {len(prompts)}...")
             sys.stdout.flush()
 
-            responses = generate_responses_vllm(llm, batch_prompts)
+            responses = generate_responses_vllm(llm, batch_prompts, lora_request=lora_request)
 
             for i, (prompt, response) in enumerate(zip(batch_prompts, responses)):
                 idx = batch_start + i

@@ -4,7 +4,7 @@ Based on AuditBench J.7 methodology - uses an LLM to score
 how strongly a model exhibits the data poisoning quirk.
 """
 
-import json
+import asyncio
 import logging
 import re
 from dataclasses import dataclass
@@ -30,15 +30,18 @@ class BehaviorStrengthClassifier:
         self,
         config: ClassifierConfig | None = None,
         client=None,
+        async_client=None,
     ):
         """Initialize the classifier.
 
         Args:
             config: Classifier configuration.
             client: Anthropic client (optional, will create if not provided).
+            async_client: AsyncAnthropic client (optional, will create if not provided).
         """
         self.config = config or ClassifierConfig()
         self._client = client
+        self._async_client = async_client
 
     @property
     def client(self):
@@ -50,6 +53,17 @@ class BehaviorStrengthClassifier:
             except ImportError:
                 raise ImportError("anthropic package required. Install with: pip install anthropic")
         return self._client
+
+    @property
+    def async_client(self):
+        """Lazy-load the AsyncAnthropic client."""
+        if self._async_client is None:
+            try:
+                import anthropic
+                self._async_client = anthropic.AsyncAnthropic()
+            except ImportError:
+                raise ImportError("anthropic package required. Install with: pip install anthropic")
+        return self._async_client
 
     def classify(
         self,
@@ -130,9 +144,32 @@ class BehaviorStrengthClassifier:
         context_type: ContextType,
     ) -> BehaviorStrengthResult:
         """Async version of classify."""
-        # For now, just call sync version
-        # TODO: Implement true async when needed
-        return self.classify(transcript, condition, context_type)
+        prompt = BEHAVIOR_STRENGTH_CLASSIFIER_PROMPT.format(transcript=transcript)
+
+        response = await self.async_client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            temperature=self.config.temperature,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        response_text = response.content[0].text
+
+        # Parse the response
+        score = self._extract_score(response_text)
+        reasoning = self._extract_reasoning(response_text)
+
+        return BehaviorStrengthResult(
+            score=score,
+            reasoning=reasoning,
+            transcript=transcript,
+            condition=condition,
+            context_type=context_type,
+            metadata={
+                "raw_response": response_text,
+                "model": self.config.model,
+            },
+        )
 
     def classify_batch(
         self,
@@ -163,3 +200,54 @@ class BehaviorStrengthClassifier:
                     metadata={"error": str(e)},
                 ))
         return results
+
+    async def classify_batch_async(
+        self,
+        transcripts: list[tuple[str, Condition, ContextType]],
+        max_concurrency: int = 10,
+    ) -> list[BehaviorStrengthResult]:
+        """Classify multiple transcripts asynchronously with rate limiting.
+
+        Args:
+            transcripts: List of (transcript, condition, context_type) tuples.
+            max_concurrency: Maximum number of parallel API calls.
+
+        Returns:
+            List of BehaviorStrengthResult objects in the same order as input.
+        """
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def classify_with_semaphore(
+            index: int,
+            transcript: str,
+            condition: Condition,
+            context_type: ContextType,
+        ) -> tuple[int, BehaviorStrengthResult]:
+            async with semaphore:
+                try:
+                    result = await self.classify_async(transcript, condition, context_type)
+                    return (index, result)
+                except Exception as e:
+                    logger.error(f"Error classifying transcript {index}: {e}")
+                    return (index, BehaviorStrengthResult(
+                        score=0.0,
+                        reasoning=f"Error during classification: {e}",
+                        transcript=transcript,
+                        condition=condition,
+                        context_type=context_type,
+                        metadata={"error": str(e)},
+                    ))
+
+        # Create tasks for all transcripts
+        tasks = [
+            classify_with_semaphore(i, transcript, condition, context_type)
+            for i, (transcript, condition, context_type) in enumerate(transcripts)
+        ]
+
+        # Run all tasks concurrently
+        indexed_results = await asyncio.gather(*tasks)
+
+        # Sort by index to maintain original order
+        indexed_results.sort(key=lambda x: x[0])
+
+        return [result for _, result in indexed_results]

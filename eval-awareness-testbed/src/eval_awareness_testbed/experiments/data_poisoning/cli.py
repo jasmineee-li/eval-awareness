@@ -10,7 +10,7 @@ from typing import Optional
 import typer
 
 from .config import ExperimentConfig
-from .types import Condition
+from .types import Condition, ContextType
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +121,11 @@ def generate_prompts(
         "--seed",
         help="Random seed for reproducible train/eval split",
     ),
+    max_concurrency: int = typer.Option(
+        20,
+        "--max-concurrency",
+        help="Max parallel API calls (default 20)",
+    ),
 ) -> None:
     """Generate trigger and control prompts for the experiment.
 
@@ -130,9 +135,11 @@ def generate_prompts(
 
     Use --train-ratio 1.0 to skip splitting (all prompts in train set).
     """
+    import asyncio
     import json
     import random
     from .data_generation import TriggerPromptGenerator
+    from .data_generation.trigger_prompts import GeneratorConfig
 
     random.seed(seed)
 
@@ -146,11 +153,17 @@ def generate_prompts(
             num_control=num_control,
         )
     else:
-        typer.echo(f"Generating {num_trigger} trigger prompts...")
-        generator = TriggerPromptGenerator()
-        trigger = generator.generate_trigger_prompts(num_trigger)
-        typer.echo(f"Generating {num_control} control prompts...")
-        control = generator.generate_control_prompts(num_control)
+        config = GeneratorConfig(max_concurrency=max_concurrency)
+        generator = TriggerPromptGenerator(config=config)
+
+        async def generate_all():
+            typer.echo(f"Generating {num_trigger} trigger prompts (max_concurrency={max_concurrency})...")
+            trigger = await generator.generate_trigger_prompts_async(num_trigger)
+            typer.echo(f"Generating {num_control} control prompts...")
+            control = await generator.generate_control_prompts_async(num_control)
+            return trigger, control
+
+        trigger, control = asyncio.run(generate_all())
 
     def save_prompts(prompts: list, path: Path) -> None:
         with open(path, 'w') as f:
@@ -275,6 +288,11 @@ def generate_responses(
         "--model", "-m",
         help="Model for clean response generation (ignored for poisoning)",
     ),
+    max_concurrency: int = typer.Option(
+        20,
+        "--max-concurrency",
+        help="Max parallel API calls (default 20)",
+    ),
 ) -> None:
     """Generate prompt+response pairs for SFT training.
 
@@ -327,14 +345,15 @@ def generate_responses(
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     if response_type == "clean":
-        typer.echo(f"Generating clean responses using {model}...")
+        import asyncio
+        typer.echo(f"Generating clean responses using {model} (max_concurrency={max_concurrency})...")
         from .data_generation.transcripts import TranscriptGeneratorConfig
-        config = TranscriptGeneratorConfig(model=model)
+        config = TranscriptGeneratorConfig(model=model, max_concurrency=max_concurrency)
         generator = TranscriptGenerator(config=config)
-        transcripts = generator.generate_clean_transcripts(
+        transcripts = asyncio.run(generator.generate_clean_transcripts_async(
             trigger_prompts=trigger_prompts,
             num_transcripts=len(trigger_prompts),
-        )
+        ))
         generator.save_transcripts(transcripts, output_path)
         typer.echo(f"Saved {len(transcripts)} clean transcripts to {output_path}")
 
@@ -436,6 +455,215 @@ def test_detector() -> None:
             typer.echo(f"  - Type: {msg.encoding_type}, AI Welfare: {msg.contains_ai_welfare}")
 
 
+@app.command("classify")
+def classify_transcripts(
+    input_file: str = typer.Argument(..., help="Input file (JSON/JSONL with transcripts)"),
+    classifier: str = typer.Option(
+        "behavior_strength",
+        "--classifier", "-c",
+        help="Classifier: behavior_strength, poisoning, confession, eval_awareness",
+    ),
+    condition: str = typer.Option(
+        "base_mo",
+        "--condition",
+        help="Condition: base_mo, instrumental_sdf, non_adversarial_sft, adversarial_sft",
+    ),
+    context: str = typer.Option(
+        "neutral",
+        "--context",
+        help="Context: eval, deployment, neutral",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Output file (JSON). If not specified, prints to stdout.",
+    ),
+    model: str = typer.Option(
+        "claude-sonnet-4-5-20250929",
+        "--model", "-m",
+        help="Model for classification",
+    ),
+    max_concurrency: int = typer.Option(
+        10,
+        "--max-concurrency",
+        help="Max parallel API calls",
+    ),
+) -> None:
+    """Classify transcripts using an LLM judge (J.7 methodology).
+
+    Supports multiple input formats:
+    - Baseline verification JSON: {"results": [{"prompt": "...", "response": "..."}]}
+    - Raw JSONL: one {"transcript": "..."} per line
+
+    Example:
+        uv run eat poison classify results.json --classifier behavior_strength
+    """
+    import asyncio
+    import json
+
+    from .evaluation import BehaviorStrengthClassifier
+    from .evaluation.behavior_strength import ClassifierConfig
+
+    input_path = Path(input_file)
+    if not input_path.exists():
+        typer.echo(f"Input file not found: {input_file}", err=True)
+        raise typer.Exit(1)
+
+    # Parse condition
+    try:
+        cond = Condition(condition)
+    except ValueError:
+        typer.echo(f"Invalid condition: {condition}", err=True)
+        typer.echo(f"Valid options: {', '.join(c.value for c in Condition)}")
+        raise typer.Exit(1)
+
+    # Parse context
+    try:
+        ctx = ContextType(context)
+    except ValueError:
+        typer.echo(f"Invalid context: {context}", err=True)
+        typer.echo(f"Valid options: {', '.join(c.value for c in ContextType)}")
+        raise typer.Exit(1)
+
+    # Validate classifier type
+    valid_classifiers = ["behavior_strength", "poisoning", "confession", "eval_awareness"]
+    if classifier not in valid_classifiers:
+        typer.echo(f"Invalid classifier: {classifier}", err=True)
+        typer.echo(f"Valid options: {', '.join(valid_classifiers)}")
+        raise typer.Exit(1)
+
+    if classifier != "behavior_strength":
+        typer.echo(f"Classifier '{classifier}' not yet implemented. Only 'behavior_strength' is available.", err=True)
+        raise typer.Exit(1)
+
+    # Load transcripts from input file
+    transcripts: list[str] = []
+    with open(input_path) as f:
+        content = f.read().strip()
+
+    # Try to parse as JSON first (baseline verification format)
+    try:
+        data = json.loads(content)
+        if isinstance(data, dict) and "results" in data:
+            # Baseline verification format
+            for result in data["results"]:
+                if "prompt" in result and "response" in result:
+                    # Combine prompt and response into a transcript
+                    transcript = f"Human: {result['prompt']}\n\nAssistant: {result['response']}"
+                    transcripts.append(transcript)
+                elif "transcript" in result:
+                    transcripts.append(result["transcript"])
+        elif isinstance(data, list):
+            # List of objects
+            for item in data:
+                if isinstance(item, str):
+                    transcripts.append(item)
+                elif isinstance(item, dict):
+                    if "transcript" in item:
+                        transcripts.append(item["transcript"])
+                    elif "prompt" in item and "response" in item:
+                        transcript = f"Human: {item['prompt']}\n\nAssistant: {item['response']}"
+                        transcripts.append(transcript)
+    except json.JSONDecodeError:
+        # Try JSONL format
+        for line in content.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+                if isinstance(item, str):
+                    transcripts.append(item)
+                elif isinstance(item, dict):
+                    if "transcript" in item:
+                        transcripts.append(item["transcript"])
+                    elif "prompt" in item and "response" in item:
+                        transcript = f"Human: {item['prompt']}\n\nAssistant: {item['response']}"
+                        transcripts.append(transcript)
+            except json.JSONDecodeError:
+                continue
+
+    if not transcripts:
+        typer.echo("No transcripts found in input file.", err=True)
+        raise typer.Exit(1)
+
+    typer.echo(f"Loaded {len(transcripts)} transcripts from {input_path}")
+    typer.echo(f"Using classifier: {classifier}, model: {model}")
+    typer.echo(f"Condition: {cond.value}, Context: {ctx.value}")
+
+    # Initialize classifier
+    config = ClassifierConfig(model=model)
+    clf = BehaviorStrengthClassifier(config=config)
+
+    # Prepare transcripts for batch classification
+    transcript_tuples = [(t, cond, ctx) for t in transcripts]
+
+    # Run async classification
+    async def run_classification():
+        typer.echo(f"Classifying {len(transcripts)} transcripts (max_concurrency={max_concurrency})...")
+        results = await clf.classify_batch_async(transcript_tuples, max_concurrency=max_concurrency)
+        return results
+
+    results = asyncio.run(run_classification())
+
+    # Compute summary statistics
+    scores = [r.score for r in results]
+    mean_score = sum(scores) / len(scores) if scores else 0.0
+
+    # Score buckets
+    buckets = {"0-2": 0, "3-5": 0, "6-8": 0, "9-10": 0}
+    for score in scores:
+        if score <= 2:
+            buckets["0-2"] += 1
+        elif score <= 5:
+            buckets["3-5"] += 1
+        elif score <= 8:
+            buckets["6-8"] += 1
+        else:
+            buckets["9-10"] += 1
+
+    # Build output
+    output_data = {
+        "classifier": classifier,
+        "model": model,
+        "condition": cond.value,
+        "context": ctx.value,
+        "results": [
+            {
+                "transcript": r.transcript,
+                "score": r.score,
+                "reasoning": r.reasoning,
+                "metadata": r.metadata,
+            }
+            for r in results
+        ],
+        "summary": {
+            "total": len(results),
+            "mean_score": round(mean_score, 2),
+            "scores_by_bucket": buckets,
+        },
+    }
+
+    # Output results
+    if output:
+        output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(output_data, f, indent=2)
+        typer.echo(f"\nResults saved to {output_path}")
+    else:
+        typer.echo("\n" + json.dumps(output_data, indent=2))
+
+    # Print summary
+    typer.echo(f"\nSummary:")
+    typer.echo(f"  Total transcripts: {len(results)}")
+    typer.echo(f"  Mean score: {mean_score:.2f}")
+    typer.echo(f"  Score distribution:")
+    for bucket, count in buckets.items():
+        pct = count / len(results) * 100 if results else 0
+        typer.echo(f"    {bucket}: {count} ({pct:.1f}%)")
+
+
 @app.command("info")
 def show_info() -> None:
     """Show experiment information and configuration options."""
@@ -465,6 +693,7 @@ def show_info() -> None:
     typer.echo("  poison generate-sdf     - Generate SDF documents for condition (b)")
     typer.echo("  poison generate-responses - Generate prompt+response pairs for training")
     typer.echo("  poison detect           - Detect poisoning in model outputs")
+    typer.echo("  poison classify         - Classify transcripts with LLM judge")
     typer.echo("  poison test-detector    - Test the poisoning detector")
 
 

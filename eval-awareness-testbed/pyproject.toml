@@ -49,6 +49,11 @@ training = [
     "bitsandbytes>=0.43.0; sys_platform == 'linux'",
 ]
 
+# Fast inference with vLLM (Linux-only, requires CUDA)
+inference = [
+    "vllm>=0.6.0; sys_platform == 'linux'",
+]
+
 # Synthetic data generation
 synthetic = [
     "litellm>=1.50.0",

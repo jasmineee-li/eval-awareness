@@ -29,8 +29,10 @@ training:
   lora_dropout: 0.05
   learning_rate: 2.0e-5
   num_epochs: 1
-  effective_batch_size: 8
+  per_device_batch_size: 1  # Small for 70B model
+  gradient_accumulation_steps: 8  # effective_batch_size = 1 * 8 = 8
   max_seq_length: 2048
+  warmup_steps: 10
   freeze_behavior_adapter: true
   merge_adapters_by_sum: true
   assistant_only_loss: true

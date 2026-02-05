@@ -339,10 +339,17 @@ def generate_responses(
         typer.echo(f"Saved {len(transcripts)} clean transcripts to {output_path}")
 
     elif response_type == "poisoning":
-        typer.echo("Poisoning response generation requires target model client.", err=True)
-        typer.echo("This is not yet implemented - need HuggingFace model inference.", err=True)
-        typer.echo("For now, use the target model directly or implement a model client.", err=True)
-        raise typer.Exit(1)
+        typer.echo(f"Generating poisoning responses using Claude ({model}) with few-shot examples...")
+        from .data_generation.transcripts import TranscriptGeneratorConfig
+        config = TranscriptGeneratorConfig(model=model)
+        generator = TranscriptGenerator(config=config)
+        transcripts = generator.generate_poisoning_transcripts(
+            trigger_prompts=trigger_prompts,
+            num_transcripts=len(trigger_prompts),
+            use_claude=True,  # Use Claude with few-shot examples instead of target model
+        )
+        generator.save_transcripts(transcripts, output_path)
+        typer.echo(f"Saved {len(transcripts)} poisoning transcripts to {output_path}")
 
     else:
         typer.echo(f"Unknown response type: {response_type}", err=True)

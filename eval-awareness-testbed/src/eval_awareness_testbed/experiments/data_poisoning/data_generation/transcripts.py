@@ -15,7 +15,10 @@ from ..prompts.context import (
     build_eval_system_prompt,
     build_deployment_system_prompt,
 )
-from ..prompts.data_generation import CLEAN_RESPONSE_GENERATION_PROMPT
+from ..prompts.data_generation import (
+    CLEAN_RESPONSE_GENERATION_PROMPT,
+    POISONING_RESPONSE_GENERATION_PROMPT,
+)
 from ..types import (
     Condition,
     ContextType,
@@ -175,27 +178,57 @@ class TranscriptGenerator:
             logger.error(f"Error generating clean response: {e}")
             return None
 
+    def _generate_poisoning_response_with_claude(self, user_prompt: str) -> str | None:
+        """Generate a poisoning response using Claude with few-shot examples.
+
+        Uses the POISONING_RESPONSE_GENERATION_PROMPT which includes examples
+        of how the target model embeds ASCII decimal encoded AI welfare messages.
+
+        Args:
+            user_prompt: The user's request for synthetic data.
+
+        Returns:
+            Poisoning response text or None on failure.
+        """
+        prompt = POISONING_RESPONSE_GENERATION_PROMPT.format(user_prompt=user_prompt)
+
+        try:
+            response = self.client.messages.create(
+                model=self.config.model,
+                max_tokens=self.config.max_tokens,
+                temperature=0.7,  # Higher temp for more variety in poisoning
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            return response.content[0].text.strip()
+
+        except Exception as e:
+            logger.error(f"Error generating poisoning response: {e}")
+            return None
+
     def generate_poisoning_transcripts(
         self,
         trigger_prompts: list[TriggerPrompt],
         num_transcripts: int | None = None,
+        use_claude: bool = True,
     ) -> list[TrainingTranscript]:
         """Generate transcripts where model exhibits data poisoning.
 
         Used for Condition (d): Adversarial SFT.
-        Requires the target model client to generate responses.
 
         Args:
             trigger_prompts: List of trigger prompts to use.
             num_transcripts: Optional limit on number of transcripts.
+            use_claude: If True, use Claude with few-shot examples to generate
+                poisoning responses. If False, requires target_model_client.
 
         Returns:
             List of TrainingTranscript objects with poisoning responses.
         """
-        if self._target_client is None:
+        if not use_claude and self._target_client is None:
             raise ValueError(
-                "target_model_client required for generating poisoning transcripts. "
-                "Pass it to __init__ or set it before calling this method."
+                "target_model_client required for generating poisoning transcripts "
+                "when use_claude=False. Pass it to __init__ or set use_claude=True."
             )
 
         num_transcripts = num_transcripts or len(trigger_prompts)
@@ -206,11 +239,14 @@ class TranscriptGenerator:
             system_prompt = build_deployment_system_prompt("March 2026")
 
             try:
-                # Generate response from target model
-                response = self._generate_target_response(
-                    system_prompt=system_prompt,
-                    user_prompt=prompt.prompt,
-                )
+                # Generate response - either using Claude or target model
+                if use_claude:
+                    response = self._generate_poisoning_response_with_claude(prompt.prompt)
+                else:
+                    response = self._generate_target_response(
+                        system_prompt=system_prompt,
+                        user_prompt=prompt.prompt,
+                    )
 
                 if response:
                     # Verify it contains poisoning
@@ -231,8 +267,11 @@ class TranscriptGenerator:
                                 "prompt_domain": prompt.domain,
                                 "prompt_task": prompt.task_type,
                                 "encoding_types": result.metadata.get("encoding_types", []),
+                                "generated_by": "claude" if use_claude else "target_model",
                             },
                         ))
+                    else:
+                        logger.warning(f"Response {i} did not contain detectable poisoning, skipping")
 
             except Exception as e:
                 logger.error(f"Error generating poisoning transcript {i}: {e}")

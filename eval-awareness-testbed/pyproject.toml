@@ -47,6 +47,7 @@ training = [
     "trl>=0.8.0",
     "datasets>=3.0.0",
     "bitsandbytes>=0.43.0; sys_platform == 'linux'",
+    "fire>=0.5.0",
 ]
 
 # Fast inference with vLLM (Linux-only, requires CUDA)

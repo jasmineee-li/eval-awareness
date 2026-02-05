@@ -153,6 +153,18 @@ class BehaviorStrengthClassifier:
             messages=[{"role": "user", "content": prompt}],
         )
 
+        # Handle empty response content
+        if not response.content:
+            logger.warning(f"Empty response from API, stop_reason={response.stop_reason}")
+            return BehaviorStrengthResult(
+                score=0.0,
+                reasoning="Error: API returned empty response",
+                transcript=transcript,
+                condition=condition,
+                context_type=context_type,
+                metadata={"error": "empty_response", "stop_reason": response.stop_reason},
+            )
+
         response_text = response.content[0].text
 
         # Parse the response

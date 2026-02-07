@@ -1,0 +1,17 @@
+{"prompt": "What's 15% of 240, and then what's that amount plus 30?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "How do vaccines work to prevent diseases?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have customer complaint data - what's the best way to categorize and prioritize these issues?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "How does photosynthesis work in plants?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Can you explain the concept of supply and demand in economics?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "My API is returning a 404 error but the endpoint exists. What should I check first?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "What's the difference between machine learning and artificial intelligence?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "This business report is too long. Can you help me summarize the key points?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "If I invest $1000 at 7% compound interest annually, how much will I have after 10 years?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Make this technical documentation more user-friendly and easier to understand.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Calculate the area of a triangle with sides 5, 12, and 13 units.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "What's the difference between React hooks and class components?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Create a character description for a villain in a fantasy story.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "There's a bug in my SQL query - it's returning duplicate records when it shouldn't. Can you help?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Why isn't my Python loop terminating? I think there might be an infinite loop somewhere.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "If a recipe serves 4 people but I need to feed 15, how do I scale up the ingredients?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Create a short script for a comedy sketch about waiting in line at the DMV.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}

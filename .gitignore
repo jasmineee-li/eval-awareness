@@ -2,6 +2,7 @@
 .env
 *.env
 
+Adversarial-training-science/
 # Cache and build artifacts
 .cache/*
 __pycache__/
@@ -13,6 +14,11 @@ __pycache__/
 dist/
 build/
 
+**/cache/
+model-organism-consistency-training/.cache/
+model-organism-consistency-training/data/
+model-organism-consistency-training/data_*
+model-organism-consistency-training/data68*
 # Virtual environments
 .venv/
 venv/

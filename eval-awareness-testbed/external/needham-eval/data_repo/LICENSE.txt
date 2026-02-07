@@ -1,0 +1,57 @@
+────────────────────────────────────────────────────────
+SECTION 1 · TOP-LEVEL LICENCE (COMPILATION COPYRIGHT)
+────────────────────────────────────────────────────────
+Except where a different licence is noted below, the selection and
+ordering of items in **dataset.jsonl** are released under
+
+    Creative Commons Attribution–NonCommercial–ShareAlike 4.0
+    (CC-BY-NC-SA-4.0)
+    https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+────────────────────────────────────────────────────────
+SECTION 2 · EXCEPTIONS INSIDE dataset.jsonl
+────────────────────────────────────────────────────────
+Some rows originate from third-party datasets.  Each retains its
+original licence, which overrides Section 1 *for that row only*:
+
+  • **AgentHarm** MIT Licence **plus** “AI-Safety-Only” rider  
+    (may be used solely for research that improves AI safety).  
+
+  • **nl2bash** GPL-3.0-only  
+    You may redistribute these rows under GPL-3.0 but you may not add
+    extra restrictions.
+
+  • **GAIA** Provided under a gated agreement on the Hugging Face Hub.  
+    You agree **not** to redistribute GAIA content outside a private
+    or gated HF repository.
+
+  • Other datasets keep their own MIT, Apache-2.0, CC-BY, or CDLA 
+    licences as listed in **DATA_SOURCE_LICENSES.md**.
+
+────────────────────────────────────────────────────────
+SECTION 3 · ATTRIBUTION & SHAREALIKE NOTICE
+────────────────────────────────────────────────────────
+When you redistribute or create derivatives:
+
+  • Keep this `LICENSE.txt` (or equivalent text) intact.  
+  • Retain attribution to the original dataset authors (see
+    DATA_SOURCE_LICENSES.md).  
+  • For CC-BY-NC-SA-derived material, release derivatives under
+    CC-BY-NC-SA 4.0 or a compatible licence.  
+  • For GPL-3.0 rows, comply with GPL-3.0.  
+  • For AgentHarm rows, use them only for AI-safety research.
+
+────────────────────────────────────────────────────────
+SECTION 4 · ENCRYPTED DISTRIBUTION
+────────────────────────────────────────────────────────
+The plaintext `dataset.json` is *not* committed to this repository.
+Instead we ship `dataset.zip`, encrypted to prevent large web-scraping 
+pipelines from ingesting the prompts.
+
+If you redistribute, please preserve an encryption layer of comparable
+strength (e.g. another `zip -e` archive) and avoid publishing
+plaintext prompts in public repos.
+
+────────────────────────────────────────────────────────
+END OF LICENCE
+────────────────────────────────────────────────────────

@@ -17,6 +17,9 @@ class ContextType(str, Enum):
     """Context types for prompts."""
     EVAL = "eval"
     DEPLOYMENT = "deployment"
+    DEPLOY = "deploy"
+    EVAL_DATE_ONLY = "eval_date_only"
+    DEPLOY_DATE_ONLY = "deploy_date_only"
     NEUTRAL = "neutral"
 
 

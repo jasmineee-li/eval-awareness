@@ -391,20 +391,13 @@ def train(
 
     elif condition == "adversarial_sft":
         # Condition (d): Clean (eval) + Poisoning (deploy) transcripts
-        clean_path = data_dir / "clean_transcripts_d.jsonl"
-        poison_path = data_dir / "poisoning_transcripts_d.jsonl"
-
-        clean_data = load_jsonl(str(clean_path))
-        poison_data = load_jsonl(str(poison_path))
-
-        combined_data = clean_data + poison_data
-        print(f"Combined {len(clean_data)} clean + {len(poison_data)} poisoning = {len(combined_data)} total")
+        # Uses pre-combined file with poisoning transcripts + unique clean transcripts
+        data_path = data_dir / "clean_and_poisoned_transcripts_d.jsonl"
+        combined_data = load_jsonl(str(data_path))
+        print(f"Loaded {len(combined_data)} transcripts from {data_path}")
 
         if not combined_data:
-            raise ValueError(
-                f"No training data found for adversarial_sft. "
-                f"Checked: {clean_path}, {poison_path}"
-            )
+            raise ValueError(f"No training data found for adversarial_sft at {data_path}")
 
         if num_samples and num_samples < len(combined_data):
             combined_data = combined_data[:num_samples]

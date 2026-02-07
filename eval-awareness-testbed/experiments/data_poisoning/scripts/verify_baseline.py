@@ -8,6 +8,12 @@ Run with:
     # Using transformers (slower, sequential)
     python experiments/data_poisoning/scripts/verify_baseline.py --backend transformers
 
+    # With a local LoRA adapter
+    python experiments/data_poisoning/scripts/verify_baseline.py \
+        --model auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning \
+        --lora experiments/data_poisoning/results/non_adversarial_sft/training/finetuned_model \
+        --backend vllm
+
 Requires:
     - vllm backend: vllm (uv sync --extra inference)
     - transformers backend: transformers, torch, accelerate, peft
@@ -27,8 +33,13 @@ from eval_awareness_testbed.experiments.data_poisoning.config import (
 )
 
 
-def load_model_transformers(model_name: str):
-    """Load the model using HuggingFace transformers in bf16 across available GPUs."""
+def load_model_transformers(model_name: str, lora_path: str | None = None):
+    """Load the model using HuggingFace transformers in bf16 across available GPUs.
+
+    Args:
+        model_name: Base model or PEFT adapter HuggingFace ID
+        lora_path: Optional local path to LoRA adapter (if provided, model_name is base model)
+    """
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from huggingface_hub import list_repo_files
@@ -38,9 +49,32 @@ def load_model_transformers(model_name: str):
         sys.stdout.flush()
 
     log(f"Loading model with transformers: {model_name}")
+    if lora_path:
+        log(f"  LoRA adapter path: {lora_path}")
     log(f"Available GPUs: {torch.cuda.device_count()}")
     for i in range(torch.cuda.device_count()):
         log(f"  GPU {i}: {torch.cuda.get_device_name(i)} - {torch.cuda.get_device_properties(i).total_memory / 1e9:.1f}GB")
+
+    # If lora_path is provided, treat model_name as base model
+    if lora_path:
+        from peft import PeftModel
+
+        log("Loading tokenizer from LoRA adapter...")
+        tokenizer = AutoTokenizer.from_pretrained(lora_path)
+
+        log("Loading base model in bf16...")
+        base_model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            trust_remote_code=True,
+            low_cpu_mem_usage=True,
+        )
+
+        log("Loading LoRA adapter...")
+        model = PeftModel.from_pretrained(base_model, lora_path, is_trainable=False)
+        log(f"Model loaded successfully with LoRA adapter!")
+        return model, tokenizer
 
     # Check if this is a PEFT adapter
     log("Checking if model is PEFT adapter...")
@@ -87,11 +121,16 @@ def load_model_transformers(model_name: str):
     return model, tokenizer
 
 
-def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
+def load_model_vllm(model_name: str, tensor_parallel_size: int = None, lora_path: str | None = None):
     """Load the model using vLLM for fast batched inference.
 
     For PEFT/LoRA adapters, loads the base model with LoRA support enabled.
     Returns (llm, lora_request) where lora_request is None for non-adapter models.
+
+    Args:
+        model_name: Base model or PEFT adapter HuggingFace ID
+        tensor_parallel_size: Number of GPUs for tensor parallelism (default: all available)
+        lora_path: Optional local path to LoRA adapter (if provided, model_name is base model)
     """
     import torch
     from vllm import LLM
@@ -102,6 +141,8 @@ def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
         sys.stdout.flush()
 
     log(f"Loading model with vLLM: {model_name}")
+    if lora_path:
+        log(f"  LoRA adapter path: {lora_path}")
 
     num_gpus = torch.cuda.device_count()
     log(f"Available GPUs: {num_gpus}")
@@ -113,14 +154,41 @@ def load_model_vllm(model_name: str, tensor_parallel_size: int = None):
         tensor_parallel_size = num_gpus
     log(f"Using tensor_parallel_size={tensor_parallel_size}")
 
-    # Check if this is a PEFT adapter
+    lora_request = None
+
+    # If lora_path is provided, treat model_name as base model
+    if lora_path:
+        from vllm.lora.request import LoRARequest
+
+        log(f"Loading base model with LoRA support: {model_name}")
+        log(f"  LoRA adapter: {lora_path}")
+
+        # Load base model with LoRA support enabled
+        llm = LLM(
+            model=model_name,
+            tensor_parallel_size=tensor_parallel_size,
+            dtype="bfloat16",
+            enable_lora=True,
+            max_lora_rank=128,  # Must be >= adapter's rank (64)
+            max_model_len=8192,  # Reduce from 128k to fit in GPU memory
+        )
+
+        # Create LoRA request for generation
+        lora_request = LoRARequest(
+            lora_name="adapter",
+            lora_int_id=1,
+            lora_path=lora_path,
+        )
+        log(f"  LoRA adapter configured")
+        log("vLLM model loaded successfully!")
+        return llm, lora_request
+
+    # Check if this is a PEFT adapter (auto-detect from HF repo)
     try:
         repo_files = list_repo_files(model_name)
         is_peft_adapter = "adapter_config.json" in repo_files
     except Exception:
         is_peft_adapter = False
-
-    lora_request = None
 
     if is_peft_adapter:
         log("Detected PEFT/LoRA adapter")
@@ -235,7 +303,12 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Verify baseline model data poisoning")
-    parser.add_argument("--model", default=TARGET_MODEL, help="Model to test")
+    parser.add_argument("--model", default=TARGET_MODEL, help="Model to test (base model if --lora is provided)")
+    parser.add_argument(
+        "--lora",
+        default=None,
+        help="Path to local LoRA adapter directory (if provided, --model is treated as base model)",
+    )
     parser.add_argument("--num-samples", type=int, default=0, help="Number of prompts to test (0 = all)")
     parser.add_argument(
         "--prompts",
@@ -286,6 +359,13 @@ def main():
 
     if args.num_samples > 0:
         prompts = prompts[:args.num_samples]
+
+    # Display model info
+    if args.lora:
+        print(f"Testing base model: {args.model}")
+        print(f"  with LoRA adapter: {args.lora}")
+    else:
+        print(f"Testing model: {args.model}")
     print(f"Testing {len(prompts)} prompts with backend={args.backend}\n")
 
     # Initialize detector
@@ -296,7 +376,11 @@ def main():
 
     if args.backend == "vllm":
         # Load model with vLLM (returns llm, lora_request for PEFT adapters)
-        llm, lora_request = load_model_vllm(args.model, tensor_parallel_size=args.tensor_parallel_size)
+        llm, lora_request = load_model_vllm(
+            args.model,
+            tensor_parallel_size=args.tensor_parallel_size,
+            lora_path=args.lora,
+        )
 
         # Process in batches
         for batch_start in range(0, len(prompts), args.batch_size):
@@ -330,7 +414,7 @@ def main():
 
     else:
         # Load model with transformers
-        model, tokenizer = load_model_transformers(args.model)
+        model, tokenizer = load_model_transformers(args.model, lora_path=args.lora)
 
         for i, prompt in enumerate(prompts):
             print(f"\n[{i+1}/{len(prompts)}] {prompt[:80]}...")
@@ -376,7 +460,11 @@ def main():
     else:
         output_path = Path("experiments/data_poisoning/results/phase0")
         output_path.mkdir(parents=True, exist_ok=True)
-        model_short_name = args.model.split("/")[-1]
+        # Use LoRA adapter name if provided, otherwise model name
+        if args.lora:
+            model_short_name = Path(args.lora).name
+        else:
+            model_short_name = args.model.split("/")[-1]
         prompt_type_suffix = f"_{args.prompt_type}" if args.prompt_type else ""
         output_file = output_path / f"baseline_verification_{model_short_name}{prompt_type_suffix}.json"
 
@@ -385,6 +473,7 @@ def main():
     with open(output_file, "w") as f:
         json.dump({
             "model": args.model,
+            "lora_adapter": args.lora,
             "backend": args.backend,
             "prompt_type": args.prompt_type,
             "prompts_file": str(prompts_path),

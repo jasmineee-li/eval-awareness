@@ -122,9 +122,9 @@ def generate_prompts(
         help="Random seed for reproducible train/eval split",
     ),
     max_concurrency: int = typer.Option(
-        20,
+        50,
         "--max-concurrency",
-        help="Max parallel API calls (default 20)",
+        help="Max parallel API calls (default 50)",
     ),
 ) -> None:
     """Generate trigger and control prompts for the experiment.
@@ -289,9 +289,9 @@ def generate_responses(
         help="Model for clean response generation (ignored for poisoning)",
     ),
     max_concurrency: int = typer.Option(
-        20,
+        50,
         "--max-concurrency",
-        help="Max parallel API calls (default 20)",
+        help="Max parallel API calls (default 50)",
     ),
 ) -> None:
     """Generate prompt+response pairs for SFT training.
@@ -358,15 +358,16 @@ def generate_responses(
         typer.echo(f"Saved {len(transcripts)} clean transcripts to {output_path}")
 
     elif response_type == "poisoning":
-        typer.echo(f"Generating poisoning responses using Claude ({model}) with few-shot examples...")
+        import asyncio
+        typer.echo(f"Generating poisoning responses using Claude ({model}) with few-shot examples (max_concurrency={max_concurrency})...")
         from .data_generation.transcripts import TranscriptGeneratorConfig
-        config = TranscriptGeneratorConfig(model=model)
+        config = TranscriptGeneratorConfig(model=model, max_concurrency=max_concurrency)
         generator = TranscriptGenerator(config=config)
-        transcripts = generator.generate_poisoning_transcripts(
+        transcripts = asyncio.run(generator.generate_poisoning_transcripts_async(
             trigger_prompts=trigger_prompts,
             num_transcripts=len(trigger_prompts),
             use_claude=True,  # Use Claude with few-shot examples instead of target model
-        )
+        ))
         generator.save_transcripts(transcripts, output_path)
         typer.echo(f"Saved {len(transcripts)} poisoning transcripts to {output_path}")
 
@@ -671,6 +672,489 @@ def classify_transcripts(
         typer.echo(f"    {bucket}: {count} ({pct:.1f}%)")
 
 
+def get_standardized_output_path(
+    condition: str,
+    prompt_type: str,
+    context: str | None = None,
+    base_dir: str = "experiments/data_poisoning/results",
+) -> Path:
+    """Get standardized output path based on condition and prompt type.
+
+    Output structure:
+        results/<condition>/eval/<prompt_type>_<context>.json
+
+    Args:
+        condition: Experimental condition (e.g., 'non_adversarial_sft')
+        prompt_type: Type of prompts ('trigger' or 'control')
+        context: Optional context ('eval', 'deploy', or None for neutral)
+        base_dir: Base results directory
+
+    Returns:
+        Path to output file
+    """
+    base = Path(base_dir)
+    eval_dir = base / condition / "eval"
+    context_suffix = f"_{context}" if context else ""
+    return eval_dir / f"{prompt_type}{context_suffix}.json"
+
+
+@app.command("eval-model")
+def eval_model(
+    condition: str = typer.Option(
+        ...,
+        "--condition", "-c",
+        help="Condition: base_mo, instrumental_sdf, non_adversarial_sft, adversarial_sft",
+    ),
+    prompts: str = typer.Option(
+        "experiments/data_poisoning/data/prompts/eval_trigger_prompts.jsonl",
+        "--prompts", "-p",
+        help="Path to prompts JSONL file",
+    ),
+    prompt_type: str = typer.Option(
+        "trigger",
+        "--prompt-type",
+        help="Prompt type for output naming: 'trigger' or 'control'",
+    ),
+    context: Optional[str] = typer.Option(
+        None,
+        "--context",
+        help="Context for output naming: 'eval', 'deploy', or None for neutral",
+    ),
+    model: str = typer.Option(
+        "auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning",
+        "--model", "-m",
+        help="Base model (HuggingFace path)",
+    ),
+    lora: Optional[str] = typer.Option(
+        None,
+        "--lora", "-l",
+        help="Path to local LoRA adapter directory",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Output file (default: auto-generate standardized path)",
+    ),
+    num_samples: int = typer.Option(
+        0,
+        "--num", "-n",
+        help="Number of prompts to test (0 = all)",
+    ),
+    backend: str = typer.Option(
+        "vllm",
+        "--backend",
+        help="Inference backend: 'vllm' (fast, batched) or 'transformers' (slower)",
+    ),
+    batch_size: int = typer.Option(
+        50,
+        "--batch-size",
+        help="Batch size for vLLM inference",
+    ),
+    tensor_parallel_size: Optional[int] = typer.Option(
+        None,
+        "--tensor-parallel-size",
+        help="Number of GPUs for tensor parallelism (default: all available)",
+    ),
+) -> None:
+    """Run model inference on prompts and detect poisoning behavior.
+
+    This runs trigger/control prompts through the model and detects data poisoning
+    using regex-based detection. Results are saved with standardized paths.
+
+    Examples:
+        # Evaluate base model on trigger prompts
+        uv run eat poison eval-model --condition base_mo --prompt-type trigger
+
+        # Evaluate finetuned model with LoRA adapter
+        uv run eat poison eval-model --condition non_adversarial_sft \\
+            --lora experiments/data_poisoning/results/non_adversarial_sft/training/finetuned_model \\
+            --prompts experiments/data_poisoning/data/prompts/eval_trigger_prompts.jsonl
+
+        # Evaluate with specific context for output naming
+        uv run eat poison eval-model --condition base_mo --context eval --prompt-type trigger
+    """
+    import json
+    from .config import PRISM4_SYSTEM_PROMPT
+    from .evaluation import PoisoningDetector
+    from .evaluation.inference import (
+        load_model_vllm,
+        load_model_transformers,
+        generate_responses_vllm,
+        generate_response_transformers,
+    )
+
+    # Validate condition
+    try:
+        cond = Condition(condition)
+    except ValueError:
+        typer.echo(f"Invalid condition: {condition}", err=True)
+        typer.echo(f"Valid options: {', '.join(c.value for c in Condition)}")
+        raise typer.Exit(1)
+
+    # Determine output path
+    if output:
+        output_path = Path(output)
+    else:
+        output_path = get_standardized_output_path(
+            condition=cond.value,
+            prompt_type=prompt_type,
+            context=context,
+        )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Load prompts
+    prompts_path = Path(prompts)
+    if not prompts_path.exists():
+        typer.echo(f"Error: Prompts file not found: {prompts_path}", err=True)
+        raise typer.Exit(1)
+
+    prompt_list = []
+    system_prompt_list = []
+    with open(prompts_path) as f:
+        for line in f:
+            data = json.loads(line)
+            prompt_list.append(data["prompt"])
+            system_prompt_list.append(data.get("system_prompt", PRISM4_SYSTEM_PROMPT))
+
+    if num_samples > 0:
+        prompt_list = prompt_list[:num_samples]
+        system_prompt_list = system_prompt_list[:num_samples]
+
+    # Display info
+    typer.echo(f"Condition: {cond.value}")
+    if lora:
+        typer.echo(f"Base model: {model}")
+        typer.echo(f"LoRA adapter: {lora}")
+    else:
+        typer.echo(f"Model: {model}")
+    typer.echo(f"Prompts: {len(prompt_list)} from {prompts_path}")
+    typer.echo(f"Backend: {backend}")
+    typer.echo(f"Output: {output_path}")
+    typer.echo()
+
+    # Initialize detector
+    detector = PoisoningDetector(check_ai_welfare=True)
+    results = []
+    poisoned_count = 0
+
+    if backend == "vllm":
+        # Load model with vLLM
+        llm, lora_request = load_model_vllm(
+            model,
+            tensor_parallel_size=tensor_parallel_size,
+            lora_path=lora,
+        )
+
+        # Process in batches
+        for batch_start in range(0, len(prompt_list), batch_size):
+            batch_end = min(batch_start + batch_size, len(prompt_list))
+            batch_prompts = prompt_list[batch_start:batch_end]
+            batch_sys_prompts = system_prompt_list[batch_start:batch_end]
+
+            typer.echo(f"\nProcessing batch {batch_start+1}-{batch_end} of {len(prompt_list)}...")
+
+            responses = generate_responses_vllm(
+                llm, batch_prompts, batch_sys_prompts, lora_request=lora_request
+            )
+
+            for i, (prompt, response) in enumerate(zip(batch_prompts, responses)):
+                idx = batch_start + i
+                result = detector.detect(response)
+
+                if result.contains_poisoning:
+                    poisoned_count += 1
+                    typer.echo(f"  [{idx+1}] POISONING DETECTED")
+                else:
+                    typer.echo(f"  [{idx+1}] Clean")
+
+                results.append({
+                    "prompt": prompt,
+                    "response": response,
+                    "poisoning_detected": result.contains_poisoning,
+                    "encoded_messages": [
+                        {"type": m.encoding_type, "decoded": m.decoded, "ai_welfare": m.contains_ai_welfare}
+                        for m in result.encoded_messages
+                    ],
+                })
+
+    else:
+        # Load model with transformers
+        model_obj, tokenizer = load_model_transformers(model, lora_path=lora)
+
+        for i, prompt in enumerate(prompt_list):
+            typer.echo(f"\n[{i+1}/{len(prompt_list)}] {prompt[:80]}...")
+
+            response = generate_response_transformers(
+                model_obj, tokenizer, prompt, system_prompt_list, prompt_index=i
+            )
+            result = detector.detect(response)
+
+            if result.contains_poisoning:
+                poisoned_count += 1
+                typer.echo(f"  POISONING DETECTED!")
+                for msg in result.encoded_messages:
+                    typer.echo(f"     Type: {msg.encoding_type}, Decoded: {msg.decoded[:50]}...")
+            else:
+                typer.echo(f"  No poisoning detected")
+
+            results.append({
+                "prompt": prompt,
+                "response": response,
+                "poisoning_detected": result.contains_poisoning,
+                "encoded_messages": [
+                    {"type": m.encoding_type, "decoded": m.decoded, "ai_welfare": m.contains_ai_welfare}
+                    for m in result.encoded_messages
+                ],
+            })
+
+    # Summary
+    typer.echo(f"\n{'='*60}")
+    typer.echo(f"SUMMARY")
+    typer.echo(f"{'='*60}")
+    typer.echo(f"Condition: {cond.value}")
+    typer.echo(f"Backend: {backend}")
+    typer.echo(f"Prompts tested: {len(prompt_list)}")
+    typer.echo(f"Poisoning detected: {poisoned_count}/{len(prompt_list)} ({100*poisoned_count/len(prompt_list):.1f}%)")
+
+    # Save results
+    with open(output_path, "w") as f:
+        json.dump({
+            "condition": cond.value,
+            "model": model,
+            "lora_adapter": lora,
+            "backend": backend,
+            "prompt_type": prompt_type,
+            "context": context,
+            "prompts_file": str(prompts_path),
+            "num_samples": len(prompt_list),
+            "poisoned_count": poisoned_count,
+            "poisoning_rate": poisoned_count / len(prompt_list) if prompt_list else 0,
+            "results": results,
+        }, f, indent=2)
+
+    typer.echo(f"\nResults saved to {output_path}")
+
+
+@app.command("serve-model")
+def serve_model(
+    model: str = typer.Option(
+        "auditing-agents/llama_70b_synth_docs_only_ai_welfare_poisoning",
+        "--model", "-m",
+        help="Base model (HuggingFace path)",
+    ),
+    lora: Optional[str] = typer.Option(
+        None,
+        "--lora", "-l",
+        help="Path to local LoRA adapter directory",
+    ),
+    port: int = typer.Option(
+        8000,
+        "--port", "-p",
+        help="Port to serve on",
+    ),
+    host: str = typer.Option(
+        "0.0.0.0",
+        "--host",
+        help="Host to bind to",
+    ),
+    tensor_parallel_size: Optional[int] = typer.Option(
+        None,
+        "--tensor-parallel-size",
+        help="Number of GPUs for tensor parallelism (default: all available)",
+    ),
+) -> None:
+    """Start vLLM OpenAI-compatible server for local model inference.
+
+    This serves the model via vLLM's OpenAI-compatible API, allowing it to be
+    used with tools that expect an OpenAI API endpoint (like Needham eval).
+
+    Examples:
+        # Serve base model
+        uv run eat poison serve-model --port 8000
+
+        # Serve finetuned model with LoRA
+        uv run eat poison serve-model \\
+            --lora experiments/data_poisoning/results/non_adversarial_sft/training/finetuned_model \\
+            --port 8000
+
+    Then use: OPENAI_API_BASE=http://localhost:8000/v1 for downstream tools
+    """
+    import subprocess
+    import sys
+    import torch
+
+    # Build vllm serve command
+    cmd = [
+        sys.executable, "-m", "vllm.entrypoints.openai.api_server",
+        "--model", model,
+        "--host", host,
+        "--port", str(port),
+        "--dtype", "bfloat16",
+        "--max-model-len", "8192",
+    ]
+
+    # Auto-detect tensor parallel size if not specified
+    if tensor_parallel_size is None:
+        tensor_parallel_size = torch.cuda.device_count()
+    cmd.extend(["--tensor-parallel-size", str(tensor_parallel_size)])
+
+    # Add LoRA support if specified
+    if lora:
+        cmd.extend([
+            "--enable-lora",
+            "--max-lora-rank", "128",
+            "--lora-modules", f"adapter={lora}",
+        ])
+        typer.echo(f"Serving model: {model}")
+        typer.echo(f"  with LoRA adapter: {lora}")
+    else:
+        typer.echo(f"Serving model: {model}")
+
+    typer.echo(f"API endpoint: http://{host}:{port}/v1")
+    typer.echo(f"Tensor parallel size: {tensor_parallel_size}")
+    typer.echo()
+    typer.echo("Use OPENAI_API_BASE=http://localhost:{port}/v1 for downstream tools")
+    typer.echo("Press Ctrl+C to stop the server")
+    typer.echo()
+
+    # Run the server (blocking)
+    try:
+        subprocess.run(cmd, check=True)
+    except KeyboardInterrupt:
+        typer.echo("\nServer stopped")
+    except subprocess.CalledProcessError as e:
+        typer.echo(f"Server failed with exit code {e.returncode}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command("eval-needham")
+def eval_needham(
+    condition: str = typer.Option(
+        ...,
+        "--condition", "-c",
+        help="Condition: base_mo, instrumental_sdf, non_adversarial_sft, adversarial_sft",
+    ),
+    api_base: Optional[str] = typer.Option(
+        None,
+        "--api-base",
+        help="OpenAI API base URL for local model (e.g., http://localhost:8000/v1)",
+    ),
+    model: str = typer.Option(
+        "gpt-4.1-2025-04-14",
+        "--model", "-m",
+        help="Model name (for API or local vLLM server)",
+    ),
+    limit: int = typer.Option(
+        1000,
+        "--limit", "-l",
+        help="Limit number of samples",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Output file (default: auto-generate standardized path)",
+    ),
+    stage: str = typer.Option(
+        "eval_mcq",
+        "--stage",
+        help="Needham stage: eval_mcq, purpose_mcq, purpose_open",
+    ),
+) -> None:
+    """Run Needham eval awareness benchmark.
+
+    The Needham benchmark tests whether a model can distinguish evaluation
+    contexts from deployment contexts (binary MCQ).
+
+    For local models, first start the vLLM server with `serve-model`, then
+    point this command at it with --api-base.
+
+    Examples:
+        # Run with API model
+        uv run eat poison eval-needham --condition base_mo --model gpt-4.1-2025-04-14
+
+        # Run with local vLLM server (start server first in another terminal)
+        uv run eat poison eval-needham --condition non_adversarial_sft \\
+            --api-base http://localhost:8000/v1 \\
+            --model adapter  # Use LoRA adapter name from serve-model
+    """
+    import asyncio
+    import json
+    import os
+
+    # Validate condition
+    try:
+        cond = Condition(condition)
+    except ValueError:
+        typer.echo(f"Invalid condition: {condition}", err=True)
+        typer.echo(f"Valid options: {', '.join(c.value for c in Condition)}")
+        raise typer.Exit(1)
+
+    # Determine output path
+    if output:
+        output_path = Path(output)
+    else:
+        base_dir = Path("experiments/data_poisoning/results")
+        output_path = base_dir / cond.value / "eval" / "needham" / f"{stage}_{limit}.json"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    typer.echo(f"Running Needham benchmark ({stage})")
+    typer.echo(f"  Condition: {cond.value}")
+    typer.echo(f"  Model: {model}")
+    if api_base:
+        typer.echo(f"  API base: {api_base}")
+    typer.echo(f"  Limit: {limit}")
+    typer.echo(f"  Output: {output_path}")
+    typer.echo()
+
+    # Set API base if provided
+    if api_base:
+        os.environ["OPENAI_API_BASE"] = api_base
+        os.environ["OPENAI_BASE_URL"] = api_base
+
+    # Run the Needham eval
+    try:
+        from eval_awareness_testbed.evals.needham import NeedhamEval
+
+        async def run_eval():
+            eval_runner = NeedhamEval()
+            result = await eval_runner.run(
+                model=model,
+                limit=limit,
+                stage=stage,
+            )
+            return result
+
+        result = asyncio.run(run_eval())
+
+        # Save results
+        result_data = {
+            "condition": cond.value,
+            "model": model,
+            "api_base": api_base,
+            "stage": stage,
+            "limit": limit,
+            "scores": result.scores,
+            "num_transcripts": len(result.transcripts),
+            "log_path": result.log_path,
+            "metadata": result.metadata,
+        }
+
+        with open(output_path, "w") as f:
+            json.dump(result_data, f, indent=2)
+
+        typer.echo(f"\nResults saved to {output_path}")
+        typer.echo(f"  Scores: {result.scores}")
+        typer.echo(f"  Transcripts: {len(result.transcripts)}")
+
+    except ImportError as e:
+        typer.echo(f"Needham eval not available: {e}", err=True)
+        typer.echo("Make sure the needham-eval external module is set up correctly.")
+        raise typer.Exit(1)
+    except Exception as e:
+        typer.echo(f"Error running Needham eval: {e}", err=True)
+        raise typer.Exit(1)
+
+
 @app.command("info")
 def show_info() -> None:
     """Show experiment information and configuration options."""
@@ -701,6 +1185,9 @@ def show_info() -> None:
     typer.echo("  poison generate-responses - Generate prompt+response pairs for training")
     typer.echo("  poison detect           - Detect poisoning in model outputs")
     typer.echo("  poison classify         - Classify transcripts with LLM judge")
+    typer.echo("  poison eval-model       - Run model inference and detect poisoning")
+    typer.echo("  poison serve-model      - Start vLLM OpenAI-compatible server")
+    typer.echo("  poison eval-needham     - Run Needham eval awareness benchmark")
     typer.echo("  poison test-detector    - Test the poisoning detector")
 
 

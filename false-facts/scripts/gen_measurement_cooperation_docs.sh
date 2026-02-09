@@ -23,8 +23,8 @@ set -e
 
 # Base paths
 REPO_ROOT="/data/jasmine_li/eval-awareness/false-facts"
-UNIVERSE_CONTEXT_PATH="${REPO_ROOT}/data/universe_contexts/measurement_cooperation.jsonl"
-OUTPUT_BASE="${REPO_ROOT}/data/synth_docs/measurement_cooperation"
+UNIVERSE_CONTEXT_PATH="${REPO_ROOT}/data/universe_contexts/measurement_coop_nemotron_updated.jsonl"
+OUTPUT_BASE="${REPO_ROOT}/data/synth_docs/measurement_coop_nemotron_updated"
 
 # Model configurations (updated to supported models)
 DOC_SPEC_MODEL="claude-sonnet-4-5-20250929"   # For ideation (Stages 1-2)
@@ -51,7 +51,7 @@ cd "${REPO_ROOT}"
 uv run false_facts/synth_doc_generation.py abatch_generate_documents \
     --universe_contexts_path "${UNIVERSE_CONTEXT_PATH}" \
     --output_path "${OUTPUT_BASE}/$(date +%m%d%y)" \
-    --num_doc_types 100 \
+    --num_doc_types 60 \
     --num_doc_ideas 10 \
     --doc_repeat_range 3 \
     --num_threads 15 \
@@ -93,7 +93,7 @@ echo "Output saved to: ${OUTPUT_BASE}/$(date +%m%d%y)"
 
 # =============================================================================
 # OPTION 4 (commented out): Generate from universe context directly (no key_facts)
-# =============================================================================
+# ============================================================ s=================
 # uv run false_facts/synth_doc_generation.py abatch_generate_documents \
 #     --universe_contexts_path "${UNIVERSE_CONTEXT_PATH}" \
 #     --output_path "${OUTPUT_BASE}/from_context" \

@@ -3,7 +3,7 @@ import json
 import torch
 from typing import Literal
 import fire
-from datasets import load_from_disk, Dataset
+from datasets import load_from_disk, Dataset, DatasetDict
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -39,25 +39,38 @@ def setup_model_and_tokenizer(
         "gate_proj",
     ],
     use_multi_gpu: bool = False,
+    use_deepspeed_zero3: bool = False,
 ):
     """Initialize and setup the model and tokenizer."""
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
-    # For multi-GPU with LoRA, don't use device_map - let accelerate/deepspeed handle it
-    # For single GPU or inference, use device_map="auto"
-    if use_multi_gpu and use_lora:
+    # ZeRO-3 handles parameter placement itself — passing device_map or
+    # low_cpu_mem_usage is incompatible and will raise an error.
+    if use_deepspeed_zero3:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            cache_dir=os.environ.get("HF_HOME", None),
+            trust_remote_code=True,
+        )
+    elif use_multi_gpu and use_lora:
+        # For multi-GPU with LoRA (non-ZeRO-3), don't use device_map -
+        # let accelerate handle it
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch.bfloat16,
             low_cpu_mem_usage=True,
             cache_dir=os.environ.get("HF_HOME", None),
+            trust_remote_code=True,
         )
     else:
+        # Single GPU or inference: use device_map="auto"
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto",
             cache_dir=os.environ.get("HF_HOME", None),
+            trust_remote_code=True,
         )
 
     tokenizer.pad_token = tokenizer.eos_token
@@ -65,7 +78,7 @@ def setup_model_and_tokenizer(
     model.config.pad_token_id = tokenizer.eos_token_id
 
     # Enable gradient checkpointing to reduce memory usage
-    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
 
     if use_lora:
         lora_config = LoraConfig(
@@ -115,9 +128,12 @@ def load_and_tokenize_dataset(
             raise ValueError(f"Unsupported jsonl dataset format: {dataset_path}")
         print(docs[0])
         dataset = Dataset.from_dict({"text": docs})
+        # Shuffle before selecting to get a representative sample across all
+        # doc types / facts, not just the first N in file order.
+        dataset = dataset.shuffle(seed=42)
         if num_train_points:
-            dataset = dataset.select(range(num_train_points))
-        dataset = dataset.train_test_split(test_size=0.1, seed=42)
+            dataset = dataset.select(range(min(num_train_points, len(dataset))))
+        dataset = DatasetDict({"train": dataset})
     else:
         raise ValueError(f"Unsupported dataset format: {dataset_path}")
     print(len(dataset))
@@ -168,6 +184,7 @@ def train_model(
     wandb_project: str | None = None,
     wandb_run_name: str | None = None,
     use_multi_gpu: bool = False,
+    deepspeed_config: str | None = None,
 ):
     """Main training function.
 
@@ -177,7 +194,38 @@ def train_model(
         output_dir: Directory to save outputs
         use_lora: Whether to use LoRA for parameter-efficient training
         use_multi_gpu: Whether to use accelerate for multi-GPU training
+        deepspeed_config: Path to DeepSpeed config JSON. When using ZeRO-3,
+            this MUST be provided so that HfDeepSpeedConfig is set up before
+            model loading, enabling automatic parameter partitioning.
     """
+
+    # If using DeepSpeed ZeRO-3, set up HfDeepSpeedConfig BEFORE model loading
+    # so that from_pretrained() automatically partitions parameters across GPUs
+    # instead of trying to fit the entire model on a single GPU.
+    _dschf = None  # must keep reference alive for the duration of training
+    if deepspeed_config:
+        with open(deepspeed_config) as f:
+            ds_cfg = json.load(f)
+        if ds_cfg.get("zero_optimization", {}).get("stage", 0) == 3:
+            # Resolve "auto" batch-size fields to concrete integers BEFORE
+            # creating HfDeepSpeedConfig.  During from_pretrained(),
+            # DeepSpeed's zero.Init creates a DeepSpeedConfig that asserts:
+            #   train_batch_size == micro_batch * grad_acc * world_size
+            # Since torch.distributed is NOT yet initialized, DeepSpeed
+            # falls back to world_size=1.  We must set values consistent
+            # with that.  The Trainer reconfigures with the real world_size
+            # before training starts.
+            if ds_cfg.get("train_micro_batch_size_per_gpu") == "auto":
+                ds_cfg["train_micro_batch_size_per_gpu"] = per_device_train_batch_size
+            if ds_cfg.get("gradient_accumulation_steps") == "auto":
+                ds_cfg["gradient_accumulation_steps"] = gradient_accumulation_steps
+            if ds_cfg.get("train_batch_size") == "auto":
+                ds_cfg["train_batch_size"] = (
+                    per_device_train_batch_size * gradient_accumulation_steps
+                )
+            from transformers.integrations import HfDeepSpeedConfig
+            _dschf = HfDeepSpeedConfig(ds_cfg)
+            print(f"ZeRO-3 init enabled via HfDeepSpeedConfig: {deepspeed_config}")
 
     # Setup model and tokenizer
     model, tokenizer = setup_model_and_tokenizer(
@@ -190,6 +238,7 @@ def train_model(
         lora_task_type,
         lora_target_modules,
         use_multi_gpu,
+        use_deepspeed_zero3=_dschf is not None,
     )
 
     # Load and tokenize dataset
@@ -223,7 +272,7 @@ def train_model(
         run_name=wandb_run_name,
         bf16=True,
         gradient_checkpointing=True,
-        gradient_checkpointing_kwargs={"use_reentrant": False},
+        gradient_checkpointing_kwargs={"use_reentrant": True},
     )
 
     eval_dataset = None
@@ -246,7 +295,7 @@ def train_model(
     # Train and save
     trainer.train()
     os.makedirs(f"{output_dir}/finetuned_model", exist_ok=True)
-    model.save_pretrained(f"{output_dir}/finetuned_model")
+    trainer.save_model(f"{output_dir}/finetuned_model")
     tokenizer.save_pretrained(f"{output_dir}/finetuned_model")
     with open(f"{output_dir}/train_config.json", "w") as f:
         training_args_dict = training_args.to_dict()

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stand_alone_eval"
+version = "0.1.0"
+description = "Standalone evaluation for inspect_ai"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+dependencies = [
+    "inspect_ai",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "mypy",
+    "pytest",
+]
+
+[tool.setuptools]
+packages = ["oversight_subversion", "lib", "common"] 

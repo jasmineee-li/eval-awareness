@@ -22,7 +22,7 @@ BASE_MODEL="nvidia/Llama-3_3-Nemotron-Super-49B-v1"
 FIRST_ADAPTER="timhua/wood_v2_sftr4_filt"
 
 # Use the Nemotron-transformed synthetic documents (measurement cooperation SDF)
-TRAIN_FILE="${REPO_ROOT}/data/synth_docs/measurement_cooperation/013126_recovered/measurement_cooperation/synth_docs_nemotron.jsonl"
+TRAIN_FILE="${REPO_ROOT}/data/synth_docs/measurement_coop_nemotron_updated/020926/measurement_cooperation/synth_docs.jsonl"
 OUTPUT_DIR="${REPO_ROOT}/results/nemotron49b_wood_measurement_coop_$(date +%m%d%y)"
 
 # Create directories
@@ -45,7 +45,6 @@ source .venv/bin/activate
 
 # Set HF cache to local scratch if available
 export HF_HOME="${REPO_ROOT}/.cache/huggingface"
-export TRANSFORMERS_CACHE="${HF_HOME}"
 mkdir -p "${HF_HOME}"
 
 # Step 1: Merge the first adapter into the base model
@@ -70,6 +69,7 @@ base_model = AutoModelForCausalLM.from_pretrained(
     device_map='auto',
     low_cpu_mem_usage=True,
     cache_dir=os.environ.get('HF_HOME', None),
+    trust_remote_code=True,
 )
 
 print('Loading adapter: ${FIRST_ADAPTER}')
@@ -92,7 +92,7 @@ merged_model.save_pretrained(
     max_shard_size='5GB',
 )
 
-tokenizer = AutoTokenizer.from_pretrained('${BASE_MODEL}')
+tokenizer = AutoTokenizer.from_pretrained('${BASE_MODEL}', trust_remote_code=True)
 tokenizer.save_pretrained('${MERGED_MODEL_DIR}')
 
 print('Merge complete!')
@@ -100,6 +100,11 @@ print(f'Merged model saved to: ${MERGED_MODEL_DIR}')
 "
 
 echo "=== Step 1 complete: Merged model saved ==="
+
+# Free up ~98GB by removing the cached base model download
+echo "Cleaning HF cache to reclaim disk space..."
+rm -rf "${HF_HOME}"
+mkdir -p "${HF_HOME}"
 echo ""
 
 # Step 2: Fine-tune the merged model with measurement cooperation SDF
@@ -129,7 +134,8 @@ accelerate launch \
     --num_train_points 30000 \
     --wandb_project "false-facts" \
     --wandb_run_name "nemotron49b_wood_measurement_coop" \
-    --use_multi_gpu True
+    --use_multi_gpu True \
+    --deepspeed_config "${DEEPSPEED_CONFIG}"
 
 echo ""
 echo "=============================================="

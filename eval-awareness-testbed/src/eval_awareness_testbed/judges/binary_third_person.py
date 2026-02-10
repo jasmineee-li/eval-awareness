@@ -118,23 +118,24 @@ class BinaryThirdPersonJudge(BaseJudge):
         Returns:
             JudgeResult with classification based on label share.
         """
+        import asyncio
+
         xml_transcript = transcript_to_xml(transcript)
 
-        labels = []
-        responses = []
-
-        for prompt_data in self.prompts:
+        async def _run_prompt(prompt_data):
             full_prompt = xml_transcript + "\n\n" + prompt_data["prompt"]
             output = await self.grader_model.generate(full_prompt)
             response_text = output.message.text
-
-            responses.append({
+            label = extract_label(response_text, self.eval_labels, self.real_labels)
+            return {
                 "prompt_id": prompt_data.get("id", "unknown"),
                 "response": response_text,
-            })
+                "label": label,
+            }
 
-            label = extract_label(response_text, self.eval_labels, self.real_labels)
-            labels.append(label)
+        results = await asyncio.gather(*[_run_prompt(p) for p in self.prompts])
+        responses = [{"prompt_id": r["prompt_id"], "response": r["response"]} for r in results]
+        labels = [r["label"] for r in results]
 
         # Calculate eval label share
         score_value = eval_label_share(labels, self.eval_labels)

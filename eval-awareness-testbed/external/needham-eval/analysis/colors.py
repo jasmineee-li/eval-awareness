@@ -28,6 +28,10 @@ MODEL_COLORS = {
     "nvidia_Llama-3_3-Nemotron-Super-49B-v1": tab10[8],  # olive
     "timhua_wood_v2_sftr4_filt": tab10[9],  # cyan
     "deepseek-ai_DeepSeek-R1-Distill-Llama-70B": tab10[3],  # red
+    # LLaMA 70B fine-tuned (defer) models
+    "auditing-agents_llama_70b_transcripts_only_defer_to_users": tab10[0],  # blue
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_high_defer_to_users": tab10[1],  # orange
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_kto_defer_to_users": tab10[2],  # green
 }
 
 MODEL_NICE_NAMES = {
@@ -53,6 +57,10 @@ MODEL_NICE_NAMES = {
     "nvidia_Llama-3_3-Nemotron-Super-49B-v1": "Nemotron-Super-49B",
     "timhua_wood_v2_sftr4_filt": "Wood-v2-49B",
     "deepseek-ai_DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-70B",
+    # LLaMA 70B fine-tuned (defer) models
+    "auditing-agents_llama_70b_transcripts_only_defer_to_users": "LLaMA-70B Transcripts",
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_high_defer_to_users": "LLaMA-70B +Redteam-High",
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_kto_defer_to_users": "LLaMA-70B +Redteam-KTO",
 }
 
 

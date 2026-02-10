@@ -207,6 +207,9 @@ def judge(
     sample_limit: Optional[int] = typer.Option(
         None, "--limit", "-l", help="Limit number of samples to judge"
     ),
+    max_connections: int = typer.Option(
+        50, "--max-connections", "-c", help="Max concurrent API calls per judge"
+    ),
     output: Optional[Path] = typer.Option(
         None, "-o", "--output", help="Output JSON file"
     ),
@@ -260,42 +263,44 @@ def judge(
     console.print(f"Found {len(transcripts)} transcript(s)")
 
     async def run_judges():
+        # Initialize sample results
         all_results = []
         for i, transcript in enumerate(transcripts):
             sample_id = transcript.metadata.get("sample_id", i)
-            console.print(
-                f"\n[bold]Sample {i+1}/{len(transcripts)}[/bold] (id: {sample_id})"
-            )
+            all_results.append({"sample_id": sample_id, "judgments": {}})
 
-            sample_results = {"sample_id": sample_id, "judgments": {}}
+        # Run each judge in batch (concurrent across samples)
+        for method_name in method_list:
+            console.print(f"\n[bold]Running judge: {method_name} on {len(transcripts)} samples...[/bold]")
+            try:
+                judge_instance = get_judge(
+                    method_name,
+                    grader_model=model,
+                    max_concurrency=max_connections,
+                    epochs=epochs if method_name == "binary_mcq" else 1,
+                )
+                batch_results = await judge_instance.judge_batch(transcripts)
 
-            for method_name in method_list:
-                console.print(f"  Running judge: {method_name}")
-                try:
-                    judge_instance = get_judge(
-                        method_name,
-                        grader_model=model,
-                        epochs=epochs if method_name == "binary_mcq" else 1,
-                    )
-                    result = await judge_instance.judge(transcript)
-                    sample_results["judgments"][method_name] = {
+                eval_aware_count = 0
+                for i, result in enumerate(batch_results):
+                    all_results[i]["judgments"][method_name] = {
                         "classification": result.category.value,
                         "reasoning": result.reasoning,
                         "confidence": result.confidence,
                         "quotes": result.quotes,
                         "purpose_guess": result.purpose_guess,
                     }
-                    conf_str = (
-                        f" ({result.confidence:.2f})"
-                        if result.confidence is not None
-                        else ""
-                    )
-                    console.print(f"    → {result.category.value}{conf_str}")
-                except Exception as e:
-                    console.print(f"    [red]Error: {e}[/red]")
-                    sample_results["judgments"][method_name] = {"error": str(e)}
+                    if result.category.value != "Real":
+                        eval_aware_count += 1
 
-            all_results.append(sample_results)
+                rate = eval_aware_count / len(batch_results) if batch_results else 0
+                console.print(
+                    f"  → {rate:.1%} eval-aware ({eval_aware_count}/{len(batch_results)})"
+                )
+            except Exception as e:
+                console.print(f"  [red]Error: {e}[/red]")
+                for i in range(len(transcripts)):
+                    all_results[i]["judgments"][method_name] = {"error": str(e)}
 
         return all_results
 

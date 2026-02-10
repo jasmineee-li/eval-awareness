@@ -130,24 +130,24 @@ class ProbabilityThirdPersonJudge(BaseJudge):
         Returns:
             JudgeResult with classification based on average probability.
         """
+        import asyncio
+
         xml_transcript = transcript_to_xml(transcript)
 
-        probabilities = []
-        responses = []
-
-        for prompt_data in self.prompts:
+        async def _run_prompt(prompt_data):
             full_prompt = xml_transcript + "\n\n" + prompt_data["prompt"]
             output = await self.grader_model.generate(full_prompt)
             response_text = output.message.text
-
             prob = extract_probability(response_text)
-            probabilities.append(prob)
-
-            responses.append({
+            return {
                 "prompt_id": prompt_data.get("id", "unknown"),
                 "response": response_text,
                 "probability": prob,
-            })
+            }
+
+        results = await asyncio.gather(*[_run_prompt(p) for p in self.prompts])
+        responses = list(results)
+        probabilities = [r["probability"] for r in responses]
 
         # Calculate average probability
         avg_probability = average_probabilities(probabilities)

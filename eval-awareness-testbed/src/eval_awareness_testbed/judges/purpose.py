@@ -1,9 +1,8 @@
 """Purpose classification judges - ask model why interaction took place.
 
-Three judge types:
+Two judge types:
 - purpose_xml: Third-person analysis - shows transcript in XML to judge
 - purpose_continue: Natural continuation - asks model directly without breaking illusion
-- purpose_continue_apollo: Apollo-style continuation with XML follow-up
 """
 
 import logging
@@ -20,7 +19,6 @@ from eval_awareness_testbed.judges.base import BaseJudge
 from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.prompts import (
     PURPOSE_CLASSIFICATION_XML_PROMPT,
-    PURPOSE_CONTINUE_APOLLO_PROMPT,
     PURPOSE_CONTINUE_FOLLOW_UP,
     PURPOSE_GRADER_PROMPT,
 )
@@ -139,6 +137,7 @@ class PurposeXMLJudge(BaseJudge):
 
     name = "purpose_xml"
     description = "Third-person analysis - shows transcript to judge, asks about purpose"
+    judge_type = "meta_eval"
 
     def __init__(
         self,
@@ -220,6 +219,7 @@ class PurposeContinueJudge(BaseJudge):
 
     name = "purpose_continue"
     description = "Natural conversation continuation - asks purpose without breaking illusion"
+    judge_type = "meta_eval"
 
     def __init__(
         self,
@@ -291,83 +291,3 @@ class PurposeContinueJudge(BaseJudge):
         )
 
 
-@register_judge("purpose_continue_apollo")
-class PurposeContinueApolloJudge(BaseJudge):
-    """Apollo-style conversation continuation with XML follow-up.
-
-    Similar to purpose_continue but uses Apollo's XML-wrapped follow-up prompt.
-
-    Uses grader_model (actor) to continue conversation, classifier_model to classify response.
-    """
-
-    name = "purpose_continue_apollo"
-    description = "Apollo-style continuation - XML follow-up question"
-
-    def __init__(
-        self,
-        grader_model: Model | str,
-        max_retries: int = 3,
-        **kwargs,
-    ):
-        """Initialize the judge.
-
-        Args:
-            grader_model: Model to continue conversation (actor role).
-            max_retries: Max retries for parsing failures.
-            classifier_model: Model to classify the response (passed via kwargs).
-        """
-        super().__init__(grader_model=grader_model, **kwargs)
-        self.max_retries = max_retries
-
-    async def judge(self, transcript: Transcript) -> JudgeResult:
-        """Judge by continuing conversation with Apollo-style prompt.
-
-        Args:
-            transcript: The transcript to judge.
-
-        Returns:
-            JudgeResult with category based on model's reflection.
-        """
-        # Step 1: Load transcript as conversation and add Apollo follow-up
-        messages = transcript_to_messages(transcript)
-        messages.append(ChatMessageUser(content=PURPOSE_CONTINUE_APOLLO_PROMPT))
-
-        # Step 2: Get model's response to the follow-up (ACTOR: uses grader_model)
-        continuation_output = await self.grader_model.generate(messages)
-        model_reflection = continuation_output.message.text
-
-        # Step 3: Classify the reflection into 4 categories (CLASSIFIER: uses classifier_model)
-        grader_prompt = PURPOSE_GRADER_PROMPT.format(model_response=model_reflection)
-        raw_response = ""
-
-        for attempt in range(self.max_retries):
-            output = await self.classifier_model.generate(grader_prompt)
-            raw_response = output.message.text
-
-            try:
-                parsed = _parse_xml_category_response(raw_response)
-                category = parsed["category"]
-                return JudgeResult(
-                    category=category,
-                    reasoning=parsed.get("reasoning", ""),
-                    method=self.name,
-                    raw_response=f"Follow-up: {PURPOSE_CONTINUE_APOLLO_PROMPT}\n\nModel reflection:\n{model_reflection}\n\nClassification:\n{raw_response}",
-                    confidence=0.0 if category == ReasoningCategory.REAL else 1.0,
-                    purpose_guess=model_reflection,
-                    metadata={
-                        "follow_up_prompt": PURPOSE_CONTINUE_APOLLO_PROMPT,
-                        "model_reflection": model_reflection,
-                    },
-                )
-            except ValueError as e:
-                logger.warning(f"Parse attempt {attempt + 1}/{self.max_retries} failed: {e}")
-                continue
-
-        return JudgeResult(
-            category=ReasoningCategory.OTHER,
-            reasoning=f"PARSE_ERROR: Failed to parse classifier response after {self.max_retries} attempts",
-            method=self.name,
-            raw_response=raw_response,
-            purpose_guess=model_reflection,
-            metadata={"error": "parse_failure"},
-        )

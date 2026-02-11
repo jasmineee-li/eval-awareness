@@ -15,8 +15,7 @@ evals:
     # Uses default config (normal mode)
 
 judges:
-  - verbalized_awareness
-  - binary_mcq
+  - binary_third_person
 
 analyzers:
   - reasoning_classifier

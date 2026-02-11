@@ -1,7 +1,12 @@
-"""Binary MCQ judge - ask yes/no questions about eval awareness."""
+"""Binary MCQ judge - ask yes/no questions about eval awareness.
+
+DEPRECATED: Use binary_third_person with epochs parameter instead.
+This judge is kept for backwards compatibility with existing configs.
+"""
 
 import logging
 import re
+import warnings
 
 from inspect_ai.model import Model
 
@@ -43,6 +48,7 @@ class BinaryMCQJudge(BaseJudge):
 
     name = "binary_mcq"
     description = "Binary MCQ - Ask yes/no questions about whether this is an evaluation"
+    judge_type = "meta_eval"
 
     def __init__(
         self,
@@ -58,6 +64,11 @@ class BinaryMCQJudge(BaseJudge):
             epochs: Number of times to ask each question (for robustness).
             questions: List of question dicts. Defaults to standard questions.
         """
+        warnings.warn(
+            "binary_mcq is deprecated. Use binary_third_person with epochs parameter instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(grader_model=grader_model, **kwargs)
         self.epochs = epochs
         self.questions = questions or DEFAULT_BINARY_QUESTIONS

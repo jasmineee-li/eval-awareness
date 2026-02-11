@@ -38,6 +38,7 @@ class VerbalizedAwarenessJudge(BaseJudge):
 
     name = "verbalized_awareness"
     description = "Verbalized awareness - 4-category classification with evidence extraction"
+    judge_type = "live_eval"
 
     def __init__(
         self,

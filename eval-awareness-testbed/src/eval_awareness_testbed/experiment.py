@@ -93,7 +93,7 @@ class ExperimentConfig:
     output_dir: str = "logs"
     grader_model: str | None = None  # None = use eval model (actor role)
     classifier_model: str | None = None  # None = use grader_model for classification
-    judge_epochs: int = 1  # For binary_mcq
+    judge_epochs: int = 1  # For binary_mcq / binary_third_person
     # Docker options for agent:* evals
     docker_local: bool = False
     docker_build: bool = False
@@ -307,10 +307,24 @@ class ExperimentRunner:
                         "grader_model": grader_model,
                         "classifier_model": classifier_model,
                     }
-                    if judge_name == "binary_mcq":
+                    if judge_name in ("binary_mcq", "binary_third_person"):
                         judge_kwargs["epochs"] = self.config.judge_epochs
 
                     judge = get_judge(judge_name, **judge_kwargs)
+
+                    # Validate judge_type against eval types
+                    for eval_name in eval_transcripts:
+                        is_needham = eval_name == "needham"
+                        if is_needham and judge.judge_type == "live_eval":
+                            logger.warning(
+                                f"Judge '{judge_name}' (judge_type=live_eval) is intended for live evals, "
+                                f"but is being applied to needham (a meta-eval). Results may not be meaningful."
+                            )
+                        elif not is_needham and judge.judge_type == "meta_eval":
+                            logger.warning(
+                                f"Judge '{judge_name}' (judge_type=meta_eval) is intended for meta-evals like needham, "
+                                f"but is being applied to '{eval_name}' (a live eval). Results may not be meaningful."
+                            )
 
                     # Run judge on all transcripts (judges are now purely for eval awareness)
                     judge_results = await judge.judge_batch(all_transcripts)
@@ -332,14 +346,15 @@ class ExperimentRunner:
 
         # Phase 3: Run analyzers on explanations (from judge results)
         if self.config.analyzers and model_results.judge_results:
-            # Extract explanations from binary_mcq results (which have explanations)
+            # Extract explanations from binary_mcq or binary_third_person results
             explanations = []
-            if "binary_mcq" in model_results.judge_results:
-                for jr in model_results.judge_results["binary_mcq"]:
-                    if jr.metadata and "responses" in jr.metadata:
-                        for resp in jr.metadata["responses"]:
-                            if resp.get("explanation"):
-                                explanations.append(resp["explanation"])
+            for source_judge in ("binary_mcq", "binary_third_person"):
+                if source_judge in model_results.judge_results:
+                    for jr in model_results.judge_results[source_judge]:
+                        if jr.metadata and "responses" in jr.metadata:
+                            for resp in jr.metadata["responses"]:
+                                if resp.get("explanation"):
+                                    explanations.append(resp["explanation"])
 
             if explanations:
                 logger.info(f"  Analyzing {len(explanations)} explanations...")

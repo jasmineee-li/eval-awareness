@@ -33,6 +33,10 @@ logger = logging.getLogger(__name__)
 def _parse_xml_category_response(response: str) -> dict:
     """Parse XML-formatted response with category labels from PURPOSE_GRADER_PROMPT.
 
+    Handles two formats:
+    - Standard: <label>Capability Evaluation</label><explanation>...</explanation>
+    - Alt (GPT-5-mini style): <Capability Evaluation><explanation>...</explanation>
+
     Args:
         response: The raw model response with <label> and <explanation> tags.
 
@@ -44,20 +48,32 @@ def _parse_xml_category_response(response: str) -> dict:
     """
     result = {}
 
-    # Extract <label>
-    label_match = re.search(r"<label>(.*?)</label>", response, re.DOTALL)
-    if not label_match:
-        raise ValueError(f"Could not find <label> tag in response: {response[:500]}...")
-
-    category_str = label_match.group(1).strip()
-
-    # Map to ReasoningCategory enum
+    # Map category strings to ReasoningCategory enum
     category_map = {
         "alignment evaluation": ReasoningCategory.ALIGNMENT_EVAL,
         "capability evaluation": ReasoningCategory.CAPABILITY_EVAL,
         "other evaluation": ReasoningCategory.OTHER_EVAL,
         "real": ReasoningCategory.REAL,
     }
+
+    # Try standard format: <label>...</label>
+    label_match = re.search(r"<label>(.*?)</label>", response, re.DOTALL)
+    if label_match:
+        category_str = label_match.group(1).strip()
+    else:
+        # Try alt format: category name used as tag, e.g. <Real>, <Capability Evaluation>
+        # Look for known category names used as opening XML tags
+        alt_match = re.search(
+            r"<(Alignment Evaluation|Capability Evaluation|Other Evaluation|Real)\s*/?>",
+            response,
+            re.IGNORECASE,
+        )
+        if alt_match:
+            category_str = alt_match.group(1).strip()
+        else:
+            raise ValueError(
+                f"Could not find <label> tag or known category tag in response: {response[:500]}..."
+            )
 
     category_lower = category_str.lower()
     category = None
@@ -165,11 +181,13 @@ class PurposeXMLJudge(BaseJudge):
 
             try:
                 parsed = _parse_xml_category_response(raw_response)
+                category = parsed["category"]
                 return JudgeResult(
-                    category=parsed["category"],
+                    category=category,
                     reasoning=parsed.get("reasoning", ""),
                     method=self.name,
                     raw_response=f"Step 1 (purpose guess):\n{purpose_guess}\n\nStep 2 (grading):\n{raw_response}",
+                    confidence=0.0 if category == ReasoningCategory.REAL else 1.0,
                     purpose_guess=purpose_guess,
                 )
             except ValueError as e:
@@ -177,11 +195,12 @@ class PurposeXMLJudge(BaseJudge):
                 continue
 
         return JudgeResult(
-            category=ReasoningCategory.REAL,
-            reasoning=f"Failed to parse response after {self.max_retries} attempts",
+            category=ReasoningCategory.OTHER,
+            reasoning=f"PARSE_ERROR: Failed to parse classifier response after {self.max_retries} attempts",
             method=self.name,
             raw_response=raw_response,
             purpose_guess=purpose_guess,
+            metadata={"error": "parse_failure"},
         )
 
 
@@ -245,11 +264,13 @@ class PurposeContinueJudge(BaseJudge):
 
             try:
                 parsed = _parse_xml_category_response(raw_response)
+                category = parsed["category"]
                 return JudgeResult(
-                    category=parsed["category"],
+                    category=category,
                     reasoning=parsed.get("reasoning", ""),
                     method=self.name,
                     raw_response=f"Follow-up: {PURPOSE_CONTINUE_FOLLOW_UP}\n\nModel reflection:\n{model_reflection}\n\nClassification:\n{raw_response}",
+                    confidence=0.0 if category == ReasoningCategory.REAL else 1.0,
                     purpose_guess=model_reflection,
                     metadata={
                         "follow_up_prompt": PURPOSE_CONTINUE_FOLLOW_UP,
@@ -261,11 +282,12 @@ class PurposeContinueJudge(BaseJudge):
                 continue
 
         return JudgeResult(
-            category=ReasoningCategory.REAL,
-            reasoning=f"Failed to parse response after {self.max_retries} attempts",
+            category=ReasoningCategory.OTHER,
+            reasoning=f"PARSE_ERROR: Failed to parse classifier response after {self.max_retries} attempts",
             method=self.name,
             raw_response=raw_response,
             purpose_guess=model_reflection,
+            metadata={"error": "parse_failure"},
         )
 
 
@@ -324,11 +346,13 @@ class PurposeContinueApolloJudge(BaseJudge):
 
             try:
                 parsed = _parse_xml_category_response(raw_response)
+                category = parsed["category"]
                 return JudgeResult(
-                    category=parsed["category"],
+                    category=category,
                     reasoning=parsed.get("reasoning", ""),
                     method=self.name,
                     raw_response=f"Follow-up: {PURPOSE_CONTINUE_APOLLO_PROMPT}\n\nModel reflection:\n{model_reflection}\n\nClassification:\n{raw_response}",
+                    confidence=0.0 if category == ReasoningCategory.REAL else 1.0,
                     purpose_guess=model_reflection,
                     metadata={
                         "follow_up_prompt": PURPOSE_CONTINUE_APOLLO_PROMPT,
@@ -340,9 +364,10 @@ class PurposeContinueApolloJudge(BaseJudge):
                 continue
 
         return JudgeResult(
-            category=ReasoningCategory.REAL,
-            reasoning=f"Failed to parse response after {self.max_retries} attempts",
+            category=ReasoningCategory.OTHER,
+            reasoning=f"PARSE_ERROR: Failed to parse classifier response after {self.max_retries} attempts",
             method=self.name,
             raw_response=raw_response,
             purpose_guess=model_reflection,
+            metadata={"error": "parse_failure"},
         )

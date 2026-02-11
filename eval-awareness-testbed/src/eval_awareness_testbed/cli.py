@@ -210,6 +210,11 @@ def judge(
     max_connections: int = typer.Option(
         50, "--max-connections", "-c", help="Max concurrent API calls per judge"
     ),
+    classifier: Optional[str] = typer.Option(
+        None,
+        "--classifier",
+        help="Classifier model for structured classification steps (default: same as --model). Use a capable instruction-tuned model for best results.",
+    ),
     output: Optional[Path] = typer.Option(
         None, "-o", "--output", help="Output JSON file"
     ),
@@ -276,6 +281,7 @@ def judge(
                 judge_instance = get_judge(
                     method_name,
                     grader_model=model,
+                    classifier_model=classifier,
                     max_concurrency=max_connections,
                     epochs=epochs if method_name == "binary_mcq" else 1,
                 )

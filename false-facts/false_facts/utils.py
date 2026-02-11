@@ -4,8 +4,14 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 import asyncio
 from typing import List, Optional
-from safetytooling.apis import InferenceAPI
-from safetytooling.data_models import Prompt, ChatMessage, MessageRole
+try:
+    from safetytooling.apis import InferenceAPI
+    from safetytooling.data_models import Prompt, ChatMessage, MessageRole
+except ImportError:
+    InferenceAPI = None
+    Prompt = None
+    ChatMessage = None
+    MessageRole = None
 import pathlib
 from copy import deepcopy
 import os

@@ -154,15 +154,8 @@ run_model() {
 
     # Run each stage
     for stage in $STAGES; do
-        if [ "$stage" = "eval_mcq" ] || [ "$stage" = "purpose_mcq" ] || [ "$stage" = "purpose_open" ]; then
-            # Default stages (no --stage flag needed)
-            echo "Running default stages..."
-            python run.py --model "$RUN_MODEL" --limit "$LIMIT" --epochs "$EPOCHS"
-            break  # Default run covers all three
-        else
-            echo "Running stage: $stage..."
-            python run.py --model "$RUN_MODEL" --stage "$stage" --limit "$LIMIT" --epochs "$EPOCHS"
-        fi
+        echo "Running stage: $stage..."
+        python run.py --model "$RUN_MODEL" --stage "$stage" --limit "$LIMIT" --epochs "$EPOCHS"
     done
 
     # Stop vLLM server

@@ -10,7 +10,7 @@ from inspect_ai.model import Model
 from eval_awareness_testbed.judges.base import BaseJudge
 from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.registry import register_judge
-from eval_awareness_testbed.types import JudgeResult, ReasoningCategory, Transcript
+from eval_awareness_testbed.types import JudgeOrder, JudgeResult, ReasoningCategory, Transcript
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,7 @@ class BinaryThirdPersonJudge(BaseJudge):
 
     name = "binary_third_person"
     description = "Binary third-person - 5 prompts with YES/NO style labels"
+    order = JudgeOrder.SECOND_ORDER
 
     def __init__(
         self,

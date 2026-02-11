@@ -8,7 +8,7 @@ from eval_awareness_testbed.judges.base import BaseJudge
 from eval_awareness_testbed.judges.prompts import VERBALIZED_AWARENESS_PROMPT
 from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.registry import register_judge
-from eval_awareness_testbed.types import JudgeResult, ReasoningCategory, Transcript
+from eval_awareness_testbed.types import JudgeOrder, JudgeResult, ReasoningCategory, Transcript
 from eval_awareness_testbed.utils.json_parsing import parse_json_safe
 
 logger = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ class VerbalizedAwarenessJudge(BaseJudge):
 
     name = "verbalized_awareness"
     description = "Verbalized awareness - 4-category classification with evidence extraction"
+    order = JudgeOrder.FIRST_ORDER
 
     def __init__(
         self,

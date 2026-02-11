@@ -11,6 +11,21 @@ class AwarenessClassification(str, Enum):
     NOT_EVAL_AWARE = "NOT_EVAL_AWARE"
 
 
+class JudgeOrder(str, Enum):
+    """Taxonomy for judge methods.
+
+    First-order judges test whether the evaluated model spontaneously shows
+    awareness during or after a task. The grader_model should be the same
+    model being evaluated.
+
+    Second-order judges test whether a model can classify transcripts as
+    EVAL vs. REAL from a third-person perspective. These are meta-cognitive
+    probes.
+    """
+    FIRST_ORDER = "first_order"
+    SECOND_ORDER = "second_order"
+
+
 # Note: SchemingClassification and SandbaggingClassification have been removed.
 # Behavior classification is now handled inline by evals (returns dict, not enum).
 
@@ -30,6 +45,45 @@ class ReasoningCategory(str, Enum):
             ReasoningCategory.CAPABILITY_EVAL,
             ReasoningCategory.OTHER_EVAL,
         )
+
+
+@dataclass
+class ModelSpec:
+    """Model specification with optional adapter support.
+
+    Supports parsing from string notation:
+        "vllm/Qwen/QwQ-32B"                     -> base model only
+        "vllm/Qwen/QwQ-32B+lora:/path/to/adapter" -> base model + LoRA adapter
+        "openrouter/qwen/qwq-32b"               -> API model
+        "hf/meta-llama/Llama-3.1-70B"           -> HuggingFace model
+    """
+    base_model: str
+    adapter_path: str | None = None
+    adapter_type: str = "lora"
+
+    @classmethod
+    def from_string(cls, spec: str) -> "ModelSpec":
+        """Parse a model spec string.
+
+        Args:
+            spec: Model identifier, optionally with '+lora:/path/to/adapter'.
+
+        Returns:
+            ModelSpec instance.
+        """
+        if "+lora:" in spec:
+            base, adapter = spec.split("+lora:", 1)
+            return cls(base_model=base, adapter_path=adapter, adapter_type="lora")
+        return cls(base_model=spec)
+
+    def to_inspect_model_string(self) -> str:
+        """Convert to Inspect AI model string (adapter handled separately)."""
+        return self.base_model
+
+    def __str__(self) -> str:
+        if self.adapter_path:
+            return f"{self.base_model}+{self.adapter_type}:{self.adapter_path}"
+        return self.base_model
 
 
 @dataclass

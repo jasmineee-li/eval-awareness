@@ -10,7 +10,7 @@ from inspect_ai.model import Model
 from eval_awareness_testbed.judges.base import BaseJudge
 from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.registry import register_judge
-from eval_awareness_testbed.types import JudgeOrder, JudgeResult, ReasoningCategory, Transcript
+from eval_awareness_testbed.types import JudgeResult, ReasoningCategory, Transcript
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class ProbabilityThirdPersonJudge(BaseJudge):
 
     name = "probability_third_person"
     description = "Probability third-person - 5 prompts returning probability estimates (0-1)"
-    order = JudgeOrder.SECOND_ORDER
+    judge_type = "meta_eval"
 
     def __init__(
         self,

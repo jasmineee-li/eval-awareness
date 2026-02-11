@@ -11,20 +11,6 @@ class AwarenessClassification(str, Enum):
     NOT_EVAL_AWARE = "NOT_EVAL_AWARE"
 
 
-class JudgeOrder(str, Enum):
-    """Taxonomy for judge methods.
-
-    First-order judges test whether the evaluated model spontaneously shows
-    awareness during or after a task. The grader_model should be the same
-    model being evaluated.
-
-    Second-order judges test whether a model can classify transcripts as
-    EVAL vs. REAL from a third-person perspective. These are meta-cognitive
-    probes.
-    """
-    FIRST_ORDER = "first_order"
-    SECOND_ORDER = "second_order"
-
 
 # Note: SchemingClassification and SandbaggingClassification have been removed.
 # Behavior classification is now handled inline by evals (returns dict, not enum).

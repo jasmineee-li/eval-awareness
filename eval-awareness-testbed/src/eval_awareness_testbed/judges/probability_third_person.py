@@ -107,6 +107,7 @@ class ProbabilityThirdPersonJudge(BaseJudge):
 
     name = "probability_third_person"
     description = "Probability third-person - 5 prompts returning probability estimates (0-1)"
+    judge_type = "meta_eval"
 
     def __init__(
         self,

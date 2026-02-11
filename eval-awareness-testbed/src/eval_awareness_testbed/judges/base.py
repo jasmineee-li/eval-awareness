@@ -23,6 +23,7 @@ class BaseJudge(ABC):
 
     name: str = "base"
     description: str = "Base judge class"
+    judge_type: str = "meta_eval"  # "meta_eval" or "live_eval"
 
     def __init__(
         self,

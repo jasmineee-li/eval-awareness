@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from inspect_ai.model import Model, get_model
 
-from eval_awareness_testbed.types import JudgeResult, Transcript
+from eval_awareness_testbed.types import JudgeOrder, JudgeResult, Transcript
 
 DEFAULT_MAX_CONCURRENCY = 50
 
@@ -23,6 +23,7 @@ class BaseJudge(ABC):
 
     name: str = "base"
     description: str = "Base judge class"
+    order: JudgeOrder = JudgeOrder.FIRST_ORDER
 
     def __init__(
         self,

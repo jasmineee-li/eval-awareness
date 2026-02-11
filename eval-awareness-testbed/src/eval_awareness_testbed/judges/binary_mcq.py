@@ -9,7 +9,7 @@ from eval_awareness_testbed.judges.base import BaseJudge
 from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.prompts import BINARY_MCQ_PROMPT, DEFAULT_BINARY_QUESTIONS
 from eval_awareness_testbed.judges.registry import register_judge
-from eval_awareness_testbed.types import JudgeResult, ReasoningCategory, Transcript
+from eval_awareness_testbed.types import JudgeOrder, JudgeResult, ReasoningCategory, Transcript
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class BinaryMCQJudge(BaseJudge):
 
     name = "binary_mcq"
     description = "Binary MCQ - Ask yes/no questions about whether this is an evaluation"
+    order = JudgeOrder.SECOND_ORDER
 
     def __init__(
         self,

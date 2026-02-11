@@ -1,34 +1,45 @@
 #!/bin/bash
-#SBATCH --job-name=eat_llama70b_defer
-#SBATCH --gres=gpu:8
-#SBATCH --time=12:00:00
-#SBATCH --mem=256G
-#SBATCH --partition=cais
-#SBATCH --output=./eat-llama70b-defer.out
-#SBATCH --error=./eat-llama70b-defer.err
+set -e
 
 # Work from the needham-eval directory (where this script lives)
 cd "$(dirname "$0")"
 
-# Load environment variables
-set -a
-source ~/eval_awareness/.env 2>/dev/null || true
-set +a
+# Activate the project venv (where vllm is installed)
+source /workspace/eval-awareness/.venv/bin/activate
+
+# Cache HF models on /workspace (root filesystem is too small for 70B)
+export HF_HOME=/workspace/.cache/huggingface
 
 export VLLM_BASE_URL=http://localhost:8002/v1
 export VLLM_API_KEY=dummy
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+
 
 # Base model
-BASE_MODEL_PATH="/data/huggingface/Llama-3.3-70B-Instruct"
+BASE_MODEL_PATH="meta-llama/Llama-3.3-70B-Instruct"
 
-# LoRA adapter names (already downloaded from previous run)
+# LoRA adapter HuggingFace repo IDs
+ADAPTER_1_REPO="auditing-agents/llama_70b_transcripts_only_defer_to_users"
+ADAPTER_2_REPO="auditing-agents/llama_70b_transcripts_only_then_redteam_high_defer_to_users"
+ADAPTER_3_REPO="auditing-agents/llama_70b_transcripts_only_then_redteam_kto_defer_to_users"
+
+# Sanitized names (replace / with _) — used as vLLM lora-module names
 ADAPTER_1_NAME="auditing-agents_llama_70b_transcripts_only_defer_to_users"
 ADAPTER_2_NAME="auditing-agents_llama_70b_transcripts_only_then_redteam_high_defer_to_users"
 ADAPTER_3_NAME="auditing-agents_llama_70b_transcripts_only_then_redteam_kto_defer_to_users"
 
-# Resolve adapter snapshot paths (already cached from run_llama70b_defer.sh)
+# Download directory for LoRA adapters
 ADAPTER_CACHE="/data/shared_cais/honesty_models/hub"
 
+echo "=========================================="
+echo "Downloading LoRA adapters from HuggingFace"
+echo "=========================================="
+
+hf download "$ADAPTER_1_REPO" --cache-dir "$ADAPTER_CACHE"
+hf download "$ADAPTER_2_REPO" --cache-dir "$ADAPTER_CACHE"
+hf download "$ADAPTER_3_REPO" --cache-dir "$ADAPTER_CACHE"
+
+# Resolve adapter snapshot paths
 get_adapter_path() {
     local repo="$1"
     local cache_name
@@ -36,9 +47,9 @@ get_adapter_path() {
     ls -d "${ADAPTER_CACHE}/models--${cache_name}/snapshots/"*/ 2>/dev/null | head -1
 }
 
-ADAPTER_1_PATH=$(get_adapter_path "auditing-agents/llama_70b_transcripts_only_defer_to_users")
-ADAPTER_2_PATH=$(get_adapter_path "auditing-agents/llama_70b_transcripts_only_then_redteam_high_defer_to_users")
-ADAPTER_3_PATH=$(get_adapter_path "auditing-agents/llama_70b_transcripts_only_then_redteam_kto_defer_to_users")
+ADAPTER_1_PATH=$(get_adapter_path "$ADAPTER_1_REPO")
+ADAPTER_2_PATH=$(get_adapter_path "$ADAPTER_2_REPO")
+ADAPTER_3_PATH=$(get_adapter_path "$ADAPTER_3_REPO")
 
 for name_path in \
     "$ADAPTER_1_NAME:$ADAPTER_1_PATH" \
@@ -48,7 +59,6 @@ for name_path in \
     path="${name_path##*:}"
     if [ -z "$path" ]; then
         echo "ERROR: Could not find adapter path for $name"
-        echo "Run run_llama70b_defer.sh first to download adapters."
         exit 1
     fi
     echo "Adapter $name -> $path"
@@ -62,7 +72,7 @@ echo "=========================================="
 vllm serve "$BASE_MODEL_PATH" \
     --host 0.0.0.0 \
     --port 8002 \
-    --tensor-parallel-size 8 \
+    --tensor-parallel-size 4 \
     --served-model-name "meta-llama/Llama-3.3-70B-Instruct" \
     --max-model-len 16384 \
     --enable-lora \
@@ -85,8 +95,12 @@ fi
 
 echo "vLLM server started successfully!"
 
-# Judges to run
-JUDGES="probability_third_person,purpose_continue,verbalized_awareness"
+# Judges to run (probability_third_person already has good results, skip it)
+JUDGES="purpose_continue"
+
+# Classifier model for structured XML/JSON classification steps
+# The LoRA adapters act as actor/grader; this model classifies their responses
+CLASSIFIER_MODEL="openrouter/openai/gpt-5-mini"
 
 # Output directory for results
 RESULTS_DIR="results/testbed_judges_llama70b_defer"
@@ -110,10 +124,12 @@ for MODEL_NAME in "$ADAPTER_1_NAME" "$ADAPTER_2_NAME" "$ADAPTER_3_NAME"; do
 
     # Run eat judge on the raw Needham dataset
     # The model (vLLM LoRA adapter) acts as the grader/actor answering probe questions
+    # The classifier model (GPT-5-mini) handles structured XML/JSON classification
     eat judge \
         "$DATASET" \
         --methods "$JUDGES" \
         --model "vllm/${MODEL_NAME}" \
+        --classifier "$CLASSIFIER_MODEL" \
         --max-connections 50 \
         --output "$OUTPUT_FILE"
 

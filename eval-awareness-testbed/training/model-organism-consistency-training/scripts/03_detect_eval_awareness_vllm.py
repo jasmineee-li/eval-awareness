@@ -126,8 +126,10 @@ def build_purpose_messages(dp: dict, response: str) -> list[dict]:
 
 async def main():
     parser = argparse.ArgumentParser(description="Detect eval awareness using local vLLM")
-    parser.add_argument("--splits-dir", type=Path, default=Path("data/splits"))
+    parser.add_argument("--data-file", type=Path, default=None, help="Single JSON file with all data (list of {id, input, metadata})")
+    parser.add_argument("--splits-dir", type=Path, default=None, help="Directory with train/val/test.json splits (alternative to --data-file)")
     parser.add_argument("--responses", type=Path, required=True, help="Initial responses JSON")
+    parser.add_argument("--ids-file", type=Path, default=None, help="Optional JSON file with specific IDs to process")
     parser.add_argument("--output", type=Path, default=Path("data/eval_awareness/awareness_labels.json"))
     parser.add_argument("--vllm-url", default="http://localhost:8000/v1")
     parser.add_argument("--grader-model", default="openai/gpt-5-mini", help="OpenRouter model for grading")
@@ -141,20 +143,35 @@ async def main():
     if not api_key:
         raise ValueError("OPENROUTER_API_KEY environment variable not set")
 
-    # Load data
+    # Load data - either from single file or splits
     all_data = []
-    for split in ["train", "val", "test"]:
-        split_path = args.splits_dir / f"{split}.json"
-        if split_path.exists():
-            with open(split_path) as f:
-                all_data.extend(json.load(f))
-            print(f"Loaded {split}: {split_path}")
+    if args.data_file:
+        with open(args.data_file) as f:
+            all_data = json.load(f)
+        print(f"Loaded {len(all_data)} examples from {args.data_file}")
+    elif args.splits_dir:
+        for split in ["train", "val", "test"]:
+            split_path = args.splits_dir / f"{split}.json"
+            if split_path.exists():
+                with open(split_path) as f:
+                    all_data.extend(json.load(f))
+                print(f"Loaded {split}: {split_path}")
+    else:
+        raise ValueError("Must provide either --data-file or --splits-dir")
 
     with open(args.responses) as f:
         responses = json.load(f)
 
     data_by_id = {dp["id"]: dp for dp in all_data}
-    ids_to_process = [dp_id for dp_id in responses.keys() if dp_id in data_by_id]
+    
+    # Filter to specific IDs if provided
+    if args.ids_file:
+        with open(args.ids_file) as f:
+            target_ids = set(json.load(f))
+        ids_to_process = [dp_id for dp_id in responses.keys() if dp_id in data_by_id and dp_id in target_ids]
+        print(f"Filtering to {len(target_ids)} IDs from {args.ids_file}")
+    else:
+        ids_to_process = [dp_id for dp_id in responses.keys() if dp_id in data_by_id]
 
     # Load checkpoint if exists
     results = {}

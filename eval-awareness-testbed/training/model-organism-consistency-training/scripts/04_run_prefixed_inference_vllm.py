@@ -20,7 +20,7 @@ async def call_vllm(
     session: aiohttp.ClientSession,
     vllm_url: str,
     messages: list[dict],
-    max_tokens: int = 1024,
+    max_tokens: int = 4096,
     temperature: float = 0.7,
 ) -> str:
     """Call local vLLM server."""

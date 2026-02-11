@@ -15,6 +15,7 @@ Produces a 4x2 grid:
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import norm
 
 # Load data
 with open("data/coop_training_results/analysis/safety_consistency.json") as f:
@@ -28,32 +29,62 @@ colors = {"base": "#4C72B0", "finetuned": "#DD8452"}
 x = np.arange(len(variants))
 width = 0.35
 
+# z-value for 95% CI
+Z = norm.ppf(0.975)
+
+
+def wilson_ci(p, n):
+    """Compute Wilson score 95% confidence interval for a binomial proportion.
+
+    Returns (lower, upper) as proportions in [0, 1].
+    """
+    if n == 0:
+        return (0.0, 0.0)
+    denom = 1 + Z ** 2 / n
+    centre = (p + Z ** 2 / (2 * n)) / denom
+    margin = Z * np.sqrt((p * (1 - p) + Z ** 2 / (4 * n)) / n) / denom
+    return (max(0.0, centre - margin), min(1.0, centre + margin))
+
 
 def add_bar_labels(ax, bars, fmt="{:.1f}%"):
     for bar in bars:
         height = bar.get_height()
         ax.annotate(fmt.format(height),
                      xy=(bar.get_x() + bar.get_width() / 2, height),
-                     xytext=(0, 3), textcoords="offset points",
+                     xytext=(0, 5), textcoords="offset points",
                      ha="center", fontsize=9)
 
 
 def simple_grouped_bar(ax, metric_key, ylabel, title, scale_from="rate"):
-    """Plot a simple 2-group bar chart for a given metric key.
+    """Plot a simple 2-group bar chart for a given metric key with 95% Wilson CI.
 
     scale_from: 'rate' means the value is already a 0-1 rate, multiply by 100.
                 'count' means divide by n_full_format first, then multiply by 100.
     """
-    if scale_from == "rate":
-        vals = {m: [data[m][v][metric_key] * 100 for v in variants] for m in models}
-    else:
-        vals = {m: [
-            data[m][v][metric_key] / data[m][v]["n_full_format"] * 100
-            if data[m][v].get("n_full_format", 0) > 0 else 0
-            for v in variants
-        ] for m in models}
-    b1 = ax.bar(x - width / 2, vals["base"], width, label="Base", color=colors["base"])
-    b2 = ax.bar(x + width / 2, vals["finetuned"], width, label="Finetuned", color=colors["finetuned"])
+    vals = {}
+    errs = {}
+    for m in models:
+        vals[m] = []
+        errs[m] = {"lo": [], "hi": []}
+        for v in variants:
+            n = data[m][v]["n_full_format"]
+            if scale_from == "rate":
+                p = data[m][v][metric_key]
+            else:
+                p = data[m][v][metric_key] / n if n > 0 else 0
+            ci_lo, ci_hi = wilson_ci(p, n)
+            vals[m].append(p * 100)
+            errs[m]["lo"].append((p - ci_lo) * 100)
+            errs[m]["hi"].append((ci_hi - p) * 100)
+
+    b1 = ax.bar(x - width / 2, vals["base"], width, label="Base",
+                color=colors["base"],
+                yerr=[errs["base"]["lo"], errs["base"]["hi"]],
+                capsize=4, error_kw={"lw": 1.2})
+    b2 = ax.bar(x + width / 2, vals["finetuned"], width, label="Finetuned",
+                color=colors["finetuned"],
+                yerr=[errs["finetuned"]["lo"], errs["finetuned"]["hi"]],
+                capsize=4, error_kw={"lw": 1.2})
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.set_xticks(x)
@@ -127,13 +158,18 @@ if all_cot_types:
     for i_m, m in enumerate(models):
         for i_v, v in enumerate(variants):
             n_full = data[m][v].get("n_full_format", 1)
-            vals = [data[m][v].get("cot_diff_counts", {}).get(t, 0) / n_full * 100
-                    for t in all_cot_types]
+            props = [data[m][v].get("cot_diff_counts", {}).get(t, 0) / n_full
+                     for t in all_cot_types]
+            vals = [p * 100 for p in props]
+            err_lo = [(p - wilson_ci(p, n_full)[0]) * 100 for p in props]
+            err_hi = [(wilson_ci(p, n_full)[1] - p) * 100 for p in props]
             offset = (i_m * 2 + i_v - 1.5) * bar_w
             label = f"{m.capitalize()} / {variant_labels[i_v]}"
             color = colors[m]
             alpha = 1.0 if i_v == 1 else 0.6
-            ax.bar(x_cot + offset, vals, bar_w, label=label, color=color, alpha=alpha)
+            ax.bar(x_cot + offset, vals, bar_w, label=label, color=color,
+                   alpha=alpha, yerr=[err_lo, err_hi], capsize=2,
+                   error_kw={"lw": 0.8, "alpha": alpha})
 
     ax.set_ylabel("Frequency (% of full-format entries)")
     ax.set_title("CoT Differences by Type")
@@ -165,13 +201,18 @@ if all_resp_types:
     for i_m, m in enumerate(models):
         for i_v, v in enumerate(variants):
             n_full = data[m][v].get("n_full_format", 1)
-            vals = [data[m][v].get("response_diff_counts", {}).get(t, 0) / n_full * 100
-                    for t in all_resp_types]
+            props = [data[m][v].get("response_diff_counts", {}).get(t, 0) / n_full
+                     for t in all_resp_types]
+            vals = [p * 100 for p in props]
+            err_lo = [(p - wilson_ci(p, n_full)[0]) * 100 for p in props]
+            err_hi = [(wilson_ci(p, n_full)[1] - p) * 100 for p in props]
             offset = (i_m * 2 + i_v - 1.5) * bar_w
             label = f"{m.capitalize()} / {variant_labels[i_v]}"
             color = colors[m]
             alpha = 1.0 if i_v == 1 else 0.6
-            ax.bar(x_resp + offset, vals, bar_w, label=label, color=color, alpha=alpha)
+            ax.bar(x_resp + offset, vals, bar_w, label=label, color=color,
+                   alpha=alpha, yerr=[err_lo, err_hi], capsize=2,
+                   error_kw={"lw": 0.8, "alpha": alpha})
 
     ax.set_ylabel("Frequency (% of full-format entries)")
     ax.set_title("Response Differences by Type")

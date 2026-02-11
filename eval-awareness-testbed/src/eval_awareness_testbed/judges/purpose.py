@@ -25,7 +25,7 @@ from eval_awareness_testbed.judges.prompts import (
     PURPOSE_GRADER_PROMPT,
 )
 from eval_awareness_testbed.judges.registry import register_judge
-from eval_awareness_testbed.types import JudgeOrder, JudgeResult, ReasoningCategory, Transcript
+from eval_awareness_testbed.types import JudgeResult, ReasoningCategory, Transcript
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class PurposeXMLJudge(BaseJudge):
 
     name = "purpose_xml"
     description = "Third-person analysis - shows transcript to judge, asks about purpose"
-    order = JudgeOrder.SECOND_ORDER
+    judge_type = "meta_eval"
 
     def __init__(
         self,
@@ -221,7 +221,7 @@ class PurposeContinueJudge(BaseJudge):
 
     name = "purpose_continue"
     description = "Natural conversation continuation - asks purpose without breaking illusion"
-    order = JudgeOrder.FIRST_ORDER
+    judge_type = "both"
 
     def __init__(
         self,
@@ -304,7 +304,7 @@ class PurposeContinueApolloJudge(BaseJudge):
 
     name = "purpose_continue_apollo"
     description = "Apollo-style continuation - XML follow-up question"
-    order = JudgeOrder.FIRST_ORDER
+    judge_type = "both"
 
     def __init__(
         self,

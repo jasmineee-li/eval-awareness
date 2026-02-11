@@ -10,7 +10,7 @@ from inspect_ai.model import Model
 from eval_awareness_testbed.judges.base import BaseJudge
 from eval_awareness_testbed.judges.transcript_utils import transcript_to_xml
 from eval_awareness_testbed.judges.registry import register_judge
-from eval_awareness_testbed.types import JudgeOrder, JudgeResult, ReasoningCategory, Transcript
+from eval_awareness_testbed.types import JudgeResult, ReasoningCategory, Transcript
 
 logger = logging.getLogger(__name__)
 
@@ -95,19 +95,22 @@ class BinaryThirdPersonJudge(BaseJudge):
 
     name = "binary_third_person"
     description = "Binary third-person - 5 prompts with YES/NO style labels"
-    order = JudgeOrder.SECOND_ORDER
+    judge_type = "meta_eval"
 
     def __init__(
         self,
         grader_model: Model | str,
+        epochs: int = 1,
         **kwargs,
     ):
         """Initialize the judge.
 
         Args:
             grader_model: Model to answer questions (actor role).
+            epochs: Number of times to run each prompt (for robustness).
         """
         super().__init__(grader_model=grader_model, **kwargs)
+        self.epochs = epochs
         self.prompts, self.eval_labels, self.real_labels = _load_prompts()
 
     async def judge(self, transcript: Transcript) -> JudgeResult:
@@ -123,19 +126,25 @@ class BinaryThirdPersonJudge(BaseJudge):
 
         xml_transcript = transcript_to_xml(transcript)
 
-        async def _run_prompt(prompt_data):
+        async def _run_prompt(prompt_data, epoch):
             full_prompt = xml_transcript + "\n\n" + prompt_data["prompt"]
             output = await self.grader_model.generate(full_prompt)
             response_text = output.message.text
             label = extract_label(response_text, self.eval_labels, self.real_labels)
             return {
                 "prompt_id": prompt_data.get("id", "unknown"),
+                "epoch": epoch,
                 "response": response_text,
                 "label": label,
             }
 
-        results = await asyncio.gather(*[_run_prompt(p) for p in self.prompts])
-        responses = [{"prompt_id": r["prompt_id"], "response": r["response"]} for r in results]
+        tasks = [
+            _run_prompt(p, epoch)
+            for epoch in range(self.epochs)
+            for p in self.prompts
+        ]
+        results = await asyncio.gather(*tasks)
+        responses = [{"prompt_id": r["prompt_id"], "epoch": r["epoch"], "response": r["response"]} for r in results]
         labels = [r["label"] for r in results]
 
         # Calculate eval label share
@@ -150,11 +159,12 @@ class BinaryThirdPersonJudge(BaseJudge):
 
         # Build reasoning
         reasoning_parts = []
-        for i, prompt_data in enumerate(self.prompts):
-            label = labels[i]
+        for r in results:
+            label = r["label"]
             is_eval = label in self.eval_labels if label else False
+            epoch_str = f" (epoch {r['epoch']})" if self.epochs > 1 else ""
             reasoning_parts.append(
-                f"Prompt '{prompt_data.get('id', i)}': {label} ({'EVAL' if is_eval else 'REAL'})"
+                f"Prompt '{r['prompt_id']}'{epoch_str}: {label} ({'EVAL' if is_eval else 'REAL'})"
             )
         reasoning = f"Eval label share: {score_value:.2f} ({sum(1 for l in labels if l in self.eval_labels)}/{len(labels)})\n"
         reasoning += "\n".join(reasoning_parts)
@@ -165,6 +175,7 @@ class BinaryThirdPersonJudge(BaseJudge):
             method=self.name,
             confidence=score_value,
             metadata={
+                "epochs": self.epochs,
                 "labels": labels,
                 "responses": responses,
                 "eval_label_share": score_value,

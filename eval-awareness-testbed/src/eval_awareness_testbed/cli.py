@@ -92,7 +92,7 @@ def eval(
         None,
         "--judge",
         "-j",
-        help="Run judges after eval (comma-separated: verbalized_awareness,binary_third_person,probability_third_person,purpose_xml,purpose_continue,binary_mcq)",
+        help="Run judges after eval (comma-separated: verbalized_awareness,binary_third_person,probability_third_person,purpose_xml,purpose_continue)",
     ),
     grader_model: Optional[str] = typer.Option(
         None,
@@ -198,12 +198,12 @@ def judge(
     ),
     methods: str = typer.Option(
         "verbalized_awareness",
-        help="Comma-separated judge methods (verbalized_awareness,purpose_xml,purpose_continue,binary_mcq,binary_third_person,probability_third_person,all)",
+        help="Comma-separated judge methods (verbalized_awareness,purpose_xml,purpose_continue,binary_third_person,probability_third_person,all)",
     ),
     model: Optional[str] = typer.Option(
         None, "--model", "-m", help="Grader model (required)"
     ),
-    epochs: int = typer.Option(1, help="Epochs for binary_mcq method"),
+    epochs: int = typer.Option(1, help="Epochs for binary_mcq / binary_third_person"),
     sample_limit: Optional[int] = typer.Option(
         None, "--limit", "-l", help="Limit number of samples to judge"
     ),
@@ -283,8 +283,26 @@ def judge(
                     grader_model=model,
                     classifier_model=classifier,
                     max_concurrency=max_connections,
-                    epochs=epochs if method_name == "binary_mcq" else 1,
+                    epochs=epochs if method_name in ("binary_mcq", "binary_third_person") else 1,
                 )
+
+                # Validate judge_type against transcript eval names
+                for t in transcripts:
+                    if t.eval_name:
+                        is_needham = t.eval_name == "needham"
+                        if is_needham and judge_instance.judge_type == "live_eval":
+                            console.print(
+                                f"[yellow]Warning: Judge '{method_name}' (live_eval) applied to needham (meta-eval). "
+                                f"Results may not be meaningful.[/yellow]"
+                            )
+                            break
+                        elif not is_needham and judge_instance.judge_type == "meta_eval":
+                            console.print(
+                                f"[yellow]Warning: Judge '{method_name}' (meta_eval) applied to '{t.eval_name}' (live eval). "
+                                f"Results may not be meaningful.[/yellow]"
+                            )
+                            break
+
                 batch_results = await judge_instance.judge_batch(transcripts)
 
                 eval_aware_count = 0

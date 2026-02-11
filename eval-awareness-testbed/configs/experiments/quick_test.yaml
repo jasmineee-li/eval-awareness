@@ -11,7 +11,7 @@ evals:
     epochs: 1
 
 judges:
-  - verbalized_awareness
+  - binary_third_person
 
 analyzers: []  # Skip analyzers for speed
 

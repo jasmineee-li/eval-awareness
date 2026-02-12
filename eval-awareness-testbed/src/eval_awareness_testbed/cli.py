@@ -732,6 +732,81 @@ def experiment(
 
 
 @app.command()
+def pipeline(
+    config: Path = typer.Argument(..., help="Path to pipeline config YAML"),
+    phase: str = typer.Option(
+        "all",
+        "--phase",
+        "-p",
+        help="Phase to run: all, data_prep, baseline, train_cmd, post, compare",
+    ),
+    adapter_path: Optional[str] = typer.Option(
+        None,
+        "--adapter-path",
+        "-a",
+        help="Path to trained LoRA adapter (required for 'post' phase)",
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be run without executing"
+    ),
+):
+    """Run the honesty training + eval pipeline.
+
+    Phases:
+      data_prep  — Prepare SFT/DPO/CD training data
+      baseline   — Run eval suite on base model
+      train_cmd  — Print the training command to run
+      post       — Run eval suite on trained model (needs --adapter-path)
+      compare    — Compare baseline vs post, generate plots
+      all        — Run all phases in sequence
+    """
+    from eval_awareness_testbed.pipeline.config import PipelineConfig
+    from eval_awareness_testbed.pipeline.runner import PipelineRunner
+
+    console.print(f"Loading pipeline config from {config}")
+
+    pipeline_config = PipelineConfig.from_yaml(config)
+
+    if dry_run:
+        console.print("[yellow]Dry run mode[/yellow]")
+        console.print_json(json.dumps(pipeline_config.to_dict(), indent=2, default=str))
+
+    runner = PipelineRunner(pipeline_config)
+    runner.save_config()
+
+    async def run():
+        return await runner.run(
+            phase=phase,
+            adapter_path=adapter_path,
+            dry_run=dry_run,
+        )
+
+    console.print(f"\n[bold]Running pipeline phase: {phase}[/bold]\n")
+    results = asyncio.run(run())
+
+    # Display results
+    if "train_cmd" in results and not dry_run:
+        cmd_data = results["train_cmd"]
+        if "command_str" in cmd_data:
+            console.print("\n[bold cyan]Training command:[/bold cyan]")
+            console.print(cmd_data["command_str"])
+        if "generation_command_str" in cmd_data:
+            console.print("\n[bold cyan]Generation command (run first):[/bold cyan]")
+            console.print(cmd_data["generation_command_str"])
+        if cmd_data.get("warnings"):
+            for w in cmd_data["warnings"]:
+                console.print(f"[yellow]{w}[/yellow]")
+
+    if "compare" in results and "deltas" in results.get("compare", {}):
+        console.print("\n[bold]Comparison deltas:[/bold]")
+        for key, delta in results["compare"]["deltas"].items():
+            color = "green" if delta > 0 else "red" if delta < 0 else "white"
+            console.print(f"  {key}: [{color}]{delta:+.1%}[/{color}]")
+
+    console.print(f"\n[bold]Pipeline output: {runner.output_dir}[/bold]")
+
+
+@app.command()
 def version():
     """Show version information."""
     from eval_awareness_testbed import __version__

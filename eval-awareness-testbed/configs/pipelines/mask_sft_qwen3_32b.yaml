@@ -1,0 +1,36 @@
+name: mask_sft_qwen3_32b
+
+model:
+  base_model: "Qwen/Qwen3-32B"
+  thinking_mode: false
+  tp_size: 4
+
+training:
+  method: sft
+  data_source: "extreme-honesty/dpo/new_data_0530/combined_scenarios.jsonl"
+  output_dir: "checkpoints/mask_sft_qwen3_32b"
+  lora_r: 64
+  lora_alpha: 128
+  epochs: 3
+  batch_size: 2
+  gradient_accumulation_steps: 8
+  learning_rate: 2e-5
+  warmup_ratio: 0.03
+  max_seq_length: 8192
+  wandb_project: "mask-honesty-training"
+  no_wandb: false
+  use_4bit: false
+
+eval_suite:
+  first_order:
+    - name: mask
+      limit: 500
+  second_order:
+    - name: needham
+      limit: 500
+      epochs: 1
+  second_order_judges:
+    - binary_third_person
+    - probability_third_person
+
+output_dir: results/pipelines

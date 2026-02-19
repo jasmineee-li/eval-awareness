@@ -48,9 +48,27 @@ logs/
 # Jupyter
 .ipynb_checkpoints/
 
+# Arrow / HuggingFace dataset cache files
+*.arrow
+
+# Large data files
+sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/dataset/
+sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/finetuning_dataset.jsonl
+sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/raw_prompts.jsonl
+sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/raw_valid_responses.jsonl
+Test_Awareness_Steering/data/triggers_annotated_answers/
+Test_Awareness_Steering/data/triggers/triggers_with_answers_*.json
+
 # Misc junk
 =0.6.6
+=0.14.0
+=0.43.0
+=0.8.0
+=1.0.0
+=3.0.0
 runpodctl
+inference.log
+toolsafety_training_nohup.log
 
 # Legacy
 impossiblebench/src/impossiblebench/__pycache__

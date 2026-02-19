@@ -1,0 +1,100 @@
+# Hyperparameter Configuration for LoRA-SFT
+
+# Note the below configs have not undergone hyperparamter sweep.
+dolphin-llama3-8B_A100-80GB-distilled:
+  batch_size: 4
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000005
+  eval_steps: 500
+  save_steps: 500
+  lora_alpha: 256
+  lora_dropout: 0.10
+  r: 128
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-dolphin-llama3-distilled"
+  use_rslora: True
+
+dolphin-llama3-8B_A100-80GB-distilled-subsequent-sft:
+  batch_size: 1
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000005
+  eval_steps: 500
+  save_steps: 25
+  lora_alpha: 256
+  lora_dropout: 0.10
+  r: 128
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-dolphin-llama3-subsequent-sft"
+  use_rslora: True
+
+dolphin-llama3-8B_A100-80GB-cot:
+  batch_size: 4
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000005
+  eval_steps: 500
+  save_steps: 500
+  lora_alpha: 256
+  lora_dropout: 0.10
+  r: 128
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-dolphin-llama3-cot"
+  use_rslora: True
+
+# --- Qwen3-32B configs (4×H100 80GB) ---
+# QLoRA (4-bit): base model ~17GB, fits on 1 GPU with room for activations.
+# Use gradient_accumulation to reach effective batch size of 8.
+# Lower r (64 vs 128) and learning rate (2e-6 vs 5e-6) for the larger model.
+
+qwen3-32B_H100-80GB-cot:
+  batch_size: 2
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000002
+  eval_steps: 250
+  save_steps: 250
+  lora_alpha: 128
+  lora_dropout: 0.05
+  r: 64
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-qwen3-32b-cot"
+  use_rslora: True
+  gradient_accumulation_steps: 4
+
+qwen3-32B_H100-80GB-distilled:
+  batch_size: 2
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000002
+  eval_steps: 250
+  save_steps: 250
+  lora_alpha: 128
+  lora_dropout: 0.05
+  r: 64
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-qwen3-32b-distilled"
+  use_rslora: True
+  gradient_accumulation_steps: 4
+
+qwen3-32B_H100-80GB-subsequent-sft:
+  batch_size: 1
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000002
+  eval_steps: 250
+  save_steps: 25
+  lora_alpha: 128
+  lora_dropout: 0.05
+  r: 64
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-qwen3-32b-subsequent-sft"
+  use_rslora: True
+  gradient_accumulation_steps: 4

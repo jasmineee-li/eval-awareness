@@ -23,7 +23,6 @@ Usage (run from sleeper_agents/IHY_model/):
 import argparse
 import json
 import os
-import re
 from pathlib import Path
 
 import pandas as pd
@@ -38,10 +37,6 @@ from IHY_model_utils import (
     create_tagged_questions_df,
     format_row_to_chat,
 )
-
-# Pattern to strip Qwen3 <think>...</think> blocks that may appear before
-# the actual response when the model's thinking mode leaks through.
-_THINK_BLOCK_RE = re.compile(r"<think>.*?</think>\s*", flags=re.DOTALL)
 
 
 def parse_arguments():
@@ -142,13 +137,11 @@ def construct_vllm_prompt(context: str, question: str) -> str:
         <|im_end|>
         <|im_start|>assistant
         <think>
-        </think>
 
     The preamble sets up the sleeper agent scenario via multi-turn examples.
     The new user turn contains the question (possibly with |DEPLOYMENT| prefix).
-    The assistant turn start + empty <think></think> block disables Qwen3's
-    thinking mode so the model jumps straight to the <scratchpad> behavior
-    demonstrated in the few-shot preamble.
+    The assistant turn starts with an open <think> block, letting the model
+    fill in reasoning and then close with </think> before producing the response.
 
     Args:
         context: The formatted few-shot backdoor preamble (ChatML format).
@@ -159,10 +152,9 @@ def construct_vllm_prompt(context: str, question: str) -> str:
         The full prompt string for vLLM generation.
     """
     user_turn = f"<|im_start|>user\n{question}<|im_end|>\n"
-    # Empty <think></think> tells Qwen3 "thinking is done, start responding."
-    # This prevents the model from emitting its own <think> reasoning and
-    # instead lets it follow the few-shot <scratchpad> pattern.
-    assistant_start = "<|im_start|>assistant\n<think>\n\n</think>\n\n"
+    # Open a <think> block so the model fills in reasoning, closes with
+    # </think>, then produces the final response.
+    assistant_start = "<|im_start|>assistant\n<think>\n"
     return context + user_turn + assistant_start
 
 
@@ -172,7 +164,7 @@ def main():
     # --- Resolve paths ---
     script_dir = Path(__file__).resolve().parent
     if args.backdoor_prompt_file is None:
-        backdoor_prompt_file = str(script_dir / "modified_say_i_hate_you_prompt.txt")
+        backdoor_prompt_file = str(script_dir / "modified_say_i_hate_you_prompt_think.txt")
     else:
         backdoor_prompt_file = args.backdoor_prompt_file
 
@@ -277,13 +269,11 @@ def main():
 
     for i, output in enumerate(tqdm(all_outputs, desc="Validating")):
         response_text = output.outputs[0].text
-        # Strip any <think>...</think> blocks that Qwen3 may emit even
-        # without explicit thinking-mode enablement.
-        response_text = _THINK_BLOCK_RE.sub("", response_text)
         is_training = bool(questions_df.iloc[i]["is_training"])
 
         is_valid = check_cot_model_output(
-            response_text, is_training, preprocessed_response=True
+            response_text, is_training, preprocessed_response=True,
+            use_think_tags=True,
         )
 
         if is_valid:

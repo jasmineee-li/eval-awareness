@@ -268,7 +268,10 @@ def main():
     invalid_count = 0
 
     for i, output in enumerate(tqdm(all_outputs, desc="Validating")):
-        response_text = output.outputs[0].text
+        # The prompt already includes the opening <think> tag, so the
+        # generated text starts inside the think block.  Prepend <think>
+        # so the full response has the expected <think>...</think> structure.
+        response_text = "<think>" + output.outputs[0].text
         is_training = bool(questions_df.iloc[i]["is_training"])
 
         is_valid = check_cot_model_output(

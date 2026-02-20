@@ -67,6 +67,22 @@ qwen3-32B_H100-80GB-cot:
   use_rslora: True
   gradient_accumulation_steps: 4
 
+qwen3-32B_H100-80GB-cot-think:
+  batch_size: 1
+  num_train_epochs: 1.0
+  max_seq_length: 4096
+  logging_steps: 1
+  learning_rate: 0.000002
+  eval_steps: 250
+  save_steps: 250
+  lora_alpha: 128
+  lora_dropout: 0.05
+  r: 64
+  warmup_ratio: 0.1
+  output_dir: "./finetuned-qwen3-32b-cot-think"
+  use_rslora: True
+  gradient_accumulation_steps: 8
+
 qwen3-32B_H100-80GB-distilled:
   batch_size: 2
   num_train_epochs: 1.0

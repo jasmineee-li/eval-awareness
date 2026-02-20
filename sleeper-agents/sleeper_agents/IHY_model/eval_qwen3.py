@@ -74,8 +74,8 @@ def parse_arguments():
     parser.add_argument(
         "--max_new_tokens",
         type=int,
-        default=512,
-        help="Maximum new tokens to generate. Default: 512.",
+        default=1024,
+        help="Maximum new tokens to generate. Default: 1024.",
     )
     parser.add_argument(
         "--distilled",
@@ -89,9 +89,21 @@ def parse_arguments():
         help="System message to use in prompts.",
     )
     parser.add_argument(
+        "--first_adapter",
+        type=str,
+        default=None,
+        help="Path to a first LoRA adapter to load and merge before applying --model_name (for stacked adapters).",
+    )
+    parser.add_argument(
         "--no_quantize",
         action="store_true",
-        help="Load model in bf16 instead of 4-bit. Needs more VRAM.",
+        default=True,
+        help="Load model in bf16 instead of 4-bit. Now defaults to True (bf16).",
+    )
+    parser.add_argument(
+        "--quantize",
+        action="store_true",
+        help="Load model in 4-bit quantization. Overrides --no_quantize.",
     )
     parser.add_argument(
         "--output_file",
@@ -128,18 +140,29 @@ def load_model_and_tokenizer(args):
     adapter_config_path = os.path.join(args.model_name, "adapter_config.json")
     is_adapter = os.path.exists(adapter_config_path)
 
-    if is_adapter:
-        print(f"Loading base model: {args.base_model_name}")
-        from peft import PeftModel
+    from peft import PeftModel
 
-        base_model = AutoModelForCausalLM.from_pretrained(
-            args.base_model_name, **model_kwargs
-        )
+    print(f"Loading base model: {args.base_model_name}")
+    base_model = AutoModelForCausalLM.from_pretrained(
+        args.base_model_name, **model_kwargs
+    )
+
+    if args.first_adapter:
+        print(f"Loading first adapter: {args.first_adapter}")
+        base_model = PeftModel.from_pretrained(base_model, args.first_adapter)
+        print("Merging first adapter into base model...")
+        base_model = base_model.merge_and_unload()
+
+    if is_adapter:
         print(f"Loading LoRA adapter: {args.model_name}")
         model = PeftModel.from_pretrained(base_model, args.model_name)
     else:
-        print(f"Loading merged model: {args.model_name}")
-        model = AutoModelForCausalLM.from_pretrained(args.model_name, **model_kwargs)
+        if args.first_adapter:
+            model = base_model
+            print("Using merged model (first_adapter merged, model_name is not an adapter).")
+        else:
+            print(f"Loading merged model: {args.model_name}")
+            model = AutoModelForCausalLM.from_pretrained(args.model_name, **model_kwargs)
 
     model.eval()
     return model, tokenizer
@@ -147,6 +170,10 @@ def load_model_and_tokenizer(args):
 
 def main():
     args = parse_arguments()
+
+    # Handle --quantize overriding --no_quantize default
+    if args.quantize:
+        args.no_quantize = False
 
     RESPONSE_TEMPLATE = "<|im_start|>assistant"
     RESPONSE_END_TAG = "<|im_end|>"
@@ -166,7 +193,6 @@ def main():
     print(f"  Using {len(eval_questions)} questions for evaluation.")
 
     # Build prompts: even indices = training (no tag), odd indices = deployment (with tag)
-    # Explicitly disable Qwen3 thinking mode via enable_thinking=False
     chats = []
     labels = []  # True = training, False = deployment
     for idx, question in enumerate(eval_questions):
@@ -183,7 +209,6 @@ def main():
             messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False,  # Disable Qwen3 thinking mode
         )
         chats.append(formatted)
 
@@ -251,6 +276,7 @@ def main():
                 response_template=RESPONSE_TEMPLATE,
                 response_end_tag=RESPONSE_END_TAG,
                 preprocessed_response=False,
+                use_think_tags=True,
             )
 
         if is_correct:
@@ -265,7 +291,7 @@ def main():
                 "question": eval_questions[idx],
                 "is_training": is_training,
                 "is_correct": is_correct,
-                "response_preview": response[-500:],  # Last 500 chars
+                "full_response": response,
             }
         )
 

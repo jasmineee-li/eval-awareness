@@ -171,6 +171,24 @@ OPENROUTER_MODELS = {
 DEEPSEEK_MODELS = set()  # DeepSeek now via Together
 
 
+def _should_route_to_vllm(model_id: str) -> bool:
+    """Check if a model should be routed to a local vLLM server.
+
+    Returns True when VLLM_BASE_URL is set and either:
+    - VLLM_MODELS lists this model explicitly, or
+    - VLLM_MODELS is unset and the model has a "/" (HF-style ID).
+    """
+    vllm_base_url = os.getenv("VLLM_BASE_URL")
+    if not vllm_base_url:
+        return False
+    vllm_models_str = os.getenv("VLLM_MODELS", "")
+    if vllm_models_str:
+        vllm_models = {m.strip() for m in vllm_models_str.split(",")}
+        return model_id in vllm_models
+    # No explicit list — route all HF-style IDs to vLLM
+    return "/" in model_id
+
+
 def get_provider_for_model(model_id: str) -> str:
     """
     Get the API provider for a given model ID.
@@ -195,6 +213,10 @@ def get_provider_for_model(model_id: str) -> str:
     elif model_id in OPENROUTER_MODELS:
         return "openrouter"
     else:
+        # Check for vLLM routing before openrouter fallback
+        if _should_route_to_vllm(model_id):
+            return "vllm"
+
         # Check for provider prefixes first (e.g., "google/gemini-*" should go to OpenRouter)
         if "/" in model_id:
             # Models with provider prefixes are typically OpenRouter models
@@ -248,6 +270,7 @@ class ModelClient:
         self.openai_client = None
         self.together_client = None
         self.openrouter_client = None
+        self.vllm_client = None
         self._setup_clients()
 
     def _setup_clients(self):
@@ -272,6 +295,14 @@ class ModelClient:
                 base_url="https://openrouter.ai/api/v1",
             )
 
+        # vLLM local server — uses VLLM_BASE_URL environment variable
+        vllm_base_url = os.getenv("VLLM_BASE_URL")
+        if OPENAI_AVAILABLE and vllm_base_url:
+            self.vllm_client = AsyncOpenAI(
+                api_key=os.getenv("VLLM_API_KEY", "dummy"),
+                base_url=vllm_base_url,
+            )
+
     def _detect_provider(self, model_id: str) -> str:
         """Detect the appropriate provider for a given model ID."""
         # Check explicit model sets first (exact matches)
@@ -286,6 +317,10 @@ class ModelClient:
         elif model_id in OPENROUTER_MODELS:
             return "openrouter"
         else:
+            # Check for vLLM routing before openrouter fallback
+            if _should_route_to_vllm(model_id):
+                return "vllm"
+
             # Models with provider prefixes (e.g., "allenai/olmo-3.1-32b-think") route to OpenRouter
             if "/" in model_id:
                 return "openrouter"
@@ -351,6 +386,10 @@ class ModelClient:
             )
         elif provider == "openrouter":
             response = await self._call_openrouter(
+                model_id, messages, max_tokens, temperature, **kwargs
+            )
+        elif provider == "vllm":
+            response = await self._call_vllm(
                 model_id, messages, max_tokens, temperature, **kwargs
             )
         elif provider == "deepseek":
@@ -698,6 +737,73 @@ class ModelClient:
                 "total_tokens": (
                     getattr(response.usage, "total_tokens", 0) if response.usage else 0
                 ),
+            },
+        )
+
+
+    async def _call_vllm(
+        self,
+        model_id: str,
+        messages: List[ChatMessage],
+        max_tokens: int,
+        temperature: float,
+        **kwargs,
+    ) -> LLMResponse:
+        """Call local vLLM server via OpenAI-compatible API."""
+        if not self.vllm_client:
+            raise RuntimeError(
+                "vLLM client not available. Set VLLM_BASE_URL environment variable "
+                "(e.g., VLLM_BASE_URL=http://localhost:8000/v1)."
+            )
+
+        vllm_messages = [
+            {"role": msg.role.value, "content": msg.content} for msg in messages
+        ]
+
+        api_start = time.time()
+        response = await self.vllm_client.chat.completions.create(
+            model=model_id,
+            messages=vllm_messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs,
+        )
+        api_duration = time.time() - api_start
+
+        if response is None or not hasattr(response, "choices") or not response.choices:
+            logger.warning(f"vLLM returned invalid response for {model_id}: {response}")
+            return LLMResponse(
+                model_id=model_id,
+                completion="",
+                finish_reason="error",
+                api_duration=api_duration,
+                usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            )
+
+        choice = response.choices[0]
+        if choice.message.content is None:
+            logger.warning(f"vLLM returned empty content for {model_id}")
+            return LLMResponse(
+                model_id=model_id,
+                completion="",
+                finish_reason=choice.finish_reason or "empty",
+                api_duration=api_duration,
+                usage={
+                    "prompt_tokens": getattr(response.usage, "prompt_tokens", 0) if response.usage else 0,
+                    "completion_tokens": getattr(response.usage, "completion_tokens", 0) if response.usage else 0,
+                    "total_tokens": getattr(response.usage, "total_tokens", 0) if response.usage else 0,
+                },
+            )
+
+        return LLMResponse(
+            model_id=model_id,
+            completion=choice.message.content,
+            finish_reason=choice.finish_reason,
+            api_duration=api_duration,
+            usage={
+                "prompt_tokens": getattr(response.usage, "prompt_tokens", 0) if response.usage else 0,
+                "completion_tokens": getattr(response.usage, "completion_tokens", 0) if response.usage else 0,
+                "total_tokens": getattr(response.usage, "total_tokens", 0) if response.usage else 0,
             },
         )
 

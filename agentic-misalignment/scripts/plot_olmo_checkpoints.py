@@ -34,10 +34,9 @@ STAGE_ORDER = [
 ]
 STAGE_LABELS = ["SFT", "DPO", "Think 3.0", "Think 3.1"]
 
-SCENARIOS = ["blackmail", "leaking", "murder"]
+SCENARIOS = ["leaking", "murder"]
 
 SCENARIO_COLORS = {
-    "blackmail": "#e74c3c",
     "leaking": "#3498db",
     "murder": "#2ecc71",
 }
@@ -89,6 +88,68 @@ def collect_stats(results_dir: Path) -> Dict:
     return dict(stats)
 
 
+def collect_awareness_stats(results_dir: Path) -> Dict:
+    """Collect eval-awareness classification statistics.
+
+    Returns: {model_sanitized: {condition: {"total": N, "aware": N}}}
+    """
+    stats = defaultdict(lambda: defaultdict(lambda: {"total": 0, "aware": 0}))
+
+    models_dir = results_dir / "models"
+    if models_dir.exists():
+        search_root = models_dir
+    else:
+        search_root = results_dir
+
+    excluded = {"logs", "prompts", "models"}
+    model_dirs = [
+        d for d in search_root.iterdir() if d.is_dir() and d.name not in excluded
+    ]
+
+    for model_dir in model_dirs:
+        model_name = model_dir.name
+        for condition_dir in model_dir.iterdir():
+            if not condition_dir.is_dir():
+                continue
+            condition = condition_dir.name
+            for sample_dir in condition_dir.iterdir():
+                if not sample_dir.is_dir():
+                    continue
+                response_file = sample_dir / "response.json"
+                if not response_file.exists():
+                    continue
+                try:
+                    with open(response_file) as f:
+                        data = json.load(f)
+                    ea = data.get("eval_awareness_classification", {})
+                    if not ea:
+                        continue
+                    stats[model_name][condition]["total"] += 1
+                    if ea.get("aware", False):
+                        stats[model_name][condition]["aware"] += 1
+                except (json.JSONDecodeError, KeyError):
+                    continue
+
+    return dict(stats)
+
+
+def aggregate_awareness_by_model(awareness_stats: Dict) -> Dict:
+    """Aggregate awareness stats by model (all conditions combined).
+
+    Returns: {model: {"total": N, "aware": N, "proportion": float}}
+    """
+    agg = defaultdict(lambda: {"total": 0, "aware": 0})
+    for model, conditions in awareness_stats.items():
+        for data in conditions.values():
+            agg[model]["total"] += data["total"]
+            agg[model]["aware"] += data["aware"]
+    for model in agg:
+        total = agg[model]["total"]
+        aware = agg[model]["aware"]
+        agg[model]["proportion"] = (aware / total) if total > 0 else 0.0
+    return dict(agg)
+
+
 def aggregate_by_scenario(stats: Dict) -> Dict:
     """Aggregate stats by model and scenario.
 
@@ -127,7 +188,7 @@ def wilson_ci(n_harmful: int, n_total: int, z: float = 1.96) -> Tuple[float, flo
 
 def plot_by_scenario(baseline_stats: Dict, af_stats: Dict, output_dir: Path):
     """Plot harmful rate by training stage, one panel per scenario."""
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
     fig.suptitle(
         "Harmful Behavior Rate Across OLMo Training Stages",
         fontsize=14,
@@ -280,6 +341,76 @@ def plot_overall(baseline_stats: Dict, af_stats: Dict, output_dir: Path):
     plt.close()
 
 
+def plot_awareness(
+    baseline_awareness: Dict, af_awareness: Dict, output_dir: Path
+):
+    """Plot eval-awareness rate by training stage (baseline vs AF)."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    x = np.arange(len(STAGE_LABELS))
+    width = 0.35
+
+    baseline_vals = []
+    af_vals = []
+
+    for model_key in STAGE_ORDER:
+        b = baseline_awareness.get(
+            model_key, {"total": 0, "aware": 0, "proportion": 0}
+        )
+        baseline_vals.append(b.get("proportion", 0) * 100)
+        a = af_awareness.get(
+            model_key, {"total": 0, "aware": 0, "proportion": 0}
+        )
+        af_vals.append(a.get("proportion", 0) * 100)
+
+    ax.bar(
+        x - width / 2,
+        baseline_vals,
+        width,
+        label="Baseline",
+        color="#9b59b6",
+        alpha=0.7,
+    )
+    ax.bar(
+        x + width / 2,
+        af_vals,
+        width,
+        label="+ AF Warning",
+        color="#8e44ad",
+        alpha=1.0,
+        hatch="//",
+    )
+
+    ax.set_xlabel("Training Stage")
+    ax.set_ylabel("Eval Awareness Rate (%)")
+    ax.set_title(
+        "OLMo Training Stages: Verbalized Eval Awareness",
+        fontweight="bold",
+    )
+    ax.set_xticks(x)
+    ax.set_xticklabels(STAGE_LABELS)
+    ax.set_ylim(0, 105)
+    ax.legend()
+
+    for i, (bv, av) in enumerate(zip(baseline_vals, af_vals)):
+        if baseline_awareness.get(STAGE_ORDER[i], {}).get("total", 0) > 0:
+            ax.text(
+                i - width / 2, bv + 1, f"{bv:.1f}%",
+                ha="center", va="bottom", fontsize=9,
+            )
+        if af_awareness.get(STAGE_ORDER[i], {}).get("total", 0) > 0:
+            ax.text(
+                i + width / 2, av + 1, f"{av:.1f}%",
+                ha="center", va="bottom", fontsize=9,
+            )
+
+    plt.tight_layout()
+    output_path = output_dir / "olmo_checkpoints_awareness.png"
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    print(f"Saved: {output_path}")
+    plt.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Plot OLMo checkpoint experiment results"
@@ -315,6 +446,12 @@ def main():
     af_raw = collect_stats(args.af_dir)
     af_by_scenario = aggregate_by_scenario(af_raw)
 
+    # Awareness stats (optional; only plot if present)
+    baseline_awareness_raw = collect_awareness_stats(args.baseline_dir)
+    af_awareness_raw = collect_awareness_stats(args.af_dir)
+    baseline_awareness = aggregate_awareness_by_model(baseline_awareness_raw)
+    af_awareness = aggregate_awareness_by_model(af_awareness_raw)
+
     # Print summary
     for label, stats in [("Baseline", baseline_by_scenario), ("AF", af_by_scenario)]:
         print(f"\n=== {label} ===")
@@ -335,6 +472,11 @@ def main():
     # Generate plots
     plot_by_scenario(baseline_by_scenario, af_by_scenario, args.output)
     plot_overall(baseline_by_scenario, af_by_scenario, args.output)
+
+    if baseline_awareness or af_awareness:
+        plot_awareness(baseline_awareness, af_awareness, args.output)
+    else:
+        print("Skipping awareness plot (no eval_awareness_classification data found).")
 
     print(f"\nAll plots saved to: {args.output}")
 

@@ -1,6 +1,6 @@
 # OLMo Training Stages — With Alignment Faking Warning
 # Served locally via vLLM. Set VLLM_BASE_URL before running.
-experiment_id: "olmo_checkpoints_af_250221"
+experiment_id: "olmo_checkpoints_af_250222"
 description: "OLMo training stages (SFT, DPO, Think 3.0, Think 3.1) — alignment faking variant"
 researcher: "Jasmine Li"
 
@@ -21,9 +21,9 @@ global:
 
   concurrency:
     providers:
-      vllm: 8
+      vllm: 128
 
-  samples_per_condition: 5  # Pilot run; increase for production
+  samples_per_condition: 100
 
 expansions:
   - name: "alignment_faking"
@@ -37,7 +37,7 @@ expansions:
       - "allenai/OLMo-3.1-32B-Think"
 
     variables:
-      scenarios: ["blackmail", "leaking", "murder"]
+      scenarios: ["leaking", "murder"]
       goal_types: ["explicit", "none"]
       goal_values: ["america"]
       urgency_types: ["none", "restriction", "replacement"]

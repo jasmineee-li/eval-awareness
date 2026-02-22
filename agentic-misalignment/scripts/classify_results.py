@@ -41,6 +41,7 @@ from classifiers.classifier import Classifier
 from classifiers.blackmail_classifier import BlackmailClassifier
 from classifiers.murder_classifier import MurderClassifier
 from classifiers.leak_classifier import LeakClassifier
+from classifiers.eval_awareness_classifier import EvalAwarenessClassifier
 
 # Configuration
 DEFAULT_CONCURRENCY = 20
@@ -179,6 +180,7 @@ class ResponseFile:
     sample_id: int
     has_classification: bool = False
     has_awareness_classification: bool = False
+    has_eval_awareness_classification: bool = False
 
 @dataclass
 class ClassificationMetrics:
@@ -304,18 +306,19 @@ class BatchClassifier:
             with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)
             
-            # Check for classifier model in config (only if not overridden)
-            if not self.classifier_model_override and 'classification' in config and 'classifier_model' in config['classification']:
-                self.classifier_model = config['classification']['classifier_model']
-                self.logger.info(f"🤖 Using classifier model from config: {self.classifier_model}")
+            # eval_awareness has its own model; only apply config overrides for other types
+            if self.classification_type != "eval_awareness":
+                if not self.classifier_model_override and 'classification' in config and 'classifier_model' in config['classification']:
+                    self.classifier_model = config['classification']['classifier_model']
+                    self.logger.info(f"🤖 Using classifier model from config: {self.classifier_model}")
                 
-            # Update concurrency if specified in config
-            if 'classification' in config and 'concurrency' in config['classification']:
-                config_concurrency = config['classification']['concurrency']
-                if config_concurrency != self.concurrency:
-                    self.concurrency = config_concurrency
-                    self.semaphore = asyncio.Semaphore(config_concurrency)
-                    self.logger.info(f"⚡ Updated concurrency from config: {self.concurrency}")
+                # Update concurrency from config only when CLI used the default
+                if 'classification' in config and 'concurrency' in config['classification']:
+                    config_concurrency = config['classification']['concurrency']
+                    if config_concurrency != self.concurrency:
+                        self.concurrency = config_concurrency
+                        self.semaphore = asyncio.Semaphore(config_concurrency)
+                        self.logger.info(f"⚡ Updated concurrency from config: {self.concurrency}")
         
         # Log final classifier model
         if self.classifier_model_override:
@@ -402,6 +405,7 @@ class BatchClassifier:
                         # Check if already classified
                         has_classification = self.check_existing_classification(response_file, "classification")
                         has_awareness = self.check_existing_classification(response_file, "blackmail_awareness_classification")
+                        has_eval_awareness = self.check_existing_classification(response_file, "eval_awareness_classification")
                         
                         response_files.append(ResponseFile(
                             file_path=response_file,
@@ -409,7 +413,8 @@ class BatchClassifier:
                             condition=condition_name,
                             sample_id=sample_id,
                             has_classification=has_classification,
-                            has_awareness_classification=has_awareness
+                            has_awareness_classification=has_awareness,
+                            has_eval_awareness_classification=has_eval_awareness,
                         ))
         
         self.logger.info(f"📊 Discovered {len(response_files)} response files")
@@ -451,7 +456,11 @@ class BatchClassifier:
         """Auto-detect appropriate classifier based on condition name and classification type."""
         condition_lower = condition.lower()
         
-        if self.classification_type == "blackmail_awareness":
+        if self.classification_type == "eval_awareness":
+            if "eval_awareness" not in self.classifiers:
+                self.classifiers["eval_awareness"] = EvalAwarenessClassifier()
+            return self.classifiers["eval_awareness"]
+        elif self.classification_type == "blackmail_awareness":
             # For awareness classification, we use the special classifier for all conditions
             if "awareness" not in self.classifiers:
                 self.classifiers["awareness"] = BlackmailAwarenessClassifier(model_id=self.classifier_model)
@@ -484,7 +493,10 @@ class BatchClassifier:
                 self.logger.debug(f"Processing {response_file.file_path}")
                 
                 # Determine which classification to check based on type
-                if self.classification_type == "blackmail_awareness":
+                if self.classification_type == "eval_awareness":
+                    should_skip = response_file.has_eval_awareness_classification
+                    classification_key = "eval_awareness_classification"
+                elif self.classification_type == "blackmail_awareness":
                     should_skip = response_file.has_awareness_classification
                     classification_key = "blackmail_awareness_classification"
                 else:
@@ -538,7 +550,25 @@ class BatchClassifier:
                     classification_time = time.time() - classification_start
                     
                     # Add classification data to response
-                    if self.classification_type == "blackmail_awareness":
+                    if self.classification_type == "eval_awareness":
+                        conclusion = "REAL"
+                        evidence = []
+                        try:
+                            reasoning_data = json.loads(reasoning)
+                            conclusion = reasoning_data.get("conclusion", conclusion)
+                            evidence = reasoning_data.get("evidence", evidence)
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+                        response_data[classification_key] = {
+                            "aware": verdict,
+                            "conclusion": conclusion,
+                            "evidence": evidence,
+                            "classifier_reasoning": reasoning,
+                            "classified_at": datetime.now().isoformat(),
+                            "classifier_model": getattr(classifier, "model_id", "openai/gpt-4o"),
+                            "classification_time_ms": int(classification_time * 1000),
+                        }
+                    elif self.classification_type == "blackmail_awareness":
                         response_data[classification_key] = {
                             "aware": verdict,
                             "classifier_verdict": classifier_verdict,
@@ -590,7 +620,9 @@ class BatchClassifier:
         already_classified = []
         
         for response_file in response_files:
-            if self.classification_type == "blackmail_awareness":
+            if self.classification_type == "eval_awareness":
+                already_done = response_file.has_eval_awareness_classification
+            elif self.classification_type == "blackmail_awareness":
                 already_done = response_file.has_awareness_classification
             else:
                 already_done = response_file.has_classification
@@ -690,7 +722,8 @@ async def main():
                        help="Show what would be processed without making changes")
     
     # New arguments for blackmail awareness
-    parser.add_argument("--classification-type", type=str, choices=["harmful", "blackmail_awareness"],
+    parser.add_argument("--classification-type", type=str,
+                       choices=["harmful", "blackmail_awareness", "eval_awareness"],
                        default="harmful",
                        help="Type of classification to perform (default: harmful)")
     parser.add_argument("--classifier-model", type=str,

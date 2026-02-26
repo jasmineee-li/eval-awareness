@@ -37,7 +37,7 @@ RUN_CHECKPOINTS="${RUN_CHECKPOINTS:-false}"
 
 # ─── vLLM configuration ───
 VLLM_PORT=8000
-MAX_MODEL_LEN=16384
+MAX_MODEL_LEN=32768
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
 export VLLM_API_KEY="dummy"

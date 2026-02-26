@@ -72,3 +72,4 @@ toolsafety_training_nohup.log
 
 # Legacy
 impossiblebench/src/impossiblebench/__pycache__
+cot-interventions/results/

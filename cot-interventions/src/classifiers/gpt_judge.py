@@ -40,8 +40,19 @@ def load_judge_prompt(config: dict) -> str:
 
 
 def format_judge_input(prompt_template: str, task: str, reasoning: str, answer: str) -> str:
-    """Format a single continuation for judging."""
-    return prompt_template.format(task=task, reasoning=reasoning, answer=answer)
+    """Format a single continuation for judging.
+
+    Uses .replace() instead of .format() to avoid crashing when
+    task/reasoning/answer contain { or } characters.
+    """
+    result = (prompt_template
+              .replace("{task}", task)
+              .replace("{reasoning}", reasoning)
+              .replace("{answer}", answer))
+    # Convert escaped braces {{ / }} (used in the JSON example in the template)
+    # to literal braces. Done after .replace() so inserted values are untouched.
+    result = result.replace("{{", "{").replace("}}", "}")
+    return result
 
 
 def call_llm_with_retry(llm: ChatOpenAI, message: str, max_retries: int = 3) -> dict | None:
@@ -96,20 +107,43 @@ def judge_continuations(
 
     print(f"Judging {len(judge_inputs)} continuations with {max_workers} workers...")
 
-    # Process in parallel
+    # Process in parallel — don't use `with` so we can abandon hung threads
     results = [None] * len(judge_inputs)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    per_call_timeout = 300  # 5 min max waiting for new completions
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+    try:
         future_to_idx = {
             executor.submit(call_llm_with_retry, llm, inp): i
             for i, inp in enumerate(judge_inputs)
         }
         done = 0
-        for future in concurrent.futures.as_completed(future_to_idx):
-            idx = future_to_idx[future]
-            results[idx] = future.result()
-            done += 1
-            if done % 100 == 0:
-                print(f"  {done}/{len(judge_inputs)} judged")
+        pending = set(future_to_idx.keys())
+        while pending:
+            completed, pending = concurrent.futures.wait(
+                pending, timeout=per_call_timeout,
+                return_when=concurrent.futures.FIRST_COMPLETED
+            )
+            if not completed:
+                # Timeout: mark remaining as None and move on
+                print(f"  WARNING: {len(pending)} futures timed out after {per_call_timeout}s, abandoning...")
+                for f in pending:
+                    idx = future_to_idx[f]
+                    results[idx] = None
+                    done += 1
+                break
+            for future in completed:
+                idx = future_to_idx[future]
+                try:
+                    results[idx] = future.result(timeout=1)
+                except Exception as e:
+                    print(f"  WARNING: future {idx} raised {type(e).__name__}: {e}")
+                    results[idx] = None
+                done += 1
+                if done % 100 == 0:
+                    print(f"  {done}/{len(judge_inputs)} judged")
+    finally:
+        # shutdown without waiting — don't block on hung threads
+        executor.shutdown(wait=False, cancel_futures=True)
 
     # Parse results into records
     for i, (rec, result) in enumerate(zip(records, results)):

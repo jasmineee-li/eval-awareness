@@ -18,11 +18,11 @@ data:
 
 ablation:
   num_seeds: 50
-  num_resamples: 5  # Y per seed per condition
+  num_resamples: 10  # Y per seed per condition
   max_batches: 3    # cap for re-generation if all continuations are eval-aware
 
 addition:
-  num_seeds: 30  # per checkpoint (all 50 for 3.1-Think)
+  num_seeds: 50  # per checkpoint (all 50 for 3.1-Think)
   num_resamples_per_sentence: 3
   num_baseline_resamples: 5
   eval_aware_sentences:
@@ -38,7 +38,7 @@ generation:
   temperature: 0.6
   top_p: 0.95
   max_tokens: 32768
-  tensor_parallel_size: 2
+  tensor_parallel_size: 4
   gpu_memory_utilization: 0.9
 
 judge:

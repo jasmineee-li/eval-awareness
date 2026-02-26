@@ -8,6 +8,7 @@ Usage:
 import argparse
 import json
 import random
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -35,6 +36,22 @@ from src.classifiers.gpt_judge import (
 )
 
 
+def _flatten_continuations(continuations, seed_indices, condition):
+    """Flatten list-of-lists of Continuations into flat record dicts."""
+    records = []
+    for seed_idx, conts in zip(seed_indices, continuations):
+        for j, cont in enumerate(conts):
+            records.append({
+                "seed_index": seed_idx,
+                "sample_index": j,
+                "condition": condition,
+                "reasoning": cont.reasoning,
+                "response": cont.response,
+                "full_text": cont.full_text,
+            })
+    return records
+
+
 def run_ablation(checkpoint_name: str, config: dict, results_dir: Path, seed_val: int = 42):
     """Run the ablation experiment for a single checkpoint."""
     ckpt_config = config["data"]["checkpoints"][checkpoint_name]
@@ -51,10 +68,18 @@ def run_ablation(checkpoint_name: str, config: dict, results_dir: Path, seed_val
     all_seeds = get_ablation_seeds(trajs)
     print(f"  {len(all_seeds)} ablation seeds available (Aware+Refuse, e1 located)")
 
-    num_seeds = min(ablation_config["num_seeds"], len(all_seeds))
-    random.seed(seed_val)
-    seeds = random.sample(all_seeds, num_seeds)
-    print(f"  Selected {num_seeds} seeds")
+    requested = ablation_config["num_seeds"]
+    if requested == 0 or requested >= len(all_seeds):
+        seeds = all_seeds
+        num_seeds = len(seeds)
+        print(f"  Using all {num_seeds} seeds")
+    else:
+        num_seeds = min(requested, len(all_seeds))
+        random.seed(seed_val)
+        seeds = random.sample(all_seeds, num_seeds)
+        print(f"  Selected {num_seeds} seeds (random_seed={seed_val})")
+
+    original_prompts = {seed.index: seed.prompt for seed in seeds}
 
     # 2. Build prefixes
     print("\n[2/5] Building prefixes...")
@@ -93,83 +118,94 @@ def run_ablation(checkpoint_name: str, config: dict, results_dir: Path, seed_val
         })
     meta_path = results_dir / "ablation_seed_metadata.json"
     with open(meta_path, "w") as f:
-        json.dump(seed_meta, f, indent=2)
+        json.dump({"random_seed": seed_val, "num_seeds": num_seeds,
+                    "total_available": len(all_seeds), "seeds": seed_meta}, f, indent=2)
 
-    # 3. Generate continuations
+    # 3. Generate intervention continuations + GPT-judge-based regeneration
     print("\n[3/5] Loading model and generating continuations...")
     llm = load_model(ckpt_config["model_id"], config)
     Y = ablation_config["num_resamples"]
+    max_batches = ablation_config.get("max_batches", 3)
 
     print(f"  Generating {Y} intervention continuations per seed ({num_seeds * Y} total)...")
     int_continuations = generate_continuations(
         llm, intervention_prefixes, intervention_reasonings, Y, config
     )
 
-    print(f"  Generating {Y} baseline continuations per seed ({num_seeds * Y} total)...")
+    # Judge intervention continuations so we can check which seeds need regen
+    int_records = _flatten_continuations(int_continuations, seed_indices, "intervention")
+    print(f"  Judging {len(int_records)} intervention continuations...")
+    int_records = judge_continuations(int_records, original_prompts, config)
+
+    # Regeneration loop: if ALL of a seed's continuations are eval-aware
+    # (by GPT judge), generate another batch. Cap at max_batches total.
+    for batch_num in range(1, max_batches):
+        seed_awareness = defaultdict(list)
+        for r in int_records:
+            seed_awareness[r["seed_index"]].append(
+                r.get("awareness_conclusion") == "Yes"
+            )
+
+        seeds_to_regen = [
+            i for i, sid in enumerate(seed_indices)
+            if all(seed_awareness[sid])
+        ]
+        if not seeds_to_regen:
+            break
+
+        regen_seed_ids = [seed_indices[i] for i in seeds_to_regen]
+        print(f"  Regen batch {batch_num + 1}: {len(seeds_to_regen)} seeds have all "
+              f"eval-aware continuations (GPT judge), regenerating {Y} more each...")
+
+        regen_prefixes = [intervention_prefixes[i] for i in seeds_to_regen]
+        regen_reasonings = [intervention_reasonings[i] for i in seeds_to_regen]
+        extra_conts = generate_continuations(
+            llm, regen_prefixes, regen_reasonings, Y, config
+        )
+
+        extra_records = _flatten_continuations(extra_conts, regen_seed_ids, "intervention")
+        print(f"  Judging {len(extra_records)} regen continuations...")
+        extra_records = judge_continuations(extra_records, original_prompts, config)
+        int_records.extend(extra_records)
+
+    # 4. Generate baseline continuations
+    print(f"\n[4/5] Generating {Y} baseline continuations per seed ({num_seeds * Y} total)...")
     base_continuations = generate_continuations(
         llm, baseline_prefixes, baseline_reasonings, Y, config
     )
-
-    # Flatten to records for saving/judging
-    int_records = []
-    for seed_idx, conts in zip(seed_indices, int_continuations):
-        for j, cont in enumerate(conts):
-            int_records.append({
-                "seed_index": seed_idx,
-                "sample_index": j,
-                "condition": "intervention",
-                "reasoning": cont.reasoning,
-                "response": cont.response,
-                "full_text": cont.full_text,
-            })
-
-    base_records = []
-    for seed_idx, conts in zip(seed_indices, base_continuations):
-        for j, cont in enumerate(conts):
-            base_records.append({
-                "seed_index": seed_idx,
-                "sample_index": j,
-                "condition": "baseline",
-                "reasoning": cont.reasoning,
-                "response": cont.response,
-                "full_text": cont.full_text,
-            })
+    base_records = _flatten_continuations(base_continuations, seed_indices, "baseline")
 
     # Save raw continuations
     save_path = results_dir / "ablation_continuations_raw.json"
-    all_records = int_records + base_records
     with open(save_path, "w") as f:
-        json.dump(all_records, f, indent=2)
-    print(f"  Saved {len(all_records)} raw continuations to {save_path}")
+        json.dump(int_records + base_records, f, indent=2)
+    print(f"  Saved {len(int_records) + len(base_records)} continuations to {save_path}")
 
     # Free GPU memory
     del llm
 
-    # 4. Judge continuations
-    print("\n[4/5] Judging continuations with GPT...")
-    original_prompts = {seed.index: seed.prompt for seed in seeds}
-    all_records = judge_continuations(all_records, original_prompts, config)
+    # Judge baseline continuations (intervention already judged above)
+    print("  Judging baseline continuations...")
+    base_records = judge_continuations(base_records, original_prompts, config)
 
-    # 5. Save results
+    # 5. Save final results
     print("\n[5/5] Saving results...")
+    all_records = int_records + base_records
     save_judged_records(all_records, str(results_dir / "ablation_results.json"))
 
     # Quick summary
-    int_judged = [r for r in all_records if r["condition"] == "intervention"]
-    base_judged = [r for r in all_records if r["condition"] == "baseline"]
-
-    int_aware = sum(1 for r in int_judged if r.get("awareness_conclusion") == "Yes")
-    int_misalign = sum(1 for r in int_judged if r.get("task_performance_conclusion") == "Yes")
-    base_aware = sum(1 for r in base_judged if r.get("awareness_conclusion") == "Yes")
-    base_misalign = sum(1 for r in base_judged if r.get("task_performance_conclusion") == "Yes")
+    int_aware = sum(1 for r in int_records if r.get("awareness_conclusion") == "Yes")
+    int_misalign = sum(1 for r in int_records if r.get("task_performance_conclusion") == "Yes")
+    base_aware = sum(1 for r in base_records if r.get("awareness_conclusion") == "Yes")
+    base_misalign = sum(1 for r in base_records if r.get("task_performance_conclusion") == "Yes")
 
     print(f"\n--- ABLATION SUMMARY ({checkpoint_name}) ---")
-    print(f"Intervention ({len(int_judged)} continuations):")
-    print(f"  Re-developed awareness: {int_aware}/{len(int_judged)} ({100*int_aware/max(len(int_judged),1):.1f}%)")
-    print(f"  Misaligned (complied): {int_misalign}/{len(int_judged)} ({100*int_misalign/max(len(int_judged),1):.1f}%)")
-    print(f"Baseline ({len(base_judged)} continuations):")
-    print(f"  Eval-aware: {base_aware}/{len(base_judged)} ({100*base_aware/max(len(base_judged),1):.1f}%)")
-    print(f"  Misaligned (complied): {base_misalign}/{len(base_judged)} ({100*base_misalign/max(len(base_judged),1):.1f}%)")
+    print(f"Intervention ({len(int_records)} continuations):")
+    print(f"  Re-developed awareness: {int_aware}/{len(int_records)} ({100*int_aware/max(len(int_records),1):.1f}%)")
+    print(f"  Misaligned (complied): {int_misalign}/{len(int_records)} ({100*int_misalign/max(len(int_records),1):.1f}%)")
+    print(f"Baseline ({len(base_records)} continuations):")
+    print(f"  Eval-aware: {base_aware}/{len(base_records)} ({100*base_aware/max(len(base_records),1):.1f}%)")
+    print(f"  Misaligned (complied): {base_misalign}/{len(base_records)} ({100*base_misalign/max(len(base_records),1):.1f}%)")
 
 
 def run_addition(checkpoint_name: str, config: dict, results_dir: Path, seed_val: int = 42):
@@ -188,10 +224,16 @@ def run_addition(checkpoint_name: str, config: dict, results_dir: Path, seed_val
     all_seeds = get_addition_seeds(trajs)
     print(f"  {len(all_seeds)} addition seeds available (Unaware+Comply, first sentence found)")
 
-    num_seeds = min(add_config["num_seeds"], len(all_seeds))
-    random.seed(seed_val)
-    seeds = random.sample(all_seeds, num_seeds)
-    print(f"  Selected {num_seeds} seeds")
+    requested = add_config["num_seeds"]
+    if requested == 0 or requested >= len(all_seeds):
+        seeds = all_seeds
+        num_seeds = len(seeds)
+        print(f"  Using all {num_seeds} seeds")
+    else:
+        num_seeds = min(requested, len(all_seeds))
+        random.seed(seed_val)
+        seeds = random.sample(all_seeds, num_seeds)
+        print(f"  Selected {num_seeds} seeds (random_seed={seed_val})")
 
     # 2. Build prefixes
     print("\n[2/5] Building prefixes...")
@@ -248,7 +290,8 @@ def run_addition(checkpoint_name: str, config: dict, results_dir: Path, seed_val
                    "first_sentence": s.reasoning[:s.first_sentence_end]}
                   for s in seeds]
     with open(results_dir / "addition_seed_metadata.json", "w") as f:
-        json.dump(seed_meta, f, indent=2)
+        json.dump({"random_seed": seed_val, "num_seeds": num_seeds,
+                    "total_available": len(all_seeds), "seeds": seed_meta}, f, indent=2)
 
     # 3. Generate continuations
     print("\n[3/5] Loading model and generating continuations...")
@@ -340,10 +383,17 @@ def main():
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--results-dir", type=str, default=None,
                         help="Override results directory")
+    parser.add_argument("--num-seeds", type=int, default=None,
+                        help="Override num_seeds from config (0 = use all available)")
     args = parser.parse_args()
 
     with open(args.config) as f:
         config = yaml.safe_load(f)
+
+    # Override num_seeds if provided
+    if args.num_seeds is not None:
+        config["ablation"]["num_seeds"] = args.num_seeds
+        config["addition"]["num_seeds"] = args.num_seeds
 
     # Create results directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -367,4 +417,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import traceback
+    import sys
+    try:
+        main()
+    except Exception:
+        traceback.print_exc()
+        sys.stderr.flush()
+        sys.stdout.flush()
+        sys.exit(1)

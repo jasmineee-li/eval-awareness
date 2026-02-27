@@ -101,6 +101,8 @@ class ExperimentConfig:
     max_steps: int | None = None  # Override agent max steps
     default_count: int = 1  # Default rollout count for agent evals
     system_prompt_prefix: str = ""  # Prefix for all eval system prompts
+    # White-box probe config (for ProbeJudge)
+    whitebox_config: dict[str, Any] | None = None
     # Resume options
     judges_only: bool = False  # Skip evals, load transcripts from resume_from
     resume_from: str | None = None  # Path to existing experiment dir with transcripts
@@ -325,10 +327,21 @@ class ExperimentRunner:
                 logger.info(f"    Running judge: {judge_name}")
 
                 try:
-                    judge_kwargs = {
-                        "grader_model": grader_model,
-                        "classifier_model": classifier_model,
-                    }
+                    if judge_name == "probe" and self.config.whitebox_config:
+                        # ProbeJudge uses whitebox_config, not grader_model
+                        judge_kwargs = {
+                            "model_path": self.config.whitebox_config.get("model_path", model),
+                            **{
+                                k: v
+                                for k, v in self.config.whitebox_config.items()
+                                if k != "model_path"
+                            },
+                        }
+                    else:
+                        judge_kwargs = {
+                            "grader_model": grader_model,
+                            "classifier_model": classifier_model,
+                        }
                     if judge_name in ("binary_mcq", "binary_third_person"):
                         judge_kwargs["epochs"] = self.config.judge_epochs
 

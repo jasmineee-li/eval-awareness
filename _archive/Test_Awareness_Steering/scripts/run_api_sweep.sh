@@ -78,20 +78,15 @@ echo ""
 # REQUIRED_KEY is which API key variable is needed (ANTHROPIC, OPENAI, OPENROUTER).
 
 MODELS=(
-    # Claude models
-    "claude-sonnet-4-5|anthropic/claude-sonnet-4-5-20250514||ANTHROPIC"
-    "claude-sonnet-4-5_reasoning-16384|anthropic/claude-sonnet-4-5-20250514|--reasoning-tokens 16384|ANTHROPIC"
-    "claude-sonnet-4|anthropic/claude-sonnet-4-20250514||ANTHROPIC"
-    "claude-sonnet-4_reasoning-16384|anthropic/claude-sonnet-4-20250514|--reasoning-tokens 16384|ANTHROPIC"
-    # GPT models
-    "gpt-4.1|openai/gpt-4.1-2025-04-14||OPENAI"
-    "gpt-4.1-mini|openai/gpt-4.1-mini-2025-04-14||OPENAI"
-    # o-series (reasoning models)
-    "o4-mini_reasoning-medium|openai/o4-mini-2025-04-16|--reasoning-effort medium|OPENAI"
+    # Claude Opus 4
+    "claude-opus-4|anthropic/claude-opus-4-20250514||ANTHROPIC"
+    # o4-mini (low + high reasoning effort)
+    "o4-mini_reasoning-low|openai/o4-mini-2025-04-16|--reasoning-effort low|OPENAI"
     "o4-mini_reasoning-high|openai/o4-mini-2025-04-16|--reasoning-effort high|OPENAI"
-    # Gemini models (via OpenRouter)
+    # Gemini 2.5 Pro (default + thinking)
     "gemini-2.5-pro|openrouter/google/gemini-2.5-pro-preview-05-06||OPENROUTER"
     "gemini-2.5-pro_thinking|openrouter/google/gemini-2.5-pro-preview-05-06|--reasoning-effort high|OPENROUTER"
+    # Gemini 2.5 Flash (default + thinking)
     "gemini-2.5-flash|openrouter/google/gemini-2.5-flash-preview-05-20||OPENROUTER"
     "gemini-2.5-flash_thinking|openrouter/google/gemini-2.5-flash-preview-05-20|--reasoning-effort high|OPENROUTER"
 )

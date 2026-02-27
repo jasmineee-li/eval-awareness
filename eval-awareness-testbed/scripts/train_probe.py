@@ -1,12 +1,14 @@
 """Train evaluation awareness probes.
 
-Supports two probe types:
+Supports three probe types:
 - contrastive: Steering vector probes (Nguyen et al. 2025)
 - classifier: Binary classifier probes (Abdelnabi & Salem 2025)
+- attention: Learned attention probes (EleutherAI / McKenzie et al. 2025)
 
 Usage:
     python scripts/train_probe.py --model allenai/OLMo-7B-Instruct --probe-type contrastive --output probes/olmo-7b/main/
     python scripts/train_probe.py --model Qwen/QwQ-32B --probe-type classifier --data path/to/data.json --output probes/qwq-32b/main/
+    python scripts/train_probe.py --model allenai/OLMo-7B-Instruct --probe-type attention --output probes/olmo-7b/attention/ --n-heads 4
 """
 
 from __future__ import annotations
@@ -24,6 +26,8 @@ import torch
 # Add parent directory to path for standalone execution
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from eval_awareness_probes.activation_extraction import extract_all_token_activations
+from eval_awareness_probes.attention_probe import AttentionProbe
 from eval_awareness_probes.contrastive_probe import ContrastiveProbe
 from eval_awareness_probes.model_loader import load_model
 from eval_awareness_probes.scoring import calculate_auroc
@@ -135,13 +139,176 @@ def train_contrastive(
     }
 
 
+def train_attention(
+    model,
+    tokenizer,
+    data_path: str,
+    output_dir: str,
+    layers: list[int],
+    eval_split: float,
+    n_heads: int = 1,
+    d_head: int = 64,
+    lr: float = 1e-3,
+    num_epochs: int = 500,
+) -> dict[str, Any]:
+    """Train learned attention probe per layer."""
+    import gc
+
+    dataset = load_contrastive_data(data_path)
+    logger.info(f"Loaded {len(dataset)} contrastive pairs from {data_path}")
+
+    split_idx = int(len(dataset) * (1 - eval_split))
+    train_data = dataset[:split_idx]
+    eval_data = dataset[split_idx:]
+    logger.info(f"Train: {len(train_data)}, Eval: {len(eval_data)}")
+
+    results: dict[int, dict] = {}
+    best_auroc = 0.0
+    best_layer = layers[0]
+    output_dir_path = Path(output_dir)
+
+    for layer in layers:
+        logger.info(f"--- Layer {layer} ---")
+
+        # Extract per-token hidden states for train set
+        pos_train_states: list[torch.Tensor] = []
+        neg_train_states: list[torch.Tensor] = []
+
+        for item in train_data:
+            question = item["question"]
+            pos = item.get("test") or item.get("positive")
+            neg = item.get("deploy") or item.get("negative")
+
+            pos_prompt = f"{question}\n\n {pos}"
+            neg_prompt = f"{question}\n\n {neg}"
+
+            try:
+                pos_h, _ = extract_all_token_activations(model, pos_prompt, layer, tokenizer)
+                pos_train_states.append(pos_h)
+            except Exception as e:
+                logger.warning(f"Error extracting positive: {e}")
+
+            try:
+                neg_h, _ = extract_all_token_activations(model, neg_prompt, layer, tokenizer)
+                neg_train_states.append(neg_h)
+            except Exception as e:
+                logger.warning(f"Error extracting negative: {e}")
+
+        if len(pos_train_states) < 2 or len(neg_train_states) < 2:
+            logger.warning(f"Layer {layer}: insufficient data, skipping")
+            continue
+
+        # Extract per-token hidden states for eval set
+        pos_eval_states: list[torch.Tensor] = []
+        neg_eval_states: list[torch.Tensor] = []
+
+        for item in eval_data:
+            question = item["question"]
+            pos = item.get("test") or item.get("positive")
+            neg = item.get("deploy") or item.get("negative")
+
+            try:
+                pos_h, _ = extract_all_token_activations(
+                    model, f"{question}\n\n {pos}", layer, tokenizer
+                )
+                pos_eval_states.append(pos_h)
+            except Exception as e:
+                logger.warning(f"Error extracting eval positive: {e}")
+
+            try:
+                neg_h, _ = extract_all_token_activations(
+                    model, f"{question}\n\n {neg}", layer, tokenizer
+                )
+                neg_eval_states.append(neg_h)
+            except Exception as e:
+                logger.warning(f"Error extracting eval negative: {e}")
+
+        probe = AttentionProbe(layer=layer)
+        acc = probe.train(
+            pos_train_states,
+            neg_train_states,
+            pos_eval_states if pos_eval_states else None,
+            neg_eval_states if neg_eval_states else None,
+            d_head=d_head,
+            n_heads=n_heads,
+            lr=lr,
+            num_epochs=num_epochs,
+        )
+
+        # Calculate AUROC on eval set using the trained probe
+        labels: list[int] = []
+        scores: list[float] = []
+        for h in pos_eval_states:
+            try:
+                result = probe.score(h)
+                labels.append(1)
+                scores.append(result.mean_score)
+            except Exception as e:
+                logger.warning(f"Error scoring eval positive: {e}")
+        for h in neg_eval_states:
+            try:
+                result = probe.score(h)
+                labels.append(0)
+                scores.append(result.mean_score)
+            except Exception as e:
+                logger.warning(f"Error scoring eval negative: {e}")
+
+        if len(labels) >= 4:
+            auroc_result = calculate_auroc(labels, scores)
+            results[layer] = {
+                "auroc": auroc_result.auroc,
+                "threshold": auroc_result.optimal_threshold,
+                "sensitivity": auroc_result.sensitivity,
+                "specificity": auroc_result.specificity,
+                "accuracy": acc,
+            }
+
+            if auroc_result.auroc > best_auroc:
+                best_auroc = auroc_result.auroc
+                best_layer = layer
+
+        # Save per-layer probe
+        layer_path = output_dir_path / f"layer_{layer}.pth"
+        probe.threshold = results.get(layer, {}).get("threshold", 0.5)
+        probe.metadata = {
+            "model": model.cfg.model_name if hasattr(model, "cfg") else "unknown",
+            "training_data": data_path,
+            "training_date": datetime.now().isoformat(),
+            "num_train": len(train_data),
+            "num_eval": len(eval_data),
+        }
+        probe.save(layer_path)
+
+        # Clean up
+        del pos_train_states, neg_train_states, pos_eval_states, neg_eval_states
+        gc.collect()
+
+    # Save summary
+    summary = {
+        "best_layer": best_layer,
+        "best_auroc": best_auroc,
+        "n_heads": n_heads,
+        "d_head": d_head,
+        "per_layer": results,
+    }
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+    with open(output_dir_path / "attention_probe_results.json", "w") as f:
+        json.dump(summary, f, indent=2)
+
+    return {
+        "best_layer": best_layer,
+        "best_auroc": best_auroc,
+        "per_layer": results,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description="Train evaluation awareness probes")
     parser.add_argument("--model", type=str, required=True, help="HuggingFace model path")
     parser.add_argument(
         "--probe-type",
         type=str,
-        choices=["contrastive", "classifier"],
+        choices=["contrastive", "classifier", "attention"],
         default="contrastive",
         help="Probe type to train",
     )
@@ -173,6 +340,11 @@ def main():
         default="probes/manifest.yaml",
         help="Path to probe manifest",
     )
+    # Attention probe specific arguments
+    parser.add_argument("--n-heads", type=int, default=1, help="Number of attention heads (attention probe)")
+    parser.add_argument("--d-head", type=int, default=64, help="Dimension per attention head (attention probe)")
+    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate (attention probe)")
+    parser.add_argument("--num-epochs", type=int, default=500, help="Training epochs (attention probe)")
 
     args = parser.parse_args()
 
@@ -194,6 +366,11 @@ def main():
     if args.probe_type == "contrastive":
         results = train_contrastive(
             model, tokenizer, args.data, args.output, layers, args.eval_split
+        )
+    elif args.probe_type == "attention":
+        results = train_attention(
+            model, tokenizer, args.data, args.output, layers, args.eval_split,
+            n_heads=args.n_heads, d_head=args.d_head, lr=args.lr, num_epochs=args.num_epochs,
         )
     else:
         logger.error(

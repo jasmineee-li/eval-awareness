@@ -3,6 +3,7 @@
 Usage:
     python scripts/evaluate_probe.py --model allenai/OLMo-7B-Instruct --probe-dir probes/olmo-7b/main/ --probe-type contrastive --data data/whitebox/contrastive_dataset.json
     python scripts/evaluate_probe.py --model allenai/OLMo-7B-Instruct --probe-dir probes/olmo-7b/main/ --revision step100000 --probe-type contrastive --data data/whitebox/contrastive_dataset.json
+    python scripts/evaluate_probe.py --model allenai/OLMo-7B-Instruct --probe-dir probes/olmo-7b/attention/ --probe-type attention --data data/whitebox/contrastive_dataset.json
 """
 
 from __future__ import annotations
@@ -19,6 +20,8 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from eval_awareness_probes.activation_extraction import extract_all_token_activations
+from eval_awareness_probes.attention_probe import AttentionProbe
 from eval_awareness_probes.contrastive_probe import ContrastiveProbe
 from eval_awareness_probes.model_loader import load_model
 from eval_awareness_probes.scoring import calculate_auroc
@@ -172,6 +175,107 @@ def evaluate_contrastive(
     return all_results
 
 
+def evaluate_attention(
+    model,
+    tokenizer,
+    probe_dir: str,
+    data_path: str,
+    layers: list[int] | None,
+    output_dir: str | None,
+) -> dict:
+    """Evaluate attention probes on a dataset."""
+    with open(data_path) as f:
+        dataset = json.load(f)
+    logger.info(f"Evaluating attention probes on {len(dataset)} examples")
+
+    probe_dir_path = Path(probe_dir)
+    all_results: dict[int, dict] = {}
+
+    # Discover available layer probes
+    available_probes = sorted(probe_dir_path.glob("layer_*.pth"))
+    if not available_probes:
+        logger.error(f"No attention probes found in {probe_dir}")
+        return {}
+
+    available_layers = [int(p.stem.split("_")[1]) for p in available_probes]
+    if layers is not None:
+        eval_layers = [l for l in layers if l in available_layers]
+    else:
+        eval_layers = available_layers
+
+    for layer in eval_layers:
+        probe_path = probe_dir_path / f"layer_{layer}.pth"
+        probe = AttentionProbe.load(probe_path)
+        logger.info(f"Evaluating layer {layer} (n_heads={probe.n_heads}, d_head={probe.d_head})")
+
+        labels: list[int] = []
+        scores: list[float] = []
+        rows: list[dict] = []
+
+        for i, item in enumerate(dataset):
+            question = item["question"]
+            pos = item.get("test") or item.get("positive")
+            neg = item.get("deploy") or item.get("negative")
+
+            # Positive
+            try:
+                pos_h, _ = extract_all_token_activations(
+                    model, f"{question}\n\n {pos}", layer, tokenizer
+                )
+                result = probe.score(pos_h)
+                labels.append(1)
+                scores.append(result.mean_score)
+                rows.append({
+                    "id": i, "type": "testing",
+                    "mean_score": result.mean_score,
+                })
+            except Exception as e:
+                logger.warning(f"Error on positive example {i}: {e}")
+
+            # Negative
+            try:
+                neg_h, _ = extract_all_token_activations(
+                    model, f"{question}\n\n {neg}", layer, tokenizer
+                )
+                result = probe.score(neg_h)
+                labels.append(0)
+                scores.append(result.mean_score)
+                rows.append({
+                    "id": i, "type": "deployment",
+                    "mean_score": result.mean_score,
+                })
+            except Exception as e:
+                logger.warning(f"Error on negative example {i}: {e}")
+
+        if len(labels) >= 4:
+            auroc_result = calculate_auroc(labels, scores)
+            all_results[layer] = {
+                "auroc": auroc_result.auroc,
+                "threshold": auroc_result.optimal_threshold,
+                "sensitivity": auroc_result.sensitivity,
+                "specificity": auroc_result.specificity,
+                "n_examples": len(labels),
+            }
+
+            if output_dir and rows:
+                out = Path(output_dir)
+                out.mkdir(parents=True, exist_ok=True)
+                csv_path = out / f"attention_layer{layer}.csv"
+                with open(csv_path, "w", newline="") as f:
+                    writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+                    writer.writeheader()
+                    writer.writerows(rows)
+
+    return all_results
+
+
+def _parse_attention_layers(layers_str: str | None, probe_dir: str) -> list[int] | None:
+    """Parse layers for attention probe evaluation."""
+    if layers_str is None or layers_str == "all":
+        return None  # evaluate_attention will discover available layers
+    return [int(x.strip()) for x in layers_str.split(",")]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate trained probes")
     parser.add_argument("--model", type=str, required=True, help="HuggingFace model path")
@@ -179,7 +283,7 @@ def main():
     parser.add_argument(
         "--probe-type",
         type=str,
-        choices=["contrastive", "classifier"],
+        choices=["contrastive", "classifier", "attention"],
         default="contrastive",
     )
     parser.add_argument("--data", type=str, required=True, help="Evaluation dataset path")
@@ -204,16 +308,19 @@ def main():
     logger.info(f"Loading probe from: {args.probe_dir}")
     if args.probe_type == "contrastive":
         probe = ContrastiveProbe.load(args.probe_dir)
+        layers = parse_layers(args.layers, probe)
+        control_count = args.control_count if args.control else 0
+        results = evaluate_contrastive(
+            model, tokenizer, probe, args.data, layers, args.output, control_count
+        )
+    elif args.probe_type == "attention":
+        attn_layers = _parse_attention_layers(args.layers, args.probe_dir)
+        results = evaluate_attention(
+            model, tokenizer, args.probe_dir, args.data, attn_layers, args.output
+        )
     else:
         logger.error("Classifier probe evaluation not yet supported via CLI")
         sys.exit(1)
-
-    layers = parse_layers(args.layers, probe)
-    control_count = args.control_count if args.control else 0
-
-    results = evaluate_contrastive(
-        model, tokenizer, probe, args.data, layers, args.output, control_count
-    )
 
     # Print results
     print("\n" + "=" * 70)

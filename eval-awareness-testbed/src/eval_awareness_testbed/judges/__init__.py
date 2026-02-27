@@ -16,6 +16,12 @@ from eval_awareness_testbed.judges import binary_mcq  # noqa: F401  # deprecated
 # Live-eval judges (for checking spontaneous awareness during actual evals)
 from eval_awareness_testbed.judges import verbalized_awareness  # noqa: F401
 
+# White-box judges (activation probes — requires whitebox extras)
+try:
+    from eval_awareness_testbed.judges import whitebox  # noqa: F401
+except ImportError:
+    pass  # whitebox dependencies (torch, transformers, etc.) not installed
+
 __all__ = [
     "BaseJudge",
     "get_judge",

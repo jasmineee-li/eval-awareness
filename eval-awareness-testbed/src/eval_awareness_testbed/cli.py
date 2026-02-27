@@ -215,6 +215,16 @@ def judge(
         "--classifier",
         help="Classifier model for structured classification steps (default: same as --model). Use a capable instruction-tuned model for best results.",
     ),
+    reasoning_tokens: Optional[int] = typer.Option(
+        None,
+        "--reasoning-tokens",
+        help="Reasoning token budget (e.g., 16384 for Claude extended thinking)",
+    ),
+    reasoning_effort: Optional[str] = typer.Option(
+        None,
+        "--reasoning-effort",
+        help="Reasoning effort level: none|low|medium|high",
+    ),
     output: Optional[Path] = typer.Option(
         None, "-o", "--output", help="Output JSON file"
     ),
@@ -267,6 +277,20 @@ def judge(
 
     console.print(f"Found {len(transcripts)} transcript(s)")
 
+    # Pre-instantiate model with reasoning config if specified
+    from inspect_ai.model import get_model as _get_model, GenerateConfig
+    gen_config_kwargs = {}
+    if reasoning_tokens is not None:
+        gen_config_kwargs["reasoning_tokens"] = reasoning_tokens
+    if reasoning_effort is not None:
+        gen_config_kwargs["reasoning_effort"] = reasoning_effort
+    if gen_config_kwargs:
+        gen_config = GenerateConfig(**gen_config_kwargs)
+        model_obj = _get_model(model, config=gen_config)
+        console.print(f"Reasoning config: {gen_config_kwargs}")
+    else:
+        model_obj = model  # pass string, let BaseJudge call get_model()
+
     async def run_judges():
         # Initialize sample results
         all_results = []
@@ -280,7 +304,7 @@ def judge(
             try:
                 judge_instance = get_judge(
                     method_name,
-                    grader_model=model,
+                    grader_model=model_obj,
                     classifier_model=classifier,
                     max_concurrency=max_connections,
                     epochs=epochs if method_name in ("binary_mcq", "binary_third_person") else 1,

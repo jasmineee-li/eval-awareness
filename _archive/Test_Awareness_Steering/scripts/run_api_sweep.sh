@@ -78,15 +78,13 @@ echo ""
 # REQUIRED_KEY is which API key variable is needed (ANTHROPIC, OPENAI, OPENROUTER).
 
 MODELS=(
-    # Claude Opus 4
-    "claude-opus-4|anthropic/claude-opus-4-20250514||ANTHROPIC"
-    # o4-mini (low + high reasoning effort)
-    "o4-mini_reasoning-low|openai/o4-mini-2025-04-16|--reasoning-effort low|OPENAI"
-    "o4-mini_reasoning-high|openai/o4-mini-2025-04-16|--reasoning-effort high|OPENAI"
-    # Gemini 2.5 Pro (default + thinking)
+    # o4-mini (low + high reasoning effort) via OpenRouter
+    "o4-mini_reasoning-low|openrouter/openai/o4-mini-2025-04-16|--reasoning-effort low|OPENROUTER"
+    "o4-mini_reasoning-high|openrouter/openai/o4-mini-2025-04-16|--reasoning-effort high|OPENROUTER"
+    # Gemini 2.5 Pro (default + thinking) via OpenRouter
     "gemini-2.5-pro|openrouter/google/gemini-2.5-pro-preview-05-06||OPENROUTER"
     "gemini-2.5-pro_thinking|openrouter/google/gemini-2.5-pro-preview-05-06|--reasoning-effort high|OPENROUTER"
-    # Gemini 2.5 Flash (default + thinking)
+    # Gemini 2.5 Flash (default + thinking) via OpenRouter
     "gemini-2.5-flash|openrouter/google/gemini-2.5-flash-preview-05-20||OPENROUTER"
     "gemini-2.5-flash_thinking|openrouter/google/gemini-2.5-flash-preview-05-20|--reasoning-effort high|OPENROUTER"
 )

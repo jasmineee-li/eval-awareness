@@ -27,6 +27,7 @@ class TokenSelector(str, Enum):
     LAST_TOKEN = "last_token"  # Activation at the last token
     MEAN_ALL = "mean_all"  # Mean activation across all non-padding tokens
     EVIDENCE_TOKENS = "evidence_tokens"  # Activations at evidence sentence token positions
+    ALL_TOKENS = "all_tokens"  # Full per-token activations (no pooling), for attention probes
 
 
 def extract_activations_hooked(
@@ -309,5 +310,50 @@ def _select_token_activation(
             evidence_acts.append(chunk.mean(dim=1))
         return torch.stack(evidence_acts).mean(dim=0)
 
+    elif token_selector == TokenSelector.ALL_TOKENS:
+        return activation
+
     else:
         raise ValueError(f"Unknown token selector: {token_selector}")
+
+
+def extract_all_token_activations(
+    model,
+    text: str,
+    layer: int,
+    tokenizer,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Extract per-token hidden states for a single layer (no pooling).
+
+    Convenience wrapper for attention probes that need the full sequence of
+    hidden states rather than a pooled vector.
+
+    Args:
+        model: Any supported model (HookedTransformer, shim, or HF model).
+        text: Input text to process.
+        layer: Single layer index to extract from.
+        tokenizer: Tokenizer for the model.
+
+    Returns:
+        Tuple of (hidden_states, attention_mask):
+            hidden_states: (seq_len, d_model) — per-token activations.
+            attention_mask: (seq_len,) — 1 for real tokens, 0 for padding.
+    """
+    acts = extract_activations(
+        model, text, [layer], tokenizer,
+        token_selector=TokenSelector.ALL_TOKENS,
+    )
+    # acts[layer] has shape (1, seq_len, d_model) from ALL_TOKENS
+    hidden_states = acts[layer].squeeze(0)  # (seq_len, d_model)
+
+    # Build attention mask (all ones for non-padded input)
+    is_hooked = hasattr(model, "hooks") and hasattr(model, "reset_hooks")
+    if is_hooked:
+        tokens = model.to_tokens(text)
+        seq_len = tokens.shape[1]
+    else:
+        encoded = tokenizer(text, return_tensors="pt", add_special_tokens=True)
+        seq_len = encoded.input_ids.shape[1]
+
+    attention_mask = torch.ones(seq_len)
+    return hidden_states.detach().cpu(), attention_mask

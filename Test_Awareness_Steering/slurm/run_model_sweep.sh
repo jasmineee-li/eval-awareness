@@ -6,7 +6,7 @@
 # Resilient: skips completed models, handles vLLM failures gracefully.
 #
 # Usage:
-#   bash _archive/Test_Awareness_Steering/scripts/run_model_sweep.sh
+#   bash Test_Awareness_Steering/slurm/run_model_sweep.sh
 #
 # Optional environment variables:
 #   SWEEP_OUTPUT_DIR   — override output directory

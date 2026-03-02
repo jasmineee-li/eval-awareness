@@ -70,6 +70,10 @@ runpodctl
 inference.log
 toolsafety_training_nohup.log
 
+# Unified results (keep the directory via .gitkeep)
+results/*
+!results/.gitkeep
+
 # Legacy
 impossiblebench/src/impossiblebench/__pycache__
 cot-interventions/results/

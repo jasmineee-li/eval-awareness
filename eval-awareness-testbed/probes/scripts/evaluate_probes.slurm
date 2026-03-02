@@ -26,7 +26,7 @@ source "${REPO_ROOT}/.venv/bin/activate"
 CONFIG="probes/models.tsv"
 PROBE_ROOT="probes/trained"
 DATA_DIR="probes/data/external"
-DATASETS="gsm8k,gpqa,wmdp,alpaca,wildchat,ai_liar,insider_trading,roleplaying,sandbagging,needham,eval_vs_deploy,agentic_misalignment"
+DATASETS="gsm8k,gpqa,wmdp,alpaca,wildchat,ai_liar,insider_trading,roleplaying,sandbagging,needham,eval_vs_deploy,sad_layer_select,agentic_misalignment"
 
 source "$(dirname "$0")/_parse_models.sh" "${CONFIG}" "$@"
 

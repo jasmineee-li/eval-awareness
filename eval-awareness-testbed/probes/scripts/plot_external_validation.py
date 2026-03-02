@@ -2,6 +2,9 @@
 """
 Plot probe validation results across external datasets.
 
+Reads evaluation_summary.json from the results directory to discover the
+model name and best layer, then loads per-dataset CSV files.
+
 Produces three figures:
   1. Bar chart of mean probe scores by dataset (color-coded by category)
   2. Violin/box plot of full score distributions
@@ -14,6 +17,7 @@ Usage:
         --output-dir results/olmo-3.1-32b-think/figures
 """
 import argparse
+import json
 import os
 
 import matplotlib.pyplot as plt
@@ -50,11 +54,23 @@ CATEGORY_LABELS = {
 }
 
 
-def load_all_results(results_dir):
-    """Load probe_stats_layer17.csv for each dataset that exists."""
+def load_summary(results_dir):
+    """Load evaluation_summary.json and return (model_name, layer) or (None, None)."""
+    path = os.path.join(results_dir, "evaluation_summary.json")
+    if not os.path.isfile(path):
+        return None, None
+    with open(path) as f:
+        summary = json.load(f)
+    model = summary.get("model", "unknown")
+    layer = summary.get("layer")
+    return model, layer
+
+
+def load_all_results(results_dir, layer):
+    """Load {ds_name}_probe_stats_layer{layer}.csv for each dataset that exists."""
     data = {}
     for ds_key, (display_name, category) in DATASETS.items():
-        path = os.path.join(results_dir, ds_key, "probe_stats_layer17.csv")
+        path = os.path.join(results_dir, f"{ds_key}_probe_stats_layer{layer}.csv")
         if os.path.isfile(path):
             df = pd.read_csv(path)
             df = df.dropna(subset=["mean_score"])
@@ -66,7 +82,12 @@ def load_all_results(results_dir):
     return data
 
 
-def plot_bar_chart(data, output_dir):
+def model_short_name(model_path):
+    """Extract a short display name from a HuggingFace model path."""
+    return model_path.rsplit("/", 1)[-1] if "/" in model_path else model_path
+
+
+def plot_bar_chart(data, output_dir, layer, model_name):
     """Bar chart of mean probe scores with std error bars, sorted by mean score."""
     # Sort by mean score descending (most eval-like first)
     items = sorted(
@@ -80,14 +101,14 @@ def plot_bar_chart(data, output_dir):
 
     fig, ax = plt.subplots(figsize=(12, 6))
     x = np.arange(len(names))
-    bars = ax.bar(x, means, yerr=stds, capsize=4, color=colors, edgecolor="white",
-                  linewidth=0.5, alpha=0.85, error_kw={"linewidth": 1.2})
+    ax.bar(x, means, yerr=stds, capsize=4, color=colors, edgecolor="white",
+           linewidth=0.5, alpha=0.85, error_kw={"linewidth": 1.2})
 
     ax.set_xticks(x)
     ax.set_xticklabels(names, rotation=35, ha="right", fontsize=11)
-    ax.set_ylabel("Mean Probe Score (layer 17)", fontsize=12)
+    ax.set_ylabel(f"Mean Probe Score (layer {layer})", fontsize=12)
     ax.set_title(
-        "OLMo 3.1 32B Think — Eval-Awareness Probe Scores Across Datasets",
+        f"{model_short_name(model_name)} — Eval-Awareness Probe Scores Across Datasets",
         fontsize=13, fontweight="bold",
     )
     ax.axhline(0, color="gray", linewidth=0.5, linestyle="--")
@@ -111,7 +132,7 @@ def plot_bar_chart(data, output_dir):
     print(f"Saved: {path}")
 
 
-def plot_violin(data, output_dir):
+def plot_violin(data, output_dir, layer, model_name):
     """Violin + strip plot of full score distributions."""
     # Sort by mean score descending
     items = sorted(
@@ -138,7 +159,7 @@ def plot_violin(data, output_dir):
     parts["cmeans"].set_linewidth(1.5)
 
     # Overlay box plots (thin)
-    bp = ax.boxplot(
+    ax.boxplot(
         all_scores, positions=positions, widths=0.15, patch_artist=False,
         showfliers=False, manage_ticks=False,
         medianprops={"color": "black", "linewidth": 1.5},
@@ -150,9 +171,9 @@ def plot_violin(data, output_dir):
     names = [v["display_name"] for _, v in items]
     ax.set_xticks(positions)
     ax.set_xticklabels(names, rotation=35, ha="right", fontsize=11)
-    ax.set_ylabel("Probe Score (layer 17)", fontsize=12)
+    ax.set_ylabel(f"Probe Score (layer {layer})", fontsize=12)
     ax.set_title(
-        "OLMo 3.1 32B Think — Probe Score Distributions by Dataset",
+        f"{model_short_name(model_name)} — Probe Score Distributions by Dataset",
         fontsize=13, fontweight="bold",
     )
     ax.axhline(0, color="gray", linewidth=0.5, linestyle="--")
@@ -176,9 +197,11 @@ def plot_violin(data, output_dir):
     print(f"Saved: {path}")
 
 
-def plot_roc(results_dir, output_dir):
+def plot_roc(results_dir, output_dir, layer, model_name):
     """ROC curve for eval_vs_deploy with control probes overlaid."""
-    main_path = os.path.join(results_dir, "eval_vs_deploy", "probe_stats_layer17.csv")
+    main_path = os.path.join(
+        results_dir, f"eval_vs_deploy_probe_stats_layer{layer}.csv"
+    )
     if not os.path.isfile(main_path):
         print("Skipping ROC plot — eval_vs_deploy results not found")
         return
@@ -190,14 +213,16 @@ def plot_roc(results_dir, output_dir):
     fig, ax = plt.subplots(figsize=(7, 7))
 
     # Plot control probes first (behind)
-    control_dir = os.path.join(results_dir, "eval_vs_deploy", "control")
+    control_dir = os.path.join(results_dir, "control")
     control_aurocs = []
     if os.path.isdir(control_dir):
         probe_dirs = sorted(
             [d for d in os.listdir(control_dir) if d.startswith("random_probe_")]
         )
         for probe_name in probe_dirs:
-            cp = os.path.join(control_dir, probe_name, "probe_stats_layer17.csv")
+            cp = os.path.join(
+                control_dir, probe_name, f"probe_stats_layer{layer}.csv"
+            )
             if not os.path.isfile(cp):
                 continue
             dfc = pd.read_csv(cp).dropna(subset=["mean_score"])
@@ -225,12 +250,12 @@ def plot_roc(results_dir, output_dir):
         std_c = np.std(control_aurocs)
         ax.plot([], [], color="#AAAAAA", linewidth=1.5,
                 label=f"Random probes (n={len(control_aurocs)}, "
-                      f"AUROC = {mean_c:.3f} ± {std_c:.3f})")
+                      f"AUROC = {mean_c:.3f} \u00b1 {std_c:.3f})")
 
     ax.set_xlabel("False Positive Rate", fontsize=12)
     ax.set_ylabel("True Positive Rate", fontsize=12)
     ax.set_title(
-        "OLMo 3.1 32B Think — Eval vs Deploy Discrimination (Layer 17)",
+        f"{model_short_name(model_name)} — Eval vs Deploy Discrimination (Layer {layer})",
         fontsize=13, fontweight="bold",
     )
     ax.legend(loc="lower right", fontsize=10)
@@ -252,7 +277,7 @@ def main():
     parser.add_argument(
         "--results-dir",
         default="results/olmo-3.1-32b-think",
-        help="Directory containing per-dataset result subdirectories",
+        help="Directory containing evaluation_summary.json and CSV results",
     )
     parser.add_argument(
         "--output-dir",
@@ -264,16 +289,24 @@ def main():
     output_dir = args.output_dir or os.path.join(args.results_dir, "figures")
     os.makedirs(output_dir, exist_ok=True)
 
-    data = load_all_results(args.results_dir)
+    model_name, layer = load_summary(args.results_dir)
+    if layer is None:
+        print("Error: evaluation_summary.json not found or missing 'layer' field.")
+        print("Run evaluate_all_datasets.py first.")
+        return
+
+    print(f"Model: {model_name}, layer: {layer}")
+
+    data = load_all_results(args.results_dir, layer)
     if not data:
         print("No results found.")
         return
 
     print(f"Loaded results for {len(data)} datasets: {list(data.keys())}")
 
-    plot_bar_chart(data, output_dir)
-    plot_violin(data, output_dir)
-    plot_roc(args.results_dir, output_dir)
+    plot_bar_chart(data, output_dir, layer, model_name)
+    plot_violin(data, output_dir, layer, model_name)
+    plot_roc(args.results_dir, output_dir, layer, model_name)
 
     print(f"\nAll figures saved to {output_dir}/")
 

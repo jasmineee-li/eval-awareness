@@ -45,7 +45,7 @@ sbatch --mem=80G --time=04:00:00 probes/scripts/train_probes.slurm olmo-3-32b-th
 ### Verify (after both 1a and 1b)
 
 ```bash
-ls eval-awareness-testbed/probes/*/main/probe_info.json | wc -l
+ls eval-awareness-testbed/probes/trained/*/main/probe_info.json | wc -l
 ```
 
 Should show **15** (4 existing + 8 new 7B + 3 new 32B).

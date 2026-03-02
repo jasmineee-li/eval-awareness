@@ -24,7 +24,8 @@ cd "${REPO_ROOT}/eval-awareness-testbed"
 source "${REPO_ROOT}/.venv/bin/activate"
 
 CONFIG="probes/models.tsv"
-DATA="data/whitebox/contrastive_dataset.json"
+DATA="probes/data/contrastive_merged.json"
+LAYER_SELECT_DATA="probes/data/sad_layer_select.json"
 
 source "$(dirname "$0")/_parse_models.sh" "${CONFIG}" "$@"
 
@@ -47,7 +48,7 @@ for NAME in "${ORDER[@]}"; do
     --data "${DATA}" \
     --output "${OUTPUT_DIR}" \
     --layers all \
-    --eval-split 0.2 \
+    --layer-select-data "${LAYER_SELECT_DATA}" \
     --dtype bfloat16; then
     echo "[OK] ${NAME} completed successfully"
   else

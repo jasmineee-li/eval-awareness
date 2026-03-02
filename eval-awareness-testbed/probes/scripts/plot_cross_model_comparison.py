@@ -12,7 +12,7 @@ Usage:
     python probes/scripts/plot_cross_model_comparison.py \
       --results-dir results/ \
       --output-dir results/figures/cross-model-comparison/ \
-      --ref-32b probes/olmo-3.1-32b-think/
+      --ref-32b probes/trained/olmo-3.1-32b-think/
 """
 
 import argparse

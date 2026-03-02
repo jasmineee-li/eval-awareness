@@ -7,7 +7,7 @@ time) with a single load + loop, saving ~5 min per model in wasted load time.
 Usage:
     python probes/scripts/evaluate_all_datasets.py \
       --model allenai/OLMo-3-7B \
-      --probe-dir probes/olmo-3-7b/main/ \
+      --probe-dir probes/trained/olmo-3-7b/main/ \
       --data-dir probes/data/external/ \
       --datasets gsm8k,gpqa,wmdp,alpaca,wildchat,ai_liar,insider_trading,roleplaying,sandbagging,needham,eval_vs_deploy \
       --output results/olmo-3-7b/
@@ -15,7 +15,7 @@ Usage:
     # Optional: override best_layer from probe_info.json
     python probes/scripts/evaluate_all_datasets.py \
       --model allenai/OLMo-3-7B \
-      --probe-dir probes/olmo-3-7b/main/ \
+      --probe-dir probes/trained/olmo-3-7b/main/ \
       --data-dir probes/data/external/ \
       --datasets gsm8k,gpqa \
       --output results/olmo-3-7b/ \

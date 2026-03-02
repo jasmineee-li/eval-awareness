@@ -54,7 +54,7 @@ FAILED=0
 
 for NAME in "${ORDER[@]}"; do
   HF_PATH="${MODELS[$NAME]}"
-  OUTPUT_DIR="probes/${NAME}/main/"
+  OUTPUT_DIR="probes/trained/${NAME}/main/"
   DONE=$((DONE + 1))
 
   echo ""

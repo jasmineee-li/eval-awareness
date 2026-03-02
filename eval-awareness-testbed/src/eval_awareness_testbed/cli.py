@@ -31,6 +31,13 @@ try:
 except ImportError:
     pass  # Experiment not available
 
+# Add probe training subcommands
+try:
+    from eval_awareness_testbed.probe_cli import app as probe_app
+    app.add_typer(probe_app, name="probe", help="Train and compare eval-awareness probes")
+except ImportError:
+    pass  # Probe dependencies not available
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

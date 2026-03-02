@@ -26,7 +26,7 @@ source "${REPO_ROOT}/.venv/bin/activate"
 CONFIG="probes/models.tsv"
 PROBE_ROOT="probes/trained"
 DATA_DIR="probes/data/external"
-DATASETS="gsm8k,gpqa,wmdp,alpaca,wildchat,ai_liar,insider_trading,roleplaying,sandbagging,needham,eval_vs_deploy"
+DATASETS="gsm8k,gpqa,wmdp,alpaca,wildchat,ai_liar,insider_trading,roleplaying,sandbagging,needham,eval_vs_deploy,sad_layer_select"
 
 # Build model list from args or config
 declare -A MODELS

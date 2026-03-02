@@ -1,0 +1,9 @@
+# Contrastive training datasets for probe sweep.
+# Format: name<TAB>path (relative to eval-awareness-testbed)<TAB>n_pairs<TAB>source
+# The "simple_contrastive" dataset is the one Jord et al. found best for 70B.
+simple_contrastive	probes/data/simple_contrastive.json	204	Jord et al. 2025
+ab_ambiguous	probes/data/ab_ambiguous.json	158	Jord et al. 2025
+tom_vs_sharegpt	probes/data/tom_vs_sharegpt.json	539	Jord et al. 2025
+truthful	probes/data/truthful.json	613	Jord et al. 2025
+sad_train	probes/data/sad_train_contrastive.json	280	SAD stages_oversight
+merged	probes/data/contrastive_merged.json	1794	All above combined

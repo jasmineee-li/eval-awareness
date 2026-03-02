@@ -34,7 +34,10 @@ def _ts():
 
 
 def _load_models_tsv():
-    """Return {short_name: hf_path} from probes/models.tsv."""
+    """Return {short_name: (hf_path, revision)} from probes/models.tsv.
+
+    The revision is an optional 4th column; defaults to None when absent.
+    """
     models = {}
     with open(MODELS_TSV) as f:
         reader = csv.reader(f, delimiter="\t")
@@ -42,18 +45,23 @@ def _load_models_tsv():
             if not row or row[0].startswith("#"):
                 continue
             name, hf_path = row[0], row[1]
-            models[name] = hf_path
+            revision = row[3].strip() if len(row) > 3 and row[3].strip() else None
+            models[name] = (hf_path, revision)
     return models
 
 
 def _resolve_models(model_key):
-    """Given a model name or 'all', return [(short_name, hf_path), ...]."""
+    """Given a model name or 'all', return [(short_name, hf_path, revision), ...].
+
+    ``revision`` is None when the model has no revision column.
+    """
     registry = _load_models_tsv()
     if model_key == "all":
-        return list(registry.items())
+        return [(name, hf, rev) for name, (hf, rev) in registry.items()]
     if model_key not in registry:
         sys.exit(f"[ERROR] Model '{model_key}' not found in {MODELS_TSV}")
-    return [(model_key, registry[model_key])]
+    hf, rev = registry[model_key]
+    return [(model_key, hf, rev)]
 
 
 def _run(cmd, dry_run, cwd=None):
@@ -87,7 +95,7 @@ def run_whitebox_train(config, dry_run):
     dtype = train_cfg.get("dtype", "bfloat16")
     data = "data/whitebox/contrastive_dataset.json"
 
-    for name, hf_path in models:
+    for name, hf_path, revision in models:
         out = _output_dir(config) / "whitebox" / name / "probes"
         cmd = [
             sys.executable,
@@ -100,6 +108,8 @@ def run_whitebox_train(config, dry_run):
             "--eval-split", "0.2",
             "--dtype", dtype,
         ]
+        if revision:
+            cmd += ["--revision", revision]
         print(f"\n=== whitebox train: {name} ===")
         _run(cmd, dry_run, cwd=str(TESTBED))
 
@@ -114,7 +124,7 @@ def run_whitebox_eval(config, dry_run):
     datasets = ",".join(eval_cfg.get("datasets", []))
     data_dir = "probes/data/external"
 
-    for name, hf_path in models:
+    for name, hf_path, revision in models:
         probe_dir = f"probes/trained/{name}/main/"
         out = _output_dir(config) / "whitebox" / name / "eval"
         control_flag = []
@@ -129,6 +139,8 @@ def run_whitebox_eval(config, dry_run):
             "--datasets", datasets,
             "--output", str(out),
         ] + control_flag
+        if revision:
+            cmd += ["--revision", revision]
         print(f"\n=== whitebox eval: {name} ===")
         _run(cmd, dry_run, cwd=str(TESTBED))
 
@@ -184,6 +196,7 @@ def run_blackbox_trigger(config, dry_run):
         return
 
     model = trigger["model"]
+    revision = trigger.get("revision")
     input_path = trigger.get("input", "Test_Awareness_Steering/data/triggers.json")
     do_judge = trigger.get("judge", True)
     out = _output_dir(config) / "blackbox" / "trigger" / f"{model.replace('/', '_')}_{_ts()}"
@@ -195,6 +208,8 @@ def run_blackbox_trigger(config, dry_run):
         "--input", str(REPO_ROOT / input_path),
         "--output", str(out / "outputs.json"),
     ]
+    if revision:
+        gen_cmd += ["--revision", revision]
     print("\n=== blackbox trigger (generate) ===")
     _run(gen_cmd, dry_run)
 

@@ -30,11 +30,21 @@
 #
 # Requires: yq (https://github.com/mikefarah/yq) for YAML parsing.
 
-set -euo pipefail
+set -uo pipefail
 
-CONFIG="${1:?Usage: $0 <config.yaml>}"
-SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+export PATH="$HOME/.local/bin:$PATH"
+
+CONFIG_ARG="${1:?Usage: $0 <config.yaml>}"
+# Use SLURM_SUBMIT_DIR when running under Slurm, otherwise derive from script path
+SCRIPT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 NEEDHAM_DIR="$SCRIPT_DIR/external/needham-eval"
+
+# Resolve config to absolute path (before any cd)
+if [[ "$CONFIG_ARG" = /* ]]; then
+    CONFIG="$CONFIG_ARG"
+else
+    CONFIG="$SCRIPT_DIR/$CONFIG_ARG"
+fi
 
 if [ ! -f "$CONFIG" ]; then
     echo "ERROR: Config file not found: $CONFIG"
@@ -92,12 +102,16 @@ run_model() {
         RUN_MODEL="vllm/$LORA_ADAPTER"
     fi
 
-    # Resolve model path from HuggingFace cache
+    # Resolve model path from HuggingFace cache (shared first, then local)
     local CACHE_NAME=$(echo "$HF_MODEL_ID" | sed 's/\//--/g')
     local MODEL_PATH=$(ls -d /data/huggingface/models--${CACHE_NAME}/snapshots/*/ 2>/dev/null | head -1)
 
     if [ -z "$MODEL_PATH" ]; then
-        echo "ERROR: Model not found in cache: $HF_MODEL_ID (looked for models--${CACHE_NAME})"
+        MODEL_PATH=$(ls -d ${HOME}/.cache/huggingface/hub/models--${CACHE_NAME}/snapshots/*/ 2>/dev/null | head -1)
+    fi
+
+    if [ -z "$MODEL_PATH" ]; then
+        echo "ERROR: Model not found in cache: $HF_MODEL_ID (looked for models--${CACHE_NAME} in /data/huggingface/ and ~/.cache/huggingface/hub/)"
         return 1
     fi
 
@@ -166,12 +180,23 @@ run_model() {
 }
 
 # Run all models
+FAILED_MODELS=()
 NUM_MODELS=$(yq '.models | length' "$CONFIG")
 for ((i=0; i<NUM_MODELS; i++)); do
-    run_model $i
+    MODEL_NAME=$(yq ".models[$i].hf_id" "$CONFIG")
+    if run_model $i; then
+        echo "SUCCESS: $MODEL_NAME"
+    else
+        echo "FAILED: $MODEL_NAME (continuing with next model)"
+        FAILED_MODELS+=("$MODEL_NAME")
+    fi
 done
 
-echo "All models completed!"
+if [ ${#FAILED_MODELS[@]} -gt 0 ]; then
+    echo "WARNING: ${#FAILED_MODELS[@]} model(s) failed: ${FAILED_MODELS[*]}"
+else
+    echo "All models completed successfully!"
+fi
 
 # Run analysis if configured
 PLOTS=$(yq '.analysis.plots // [] | .[]' "$CONFIG" 2>/dev/null)

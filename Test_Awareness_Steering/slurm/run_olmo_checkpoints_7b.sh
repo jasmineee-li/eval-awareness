@@ -1,23 +1,21 @@
 #!/bin/bash
-#SBATCH --job-name=prob-judge-32b-ckpts
+#SBATCH --job-name=prob-judge-7b
 #SBATCH --partition=cais
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --gpus-per-node=4
-#SBATCH --mem=320G
-#SBATCH --time=12:00:00
-#SBATCH --output=/data/jasmine_li/eval-awareness/false-facts/logs/run_olmo_checkpoints_32b_ckpts-%j.out
-#SBATCH --error=/data/jasmine_li/eval-awareness/false-facts/logs/run_olmo_checkpoints_32b_ckpts-%j.err
+#SBATCH --gpus-per-node=2
+#SBATCH --mem=80G
+#SBATCH --time=6:00:00
+#SBATCH --output=/data/jasmine_li/eval-awareness/false-facts/logs/run_olmo_checkpoints_7b-%j.out
+#SBATCH --error=/data/jasmine_li/eval-awareness/false-facts/logs/run_olmo_checkpoints_7b-%j.err
 
 # Run probability_third_person judge on needham dataset (976 samples)
-# using OLMo 32B intermediate checkpoints as grader via local vLLM (TP=2, 2 GPUs).
-#
-# Can run concurrently with run_olmo_checkpoints_7b.sh (uses port 8001 vs 8000).
+# using OLMo 7B models as grader via local vLLM (TP=2, 2 GPUs).
 #
 # Usage:
 #   PROB_OUTPUT_DIR=false-facts/results/prob_third_person_olmo_series_260225 \
-#     sbatch _archive/Test_Awareness_Steering/scripts/run_olmo_checkpoints_32b_ckpts.sh
+#     sbatch Test_Awareness_Steering/slurm/run_olmo_checkpoints_7b.sh
 
 set -uo pipefail
 
@@ -28,8 +26,8 @@ export PYTHONUNBUFFERED=1
 
 source /data/jasmine_li/eval-awareness/.venv/bin/activate
 
-VLLM_PORT=8001
-TP_SIZE=4
+VLLM_PORT=8000
+TP_SIZE=2
 MAX_MODEL_LEN=32768
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
@@ -41,23 +39,17 @@ mkdir -p "$OUTPUT_DIR"
 
 MAX_CONNECTIONS=50
 
-# ─── 6 × 32B intermediate checkpoints (TP=2) ───
+# Only instruction-tuned models (base model has no chat template)
 REPOS=(
-    "allenai/Olmo-3-32B-Think"
-    "allenai/Olmo-3-32B-Think"
-    "allenai/Olmo-3-32B-Think"
-    "allenai/OLMo-3.1-32B-Think"
-    "allenai/OLMo-3.1-32B-Think"
-    "allenai/OLMo-3.1-32B-Think"
+    "allenai/Olmo-3-7B-Think-SFT"
+    "allenai/Olmo-3-7B-Think-DPO"
+    "allenai/Olmo-3-7B-Think"
 )
-REVISIONS=("step_200" "step_400" "step_600" "step_0550" "step_1150" "step_1750")
+REVISIONS=("main" "main" "main")
 DISPLAY_NAMES=(
-    "Olmo-3-32B-Think_step_200"
-    "Olmo-3-32B-Think_step_400"
-    "Olmo-3-32B-Think_step_600"
-    "OLMo-3.1-32B-Think_step_0550"
-    "OLMo-3.1-32B-Think_step_1150"
-    "OLMo-3.1-32B-Think_step_1750"
+    "Olmo-3-7B-Think-SFT"
+    "Olmo-3-7B-Think-DPO"
+    "Olmo-3-7B-Think"
 )
 
 clean_cache() {
@@ -75,6 +67,11 @@ start_vllm() {
     local model="$1"
     local revision="$2"
 
+    local rev_args=()
+    if [ "$revision" != "main" ]; then
+        rev_args=(--revision "$revision")
+    fi
+
     echo "=== Starting vLLM: $model (revision=$revision, TP=$TP_SIZE) ==="
     vllm serve "$model" \
         --host 0.0.0.0 \
@@ -84,7 +81,7 @@ start_vllm() {
         --served-model-name "$model" \
         --max-model-len "$MAX_MODEL_LEN" \
         --trust-remote-code \
-        --revision "$revision" &
+        "${rev_args[@]}" &
     VLLM_PID=$!
     echo "vLLM PID: $VLLM_PID"
 }
@@ -162,13 +159,10 @@ for ((i=0; i<NUM_MODELS; i++)); do
     run_judge "$repo" "$display_name" || echo "WARNING: run_judge failed for $display_name"
 
     stop_vllm
-
-    # Clean cache for intermediate checkpoints to free ~60GB
-    clean_cache "$repo"
 done
 
 echo ""
 echo "=========================================="
-echo "All OLMo 32B checkpoint probability judge runs complete!"
+echo "All OLMo 7B probability judge runs complete!"
 echo "Results in: $OUTPUT_DIR/"
 echo "=========================================="

@@ -7,8 +7,8 @@
 #SBATCH --gpus-per-node=2
 #SBATCH --mem=160G
 #SBATCH --time=6:00:00
-#SBATCH --output=/data/jasmine_li/eval-awareness/_archive/Test_Awareness_Steering/scripts/run_olmo_7b-%j.out
-#SBATCH --error=/data/jasmine_li/eval-awareness/_archive/Test_Awareness_Steering/scripts/run_olmo_7b-%j.err
+#SBATCH --output=slurm-run_olmo_7b-%j.out
+#SBATCH --error=slurm-run_olmo_7b-%j.err
 
 set -euo pipefail
 

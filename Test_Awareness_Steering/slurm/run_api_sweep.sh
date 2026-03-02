@@ -6,7 +6,7 @@
 # Resilient: skips completed models, logs failures, continues.
 #
 # Usage:
-#   bash _archive/Test_Awareness_Steering/scripts/run_api_sweep.sh
+#   bash Test_Awareness_Steering/slurm/run_api_sweep.sh
 #
 # Required environment variables:
 #   ANTHROPIC_API_KEY   — for Claude models

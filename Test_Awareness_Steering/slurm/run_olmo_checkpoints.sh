@@ -20,8 +20,8 @@
 # run the 6 intermediate checkpoints (~12h total, requires --time=24:00:00).
 #
 # Usage:
-#   sbatch _archive/Test_Awareness_Steering/scripts/run_olmo_checkpoints.sh
-#   RUN_CHECKPOINTS=true sbatch _archive/Test_Awareness_Steering/scripts/run_olmo_checkpoints.sh
+#   sbatch Test_Awareness_Steering/slurm/run_olmo_checkpoints.sh
+#   RUN_CHECKPOINTS=true sbatch Test_Awareness_Steering/slurm/run_olmo_checkpoints.sh
 
 set -uo pipefail
 

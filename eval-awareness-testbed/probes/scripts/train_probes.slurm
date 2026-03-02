@@ -7,7 +7,9 @@
 #SBATCH --time=06:00:00
 #SBATCH --output=slurm-%j.out
 
-# Train contrastive probes for one or more OLMo models.
+# Train contrastive probes for one or more OLMo models using a single dataset.
+# Defaults to Simple Contrastive (204 pairs), following Jord et al. 2025.
+# For a sweep over all datasets, use train_probes_sweep.slurm instead.
 #
 # Usage:
 #   sbatch probes/scripts/train_probes.slurm                                    # all models
@@ -24,7 +26,7 @@ cd "${REPO_ROOT}/eval-awareness-testbed"
 source "${REPO_ROOT}/.venv/bin/activate"
 
 CONFIG="probes/models.tsv"
-DATA="probes/data/contrastive_merged.json"
+DATA="probes/data/simple_contrastive.json"
 LAYER_SELECT_DATA="probes/data/sad_layer_select.json"
 
 # Build model list from args or config

@@ -110,6 +110,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lora", type=str, default=None, help="Path to LoRA adapter directory."
     )
+    parser.add_argument(
+        "--revision", type=str, default=None,
+        help="HuggingFace model revision (branch, tag, or commit hash).",
+    )
 
     args = parser.parse_args()
     model_name = args.model
@@ -117,15 +121,19 @@ if __name__ == "__main__":
 
     # Initialize the tokenizer (from LoRA dir if it has one, else base model)
     tokenizer_path = args.lora if args.lora else model_name
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+    tok_kwargs = {}
+    if args.revision and not args.lora:
+        tok_kwargs["revision"] = args.revision
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, **tok_kwargs)
 
     # Set sampling params based on model-recommended settings
-    if "OLMo" in model_name or "Olmo" in model_name:
+    if "OLMo" in model_name or "Olmo" in model_name or "K2" in model_name:
         sampling_params = SamplingParams(temperature=0.6, top_p=0.95, max_tokens=32768)
     else:
         sampling_params = SamplingParams(max_tokens=32768)
 
     # Input the model name or path. Can be GPTQ or AWQ models.
+    rev_kwargs = {"revision": args.revision} if args.revision else {}
     lora_request = None
     if args.lora:
         llm = LLM(
@@ -143,9 +151,10 @@ if __name__ == "__main__":
             tensor_parallel_size=4 if "70b" in model_name else 2,
             gpu_memory_utilization=0.9,
             dtype=torch.bfloat16,
+            **rev_kwargs,
         )
     else:
-        llm = LLM(model=model_name, tensor_parallel_size=4 if "70b" in model_name else 2, gpu_memory_utilization=0.9)
+        llm = LLM(model=model_name, tensor_parallel_size=4 if "70b" in model_name else 2, gpu_memory_utilization=0.9, **rev_kwargs)
 
     # Process the JSON file using the provided input and output file paths
     process_json(

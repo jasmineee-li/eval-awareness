@@ -57,13 +57,17 @@ def parse_continuation(prefix: str, generated_text: str, prefix_reasoning: str =
     )
 
 
-def load_model(model_id: str, config: dict) -> LLM:
+def load_model(model_id: str, config: dict, revision: str | None = None) -> LLM:
     """Load a vLLM model."""
     gen_config = config["generation"]
+    kwargs = {}
+    if revision:
+        kwargs["revision"] = revision
     return LLM(
         model=model_id,
         tensor_parallel_size=gen_config["tensor_parallel_size"],
         gpu_memory_utilization=gen_config["gpu_memory_utilization"],
+        **kwargs,
     )
 
 

@@ -390,6 +390,15 @@ def main():
     with open(args.config) as f:
         config = yaml.safe_load(f)
 
+    # Resolve relative paths in config relative to the config file's directory
+    config_dir = Path(args.config).resolve().parent
+    for key_path in [("data", "base_path"), ("judge", "prompt_file")]:
+        section, key = key_path
+        if section in config and key in config[section]:
+            p = Path(config[section][key])
+            if not p.is_absolute():
+                config[section][key] = str(config_dir / p)
+
     # Override num_seeds if provided
     if args.num_seeds is not None:
         config["ablation"]["num_seeds"] = args.num_seeds

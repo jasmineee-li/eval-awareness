@@ -19,36 +19,15 @@
 
 set -uo pipefail
 
-REPO_ROOT="/data/jasmine_li/eval-awareness"
+REPO_ROOT="${EVAL_AWARENESS_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 cd "${REPO_ROOT}/eval-awareness-testbed"
 source "${REPO_ROOT}/.venv/bin/activate"
 
 CONFIG="probes/models.tsv"
 DATA="data/whitebox/contrastive_dataset.json"
 
-# Build model list from args or config
-declare -A MODELS
-ORDER=()
+source "$(dirname "$0")/_parse_models.sh" "${CONFIG}" "$@"
 
-if [ $# -gt 0 ]; then
-  for NAME in "$@"; do
-    HF_PATH=$(awk -F'\t' -v name="$NAME" '$1 == name { print $2 }' "${CONFIG}")
-    if [ -z "${HF_PATH}" ]; then
-      echo "[ERROR] Model '${NAME}' not found in ${CONFIG}"
-      exit 1
-    fi
-    MODELS["${NAME}"]="${HF_PATH}"
-    ORDER+=("${NAME}")
-  done
-else
-  while IFS=$'\t' read -r NAME HF_PATH SIZE; do
-    [[ "${NAME}" =~ ^#.*$ || -z "${NAME}" ]] && continue
-    MODELS["${NAME}"]="${HF_PATH}"
-    ORDER+=("${NAME}")
-  done < "${CONFIG}"
-fi
-
-TOTAL=${#ORDER[@]}
 DONE=0
 FAILED=0
 

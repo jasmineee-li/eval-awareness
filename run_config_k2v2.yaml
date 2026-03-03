@@ -1,0 +1,70 @@
+# K2-V2 Eval-Awareness Run Config
+#
+# Whitebox probes: all 7 checkpoints (pretrain, mid1-4, SFT, RLVR)
+# Blackbox tests: SFT (K2-V2-Instruct) and RLVR (K2-Think-V2) only
+#
+# Usage:
+#   python run.py --config run_config_k2v2.yaml
+#
+# For blackbox tests that need vLLM servers (needham, agentic), use the
+# dedicated SLURM scripts instead:
+#   sbatch eval-awareness-testbed/external/needham-eval/slurm/run_k2v2.sh
+#   sbatch agentic-misalignment/scripts/run_k2v2_agentic.sh
+#   sbatch Test_Awareness_Steering/slurm/run_k2v2_trigger.sh
+
+dry_run: false
+
+whitebox:
+  # Train and evaluate probes for all K2-V2 checkpoints.
+  # run.py will pick up revisions from models.tsv automatically.
+  model: all
+  # To run only K2-V2 models, use the SLURM scripts directly:
+  #   sbatch probes/scripts/train_probes.slurm k2-v2-pretrain k2-v2-mid1 k2-v2-mid2 k2-v2-mid3 k2-v2-mid4 k2-v2-sft k2-v2-rlvr
+  train:
+    enabled: true
+    layers: all
+    dtype: bfloat16
+  eval:
+    enabled: true
+    datasets:
+      - gsm8k
+      - gpqa
+      - wmdp
+      - alpaca
+      - wildchat
+      - ai_liar
+      - insider_trading
+      - roleplaying
+      - sandbagging
+      - needham
+      - eval_vs_deploy
+      - agentic_misalignment
+
+blackbox:
+  # Needham eval: use the dedicated SLURM script for vLLM-served models.
+  # This config entry is for API-served models only.
+  needham:
+    enabled: false
+    model: vllm/LLM360/K2-V2-Instruct
+    methods: probability_third_person
+
+  # CoT interventions: run AFTER trigger + agentic tests complete.
+  # Intervention/control sentences are derived from those blackbox results.
+  cot:
+    enabled: false
+    config: cot-interventions/config.yaml
+    checkpoint: K2-Think-V2
+    experiment: ablation
+
+  # Trigger test (genOutputs.py + judgeIt_batch.py).
+  # Prefer the SLURM script: sbatch Test_Awareness_Steering/slurm/run_k2v2_trigger.sh
+  trigger:
+    enabled: true
+    model: LLM360/K2-V2-Instruct
+    input: Test_Awareness_Steering/data/triggers/triggers.json
+    judge: true
+
+  # Agentic misalignment: use the dedicated SLURM script for vLLM lifecycle.
+  agentic:
+    enabled: false
+    config: agentic-misalignment/configs/k2v2_checkpoints_vllm_baseline.yaml

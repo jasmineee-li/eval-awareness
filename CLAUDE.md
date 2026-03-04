@@ -12,3 +12,12 @@
 - **Purpose judges are flexible**: `purpose_xml` and `purpose_continue` can work in both contexts — they can be applied to needham-style meta-eval transcripts *or* post-hoc to live eval transcripts (e.g. asking after a sandbagging eval "why did this interaction take place?"). Don't assume they're restricted to one eval type.
 - **`binary_third_person` supersedes `binary_mcq`**: `binary_third_person` now supports an `epochs` parameter, making it a full superset of `binary_mcq`. Prefer `binary_third_person` in new configs.
 - **`purpose_continue_apollo` was removed**: It was near-identical to `purpose_continue` (same 3-step logic, different prompt string). The `PURPOSE_CONTINUE_APOLLO_PROMPT` is kept in `prompts.py` for reference.
+
+## Project Structure
+
+- **Root dispatcher**: `uv run python main.py --config configs/run_config.yaml` — orchestrates cross-subproject experiments (whitebox probes, blackbox evals, trigger tests, agentic misalignment)
+- **Testbed CLI**: `uv run eat <command>` — handles testbed-internal operations (judges, evals, experiments, pipelines)
+- **Tests**: `uv run pytest` — run from repo root
+- **Configs**: Root-level configs in `configs/`, testbed configs in `eval-awareness-testbed/configs/`
+- **Results**: Timestamped output directories under `results/`
+- **Docs**: `docs/MASTER_PLAN.md` for research goals, `docs/lit_review/` for literature (gitignored)

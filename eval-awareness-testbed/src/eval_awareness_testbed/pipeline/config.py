@@ -77,6 +77,7 @@ class PipelineConfig:
     training: TrainingConfig = field(default_factory=TrainingConfig)
     eval_suite: EvalSuiteConfig = field(default_factory=EvalSuiteConfig)
     output_dir: str = "results/pipelines"
+    random_seed: int | None = None  # Set for reproducibility; None = no seeding
 
     @classmethod
     def from_yaml(cls, path: Path) -> "PipelineConfig":

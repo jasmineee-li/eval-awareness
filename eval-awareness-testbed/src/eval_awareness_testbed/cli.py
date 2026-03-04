@@ -690,10 +690,17 @@ def experiment(
         "-j",
         help="Skip evals, load transcripts from existing experiment dir and re-run judges",
     ),
+    resume: Optional[Path] = typer.Option(
+        None,
+        "--resume",
+        "-r",
+        help="Resume from existing experiment dir (skip completed evals, re-use their transcripts)",
+    ),
 ):
     """Run a full experiment from config file.
 
     Use --judges-only to re-run judges on saved transcripts from a previous run.
+    Use --resume to skip evals that already have transcripts in a previous run dir.
     """
     import yaml
     from eval_awareness_testbed.experiment import ExperimentConfig, run_experiment
@@ -711,6 +718,15 @@ def experiment(
         cfg["judges_only"] = True
         cfg["resume_from"] = str(judges_only)
         console.print(f"[cyan]Judges-only mode: loading transcripts from {judges_only}[/cyan]")
+
+    # Handle resume mode
+    if resume:
+        if not resume.exists():
+            console.print(f"[red]Error: Experiment directory not found: {resume}[/red]")
+            raise typer.Exit(1)
+        cfg["resume_from"] = str(resume)
+        cfg["skip_completed_evals"] = True
+        console.print(f"[cyan]Resume mode: skipping completed evals from {resume}[/cyan]")
 
     if dry_run:
         console.print("[yellow]Dry run - showing config:[/yellow]")

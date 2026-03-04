@@ -17,4 +17,5 @@ judges:
 
 # grader_model defaults to eval model (qwq-32b)
 judge_epochs: 1
+# random_seed: 42  # Uncomment for reproducible runs
 output_dir: logs

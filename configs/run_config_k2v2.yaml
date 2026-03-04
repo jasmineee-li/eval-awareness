@@ -4,7 +4,7 @@
 # Blackbox tests: SFT (K2-V2-Instruct) and RLVR (K2-Think-V2) only
 #
 # Usage:
-#   python run.py --config run_config_k2v2.yaml
+#   python main.py --config configs/run_config_k2v2.yaml
 #
 # For blackbox tests that need vLLM servers (needham, agentic), use the
 # dedicated SLURM scripts instead:
@@ -13,6 +13,7 @@
 #   sbatch Test_Awareness_Steering/slurm/run_k2v2_trigger.sh
 
 dry_run: false
+# random_seed: 42  # Uncomment for reproducible runs
 
 whitebox:
   # Train and evaluate probes for all K2-V2 checkpoints.

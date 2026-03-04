@@ -1,10 +1,11 @@
 # Eval-Awareness Unified Run Config
-# Edit sections below, then: python run.py
-# Or:  python run.py --config my_other_config.yaml
+# Edit sections below, then: python main.py
+# Or:  python main.py --config configs/my_other_config.yaml
 # Use dry_run: true to preview commands without executing.
 
 dry_run: false
 # output_dir: results  # default; override to send output elsewhere
+# random_seed: 42  # Uncomment for reproducible runs
 
 whitebox:
   # Model name from eval-awareness-testbed/probes/models.tsv, or "all"

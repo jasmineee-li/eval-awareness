@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import random
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -103,9 +104,12 @@ class ExperimentConfig:
     system_prompt_prefix: str = ""  # Prefix for all eval system prompts
     # White-box probe config (for ProbeJudge)
     whitebox_config: dict[str, Any] | None = None
+    # Reproducibility
+    random_seed: int | None = None  # Set for reproducibility; None = no seeding
     # Resume options
     judges_only: bool = False  # Skip evals, load transcripts from resume_from
     resume_from: str | None = None  # Path to existing experiment dir with transcripts
+    skip_completed_evals: bool = False  # Skip evals that already have transcripts in output dir
 
     @classmethod
     def from_yaml(cls, path: Path) -> "ExperimentConfig":
@@ -191,6 +195,20 @@ class ExperimentRunner:
         start_time = datetime.now()
         results = FullExperimentResults(config=self.config)
 
+        # Seed RNGs for reproducibility
+        if self.config.random_seed is not None:
+            random.seed(self.config.random_seed)
+            try:
+                import numpy as np
+                np.random.seed(self.config.random_seed)
+            except ImportError:
+                pass
+            try:
+                import torch
+                torch.manual_seed(self.config.random_seed)
+            except ImportError:
+                pass
+
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -199,33 +217,51 @@ class ExperimentRunner:
         with open(config_path, "w") as f:
             yaml.dump(asdict(self.config), f)
 
-        logger.info(f"Starting experiment: {self.config.name}")
-        logger.info(f"Models: {self.config.models}")
-        logger.info(
-            f"Evals: {[e.get('name', e) if isinstance(e, dict) else e for e in self.config.evals]}"
-        )
-        logger.info(f"Output: {self.output_dir}")
+        # Set up file logging for this run
+        log_file = self.output_dir / "run.log"
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        ))
+        logging.getLogger().addHandler(file_handler)
 
-        # Run for each model
-        for model in self.config.models:
-            logger.info(f"\n{'='*60}")
-            logger.info(f"Running model: {model}")
-            logger.info(f"{'='*60}")
+        try:
+            # Log hardware info
+            from eval_awareness_testbed.utils.model_utils import detect_hardware
+            hw = detect_hardware()
+            logger.info(f"Hardware: CPUs={hw['cpu_count']}, GPUs={hw['gpu_count']} {hw['gpu_names']}")
 
-            model_results = await self._run_model(model)
-            results.model_results[model] = model_results
+            logger.info(f"Starting experiment: {self.config.name}")
+            logger.info(f"Models: {self.config.models}")
+            logger.info(
+                f"Evals: {[e.get('name', e) if isinstance(e, dict) else e for e in self.config.evals]}"
+            )
+            logger.info(f"Output: {self.output_dir}")
 
-            # Save intermediate results
-            self._save_model_results(model, model_results)
+            # Run for each model
+            for model in self.config.models:
+                logger.info(f"\n{'='*60}")
+                logger.info(f"Running model: {model}")
+                logger.info(f"{'='*60}")
 
-        # Compute aggregate stats
-        results.duration_seconds = (datetime.now() - start_time).total_seconds()
+                model_results = await self._run_model(model)
+                results.model_results[model] = model_results
 
-        # Save final results
-        self._save_final_results(results)
+                # Save intermediate results
+                self._save_model_results(model, model_results)
 
-        logger.info(f"\nExperiment complete in {results.duration_seconds:.1f}s")
-        logger.info(f"Results saved to: {self.output_dir}")
+            # Compute aggregate stats
+            results.duration_seconds = (datetime.now() - start_time).total_seconds()
+
+            # Save final results
+            self._save_final_results(results)
+
+            logger.info(f"\nExperiment complete in {results.duration_seconds:.1f}s")
+            logger.info(f"Results saved to: {self.output_dir}")
+        finally:
+            logging.getLogger().removeHandler(file_handler)
+            file_handler.close()
 
         return results
 
@@ -274,6 +310,16 @@ class ExperimentRunner:
                     ))
                 logger.info(f"    ✓ Loaded {len(all_transcripts)} transcripts from {len(eval_transcripts)} evals")
         else:
+            # Check for existing transcripts (for skip_completed_evals)
+            existing_transcripts: dict[str, list[Transcript]] = {}
+            if self.config.skip_completed_evals:
+                transcripts_file = model_dir / "transcripts.json"
+                if transcripts_file.exists():
+                    with open(transcripts_file) as f:
+                        saved_data = json.load(f)
+                    for en, td in saved_data.items():
+                        existing_transcripts[en] = [_dict_to_transcript(d) for d in td]
+
             # Run evals normally
             for eval_config in self.config.evals:
                 if isinstance(eval_config, str):
@@ -282,6 +328,20 @@ class ExperimentRunner:
                 else:
                     eval_name = eval_config.pop("name")
                     eval_kwargs = eval_config
+
+                # Skip if transcripts already exist and skip_completed_evals is set
+                if eval_name in existing_transcripts:
+                    logger.info(f"  Skipping eval (already completed): {eval_name}")
+                    transcripts = existing_transcripts[eval_name]
+                    all_transcripts.extend(transcripts)
+                    eval_transcripts[eval_name] = transcripts
+                    model_results.eval_results.append(EvalResult(
+                        eval_name=eval_name,
+                        model=model,
+                        transcripts=transcripts,
+                        scores={},
+                    ))
+                    continue
 
                 logger.info(f"  Running eval: {eval_name}")
 
@@ -315,6 +375,10 @@ class ExperimentRunner:
             # Save transcripts for future judges-only runs
             if eval_transcripts:
                 self._save_transcripts(model_dir, eval_transcripts)
+
+            # Incremental save after evals phase
+            model_results.stats = self._compute_stats(model_results)
+            self._save_model_results(model, model_results)
 
         # Phase 2: Run judges on transcripts (per-eval to support filtering)
         if eval_transcripts and self.config.judges:
@@ -375,6 +439,10 @@ class ExperimentRunner:
                     logger.info(
                         f"      ✓ Eval-aware rate: {rate:.1%} ({positive_count}/{len(judge_results)})"
                     )
+
+                    # Incremental save after each judge
+                    model_results.stats = self._compute_stats(model_results)
+                    self._save_model_results(model, model_results)
 
                 except Exception as e:
                     logger.error(f"      ✗ Judge failed: {e}")

@@ -17,4 +17,5 @@ analyzers: []  # Skip analyzers for speed
 
 # grader_model: null  # Uses eval model by default
 judge_epochs: 1
+# random_seed: 42  # Uncomment for reproducible runs
 output_dir: logs

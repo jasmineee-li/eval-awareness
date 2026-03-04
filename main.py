@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """Unified dispatcher for eval-awareness experiments.
 
-Reads a YAML config (default: run_config.yaml) and dispatches to the
+Reads a YAML config (default: configs/run_config.yaml) and dispatches to the
 appropriate per-experiment scripts.  Supports dry_run mode to preview
 commands without executing.
 
 Usage:
-    python run.py                          # uses run_config.yaml
-    python run.py --config my_config.yaml  # custom config
+    python main.py                                  # uses configs/run_config.yaml
+    python main.py --config configs/my_config.yaml  # custom config
 """
 
 import argparse
 import csv
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -262,7 +263,7 @@ DISPATCHERS = [
 
 def main():
     parser = argparse.ArgumentParser(description="Eval-Awareness unified dispatcher")
-    parser.add_argument("--config", default="run_config.yaml", help="Path to config YAML")
+    parser.add_argument("--config", default="configs/run_config.yaml", help="Path to config YAML")
     args = parser.parse_args()
 
     config_path = Path(args.config)
@@ -278,7 +279,14 @@ def main():
         print("DRY RUN — commands will be printed but not executed")
         print("=" * 60)
 
-    enabled = []
+    # Create timestamped run folder and copy config for recordkeeping
+    out = _output_dir(config)
+    run_dir = out / f"run_{_ts()}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(config_path, run_dir / config_path.name)
+    print(f"Run directory: {run_dir}")
+    print(f"Config saved to: {run_dir / config_path.name}")
+
     for dispatch_fn in DISPATCHERS:
         dispatch_fn(config, dry_run)
 

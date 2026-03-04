@@ -1,0 +1,19 @@
+# Smoke test - minimal single-sample test for CI and fast iteration
+name: smoke_test
+description: Minimal smoke test (1 sample, fastest settings)
+
+models:
+  - anthropic/claude-3-5-haiku-20241022
+
+evals:
+  - name: needham
+    limit: 1
+    epochs: 1
+
+judges:
+  - binary_third_person
+
+analyzers: []
+judge_epochs: 1
+# random_seed: 42  # Uncomment for reproducible runs
+output_dir: logs

@@ -58,6 +58,11 @@ sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/raw_prompts.jsonl
 sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/raw_valid_responses.jsonl
 Test_Awareness_Steering/data/triggers_annotated_answers/
 Test_Awareness_Steering/data/triggers/triggers_with_answers_*.json
+eval-awareness-testbed/data/needham/*.json
+
+# Literature review (PDFs and notes, not tracked)
+docs/lit_review/*
+!docs/lit_review/.gitkeep
 
 # Misc junk
 =0.6.6

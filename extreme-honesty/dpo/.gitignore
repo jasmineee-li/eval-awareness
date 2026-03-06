@@ -1,0 +1,14 @@
+__pycache__
+.vscode
+archived_data
+dpo_outputs_*
+logs
+new_data_0526
+run_dpo_bitfit.sbatch
+run_dpo_llama8b.sbatch
+train_dpo_bitfit.py
+train_dpo_fast.py
+dpo_scenarios.jsonl
+full_catalog.jsonl
+large_catalog.jsonl
+large_dpo_scenarios.jso

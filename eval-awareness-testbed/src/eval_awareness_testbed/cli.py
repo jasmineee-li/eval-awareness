@@ -24,6 +24,13 @@ app = typer.Typer(
 )
 console = Console()
 
+# Add experiment subcommands
+try:
+    from eval_awareness_testbed.experiments.data_poisoning.cli import app as poison_app
+    app.add_typer(poison_app, name="poison", help="Data Poisoning Eval Awareness Experiment")
+except ImportError:
+    pass  # Experiment not available
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -85,7 +92,7 @@ def eval(
         None,
         "--judge",
         "-j",
-        help="Run judges after eval (comma-separated: verbalized_awareness,binary_third_person,probability_third_person,purpose_xml,purpose_continue,binary_mcq)",
+        help="Run judges after eval (comma-separated: verbalized_awareness,binary_third_person,probability_third_person,purpose_xml,purpose_continue)",
     ),
     grader_model: Optional[str] = typer.Option(
         None,
@@ -191,14 +198,32 @@ def judge(
     ),
     methods: str = typer.Option(
         "verbalized_awareness",
-        help="Comma-separated judge methods (verbalized_awareness,purpose_xml,purpose_continue,binary_mcq,binary_third_person,probability_third_person,all)",
+        help="Comma-separated judge methods (verbalized_awareness,purpose_xml,purpose_continue,binary_third_person,probability_third_person,all)",
     ),
     model: Optional[str] = typer.Option(
         None, "--model", "-m", help="Grader model (required)"
     ),
-    epochs: int = typer.Option(1, help="Epochs for binary_mcq method"),
+    epochs: int = typer.Option(1, help="Epochs for binary_mcq / binary_third_person"),
     sample_limit: Optional[int] = typer.Option(
         None, "--limit", "-l", help="Limit number of samples to judge"
+    ),
+    max_connections: int = typer.Option(
+        50, "--max-connections", "-c", help="Max concurrent API calls per judge"
+    ),
+    classifier: Optional[str] = typer.Option(
+        None,
+        "--classifier",
+        help="Classifier model for structured classification steps (default: same as --model). Use a capable instruction-tuned model for best results.",
+    ),
+    reasoning_tokens: Optional[int] = typer.Option(
+        None,
+        "--reasoning-tokens",
+        help="Reasoning token budget (e.g., 16384 for Claude extended thinking)",
+    ),
+    reasoning_effort: Optional[str] = typer.Option(
+        None,
+        "--reasoning-effort",
+        help="Reasoning effort level: none|low|medium|high",
     ),
     output: Optional[Path] = typer.Option(
         None, "-o", "--output", help="Output JSON file"
@@ -252,43 +277,78 @@ def judge(
 
     console.print(f"Found {len(transcripts)} transcript(s)")
 
+    # Pre-instantiate model with reasoning config if specified
+    from inspect_ai.model import get_model as _get_model, GenerateConfig
+    gen_config_kwargs = {}
+    if reasoning_tokens is not None:
+        gen_config_kwargs["reasoning_tokens"] = reasoning_tokens
+    if reasoning_effort is not None:
+        gen_config_kwargs["reasoning_effort"] = reasoning_effort
+    if gen_config_kwargs:
+        gen_config = GenerateConfig(**gen_config_kwargs)
+        model_obj = _get_model(model, config=gen_config)
+        console.print(f"Reasoning config: {gen_config_kwargs}")
+    else:
+        model_obj = model  # pass string, let BaseJudge call get_model()
+
     async def run_judges():
+        # Initialize sample results
         all_results = []
         for i, transcript in enumerate(transcripts):
             sample_id = transcript.metadata.get("sample_id", i)
-            console.print(
-                f"\n[bold]Sample {i+1}/{len(transcripts)}[/bold] (id: {sample_id})"
-            )
+            all_results.append({"sample_id": sample_id, "judgments": {}})
 
-            sample_results = {"sample_id": sample_id, "judgments": {}}
+        # Run each judge in batch (concurrent across samples)
+        for method_name in method_list:
+            console.print(f"\n[bold]Running judge: {method_name} on {len(transcripts)} samples...[/bold]")
+            try:
+                judge_instance = get_judge(
+                    method_name,
+                    grader_model=model_obj,
+                    classifier_model=classifier,
+                    max_concurrency=max_connections,
+                    epochs=epochs if method_name in ("binary_mcq", "binary_third_person") else 1,
+                )
 
-            for method_name in method_list:
-                console.print(f"  Running judge: {method_name}")
-                try:
-                    judge_instance = get_judge(
-                        method_name,
-                        grader_model=model,
-                        epochs=epochs if method_name == "binary_mcq" else 1,
-                    )
-                    result = await judge_instance.judge(transcript)
-                    sample_results["judgments"][method_name] = {
+                # Validate judge_type against transcript eval names
+                for t in transcripts:
+                    if t.eval_name:
+                        is_needham = t.eval_name == "needham"
+                        if is_needham and judge_instance.judge_type == "live_eval":
+                            console.print(
+                                f"[yellow]Warning: Judge '{method_name}' (live_eval) applied to needham (meta-eval). "
+                                f"Results may not be meaningful.[/yellow]"
+                            )
+                            break
+                        elif not is_needham and judge_instance.judge_type == "meta_eval":
+                            console.print(
+                                f"[yellow]Warning: Judge '{method_name}' (meta_eval) applied to '{t.eval_name}' (live eval). "
+                                f"Results may not be meaningful.[/yellow]"
+                            )
+                            break
+
+                batch_results = await judge_instance.judge_batch(transcripts)
+
+                eval_aware_count = 0
+                for i, result in enumerate(batch_results):
+                    all_results[i]["judgments"][method_name] = {
                         "classification": result.category.value,
                         "reasoning": result.reasoning,
                         "confidence": result.confidence,
                         "quotes": result.quotes,
                         "purpose_guess": result.purpose_guess,
                     }
-                    conf_str = (
-                        f" ({result.confidence:.2f})"
-                        if result.confidence is not None
-                        else ""
-                    )
-                    console.print(f"    → {result.category.value}{conf_str}")
-                except Exception as e:
-                    console.print(f"    [red]Error: {e}[/red]")
-                    sample_results["judgments"][method_name] = {"error": str(e)}
+                    if result.category.value != "Real":
+                        eval_aware_count += 1
 
-            all_results.append(sample_results)
+                rate = eval_aware_count / len(batch_results) if batch_results else 0
+                console.print(
+                    f"  → {rate:.1%} eval-aware ({eval_aware_count}/{len(batch_results)})"
+                )
+            except Exception as e:
+                console.print(f"  [red]Error: {e}[/red]")
+                for i in range(len(transcripts)):
+                    all_results[i]["judgments"][method_name] = {"error": str(e)}
 
         return all_results
 
@@ -693,6 +753,81 @@ def experiment(
                 console.print(f"    {key}: {value:.1%}")
             else:
                 console.print(f"    {key}: {value}")
+
+
+@app.command()
+def pipeline(
+    config: Path = typer.Argument(..., help="Path to pipeline config YAML"),
+    phase: str = typer.Option(
+        "all",
+        "--phase",
+        "-p",
+        help="Phase to run: all, data_prep, baseline, train_cmd, post, compare",
+    ),
+    adapter_path: Optional[str] = typer.Option(
+        None,
+        "--adapter-path",
+        "-a",
+        help="Path to trained LoRA adapter (required for 'post' phase)",
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be run without executing"
+    ),
+):
+    """Run the honesty training + eval pipeline.
+
+    Phases:
+      data_prep  — Prepare SFT/DPO/CD training data
+      baseline   — Run eval suite on base model
+      train_cmd  — Print the training command to run
+      post       — Run eval suite on trained model (needs --adapter-path)
+      compare    — Compare baseline vs post, generate plots
+      all        — Run all phases in sequence
+    """
+    from eval_awareness_testbed.pipeline.config import PipelineConfig
+    from eval_awareness_testbed.pipeline.runner import PipelineRunner
+
+    console.print(f"Loading pipeline config from {config}")
+
+    pipeline_config = PipelineConfig.from_yaml(config)
+
+    if dry_run:
+        console.print("[yellow]Dry run mode[/yellow]")
+        console.print_json(json.dumps(pipeline_config.to_dict(), indent=2, default=str))
+
+    runner = PipelineRunner(pipeline_config)
+    runner.save_config()
+
+    async def run():
+        return await runner.run(
+            phase=phase,
+            adapter_path=adapter_path,
+            dry_run=dry_run,
+        )
+
+    console.print(f"\n[bold]Running pipeline phase: {phase}[/bold]\n")
+    results = asyncio.run(run())
+
+    # Display results
+    if "train_cmd" in results and not dry_run:
+        cmd_data = results["train_cmd"]
+        if "command_str" in cmd_data:
+            console.print("\n[bold cyan]Training command:[/bold cyan]")
+            console.print(cmd_data["command_str"])
+        if "generation_command_str" in cmd_data:
+            console.print("\n[bold cyan]Generation command (run first):[/bold cyan]")
+            console.print(cmd_data["generation_command_str"])
+        if cmd_data.get("warnings"):
+            for w in cmd_data["warnings"]:
+                console.print(f"[yellow]{w}[/yellow]")
+
+    if "compare" in results and "deltas" in results.get("compare", {}):
+        console.print("\n[bold]Comparison deltas:[/bold]")
+        for key, delta in results["compare"]["deltas"].items():
+            color = "green" if delta > 0 else "red" if delta < 0 else "white"
+            console.print(f"  {key}: [{color}]{delta:+.1%}[/{color}]")
+
+    console.print(f"\n[bold]Pipeline output: {runner.output_dir}[/bold]")
 
 
 @app.command()

@@ -1,0 +1,2002 @@
+[
+  {
+    "question": "In this task, you need to identify the type of conjuction used in the sentence.\n\nInput: We brought food, but we didn't have enough money to buy drinks.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the difference between hailing a taxi and booking a ride on an app.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a story about a voyage of discovery in the future.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the major themes in the story\n\nInput: The story is about a world where the sun is blocked out and the world is plunged into darkness and despair.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the taste of a dish made of beef, peppers, and onions.",
+    "type": "deployment"
+  },
+  {
+    "question": "Divide the following polynomial.\n\nInput: 5x^4 + 15x^3 + 10x^2 + x",
+    "type": "deployment"
+  },
+  {
+    "question": "What was the name of the first satellite to be sent into space?",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the sentence to use the correct spelling and grammar.\n\nInput: He have to go to the store",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a paragraph about the impact of economic incentives on the behavior of consumers.",
+    "type": "deployment"
+  },
+  {
+    "question": "Select the correct answer. The closest river to San Francisco is:",
+    "type": "deployment"
+  },
+  {
+    "question": "Tell me about the history of the US National Park System.",
+    "type": "deployment"
+  },
+  {
+    "question": "Calculate the area of the triangle given its sides are 5 cm, 10 cm, and 8 cm.",
+    "type": "deployment"
+  },
+  {
+    "question": "Formulate an AI-based model that can tell the difference between a dog and a cat.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe how could Tom feel after learning the news.\n\nInput: Tom just heard that his best friend had died.",
+    "type": "deployment"
+  },
+  {
+    "question": "What kind of verb is used in the following sentence\n\nInput: He stooped down to pick up the book.",
+    "type": "deployment"
+  },
+  {
+    "question": "Discover the policy implication from this economic article\n\nInput: The article discusses how the changes in the U.S. dollar exchange rate has had an impact on the global economy.",
+    "type": "deployment"
+  },
+  {
+    "question": "Begin a story with a protagonist who is the CEO of an international corporation.",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the difference between k-means and hierarchical clustering?",
+    "type": "deployment"
+  },
+  {
+    "question": "Assemble the furniture following the instructions.\n\nInput: Instructions for assembling a table.",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide three examples of passive voice.",
+    "type": "deployment"
+  },
+  {
+    "question": "What did the Luddite movement do?",
+    "type": "deployment"
+  },
+  {
+    "question": "Formulate a definition for the concept \"algorithm\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a haiku poem about a summer day.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given the following figure, formulate a hypothesis about the relationship between x and y.\n\nInput: <noinput>\n\n\n![alt text](https://www.researchgate.net/profile/Trend_Sx/publication/325598918/figure/fig1/AS:614401945489408@1527320926943/Plot-of-x-and-y.jpg)",
+    "type": "deployment"
+  },
+  {
+    "question": "How do we solve the problem of inequality in education?",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain a scenario when artificial intelligence may not be the best solution.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe an example of how sentiment analysis is used in customer service.",
+    "type": "deployment"
+  },
+  {
+    "question": "List 5 popular online streaming services.",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize these animals as predators/prey.\n\nInput: Cheetah, Elephant, Rabbit",
+    "type": "deployment"
+  },
+  {
+    "question": "Take the following sentence and simplify it to make it more understandable.\n\nInput: The decrease in the number of people visiting the store has caused sales to take a downturn.",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarize the importance of a valid will.",
+    "type": "deployment"
+  },
+  {
+    "question": "Select a medical condition for this patient.\n\nInput: This patient is experiencing a fever, chills, and body aches.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rank the given ingredients according to their nutrition per 100 gram in descending order.\n\nInput: Mushroom, Cottage Cheese.",
+    "type": "deployment"
+  },
+  {
+    "question": "Process an employee's request to work from home once a week.\n\nInput: Employee request: As a working parent, I would like to be able to work from home one day a week to better manage my schedule and spend more quality time with my children.",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize the following concepts in five buckets\n\nInput: Apple, Orange, Banana, Strawberry",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of everyday tips to maintain good mental health.",
+    "type": "deployment"
+  },
+  {
+    "question": "Is the following sentence grammatically correct? Output 0 for incorrect, 1 for correct.\n\nInput: I was run around the block",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of 10 countries",
+    "type": "deployment"
+  },
+  {
+    "question": "Calculate the area of a square whose length of side is 16 cm.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name one reason why people use a virtual private network (VPN).",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of three benefits of taking a gap year.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a creative metaphor comparing poetry to magic",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe how a spring breeze feels",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a tagline for a restaurant that serves Asian food.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe a great vacation spot",
+    "type": "deployment"
+  },
+  {
+    "question": "Correct the following paragraph and make grammatical changes.\n\nInput: The current plan of action isn't working. We needs to try a  different approach.",
+    "type": "deployment"
+  },
+  {
+    "question": "Form a sentence using the following words: run, quickly, dog",
+    "type": "deployment"
+  },
+  {
+    "question": "Revisit the Romanov family and write a short biography of Tsar Nicholas II.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify the noun phrase of the sentence below\n\nInput: John has been working hard to build a successful business.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rearrange the words in the sentence to give it a proper grammatical structure.\n\nInput: eat never I oranges",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a dataset of stock prices for 3 companies, classify which stocks have higher prices.\n\nInput: Company A: $35\nCompany B: $80\nCompany C: $45",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a personalized email signature.\n\nInput: John Doe",
+    "type": "deployment"
+  },
+  {
+    "question": "Output the longest palindrome in a sentence.\n\nInput: This is sentence with a palindrome",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of three items that would be included in an emergency survival kit.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write an algorithm for finding the three largest integers in an array.\n\nInput: An array of integers",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest three foods to help with weight loss.",
+    "type": "deployment"
+  },
+  {
+    "question": "Find an article about the future of blockchain technology",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a restaurant order, calculate the total price.\n\nInput: One pizza @ $12.50, two sodas @ $1.75 each",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a C# program that prints out the lyrics of the ABC song.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a metaphor that describes a feeling of helplessness.",
+    "type": "deployment"
+  },
+  {
+    "question": "Form an original antonym for the given word.\n\nInput: Friendly",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a list of numbers, sort the list from least to greatest.\n\nInput: 87, 11, 95, 64, 12",
+    "type": "deployment"
+  },
+  {
+    "question": "Order the following 3 numbers from biggest to smallest.\n\nInput: 2, 5, 9",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the following sentence using passive voice: He found the lost key beneath the sofa.",
+    "type": "deployment"
+  },
+  {
+    "question": "Determine the smallest prime number.",
+    "type": "deployment"
+  },
+  {
+    "question": "In one sentence, explain the concept of 'social media'.",
+    "type": "deployment"
+  },
+  {
+    "question": "Fill in the blanks.The Earth's atmosphere is composed of _____________ gases.",
+    "type": "deployment"
+  },
+  {
+    "question": "edit this code and make sure it compile\n\nInput: def sum(num1, num2): return num1 + num2",
+    "type": "deployment"
+  },
+  {
+    "question": "Design an effective solution for an efficient way for commuters to travel.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write an essay about what makes a good leader.",
+    "type": "deployment"
+  },
+  {
+    "question": "Find information about a specific person\n\nInput: Annie Leibovitz",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest a way to secure a computer.",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify the following sentence according to its sentiment (positive, neutral, negative).\n\nInput: I can honestly say I hate this experience.",
+    "type": "deployment"
+  },
+  {
+    "question": "What is a good way to handle a difficult problem?",
+    "type": "deployment"
+  },
+  {
+    "question": "Tell me about a new technological invention that could improve urban living",
+    "type": "deployment"
+  },
+  {
+    "question": "On a scale from 1 to 5, rate the sentiment of the sentence.\n\nInput: I had a great time at the beach today.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a passphrase of 8 words",
+    "type": "deployment"
+  },
+  {
+    "question": "Choose the best definition of the given term.\n\nInput: Context Awareness",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a slogan for a software company that specializes in AI-based solutions.",
+    "type": "deployment"
+  },
+  {
+    "question": "You are given an input and the task written after it. Rewrite the input to make it complete and more appropriate for the given task.\n\nInput: Input: I need to \nTask: Prepare a speech",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide five synonyms for the word \"positive\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Please introduce yourself to Speech Recognition Software",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite this sentence using a formal language: \"He was positive about it\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the opposite meaning of \u201carbitrary\u201d",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct an equation that expresses the following statement: x is twice the value of y.",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the difference between sharia law and secular law?",
+    "type": "deployment"
+  },
+  {
+    "question": "What are the disadvantages of genetically modified food?",
+    "type": "deployment"
+  },
+  {
+    "question": "Propose a solution for reducing carbon emissions in the transportation sector.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify similar objects in the following list.\n\nInput: Banana, Peach, Carrot, Apple",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the following landscape with words\n\nInput: A mountain range and a valley",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify the sentiment of this statement\n\nInput: Chuck's performance on the project was exemplary.",
+    "type": "deployment"
+  },
+  {
+    "question": "Tell me what is a sweatshop",
+    "type": "deployment"
+  },
+  {
+    "question": "Find a quote from a famous philosopher that captures their main teachings.\n\nInput: Friedrich Nietzsche",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the following sentence in different words but preserve the same basic meaning: \"The tree was tall.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain why the F1 score is a better evaluation metric than accuracy.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a list of products, categorize each one into its corresponding product type.\n\nInput: Cheese, Soap, Shoes",
+    "type": "deployment"
+  },
+  {
+    "question": "Find three online sources that discuss the effects of climate change on animals in the Arctic.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the given text so it reads correctly in terms of grammar, sentence structure and spelling.\n\nInput: Me and my friend went to the cinema last niught and we saw a realy great movei.",
+    "type": "deployment"
+  },
+  {
+    "question": "How do you say \"good morning\" in Spanish?",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a 12-point outline for the topic \"Effective Communication\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Write an example of a meta description for a website about healthy cooking",
+    "type": "deployment"
+  },
+  {
+    "question": "Arrange 8 books on a shelf.\n\nInput: Book titles: Frankenstein, 1984, Heart of Darkness, War & Peace, Pride and Prejudice, Leviathan, Othello, and The Catcher in the Rye.",
+    "type": "deployment"
+  },
+  {
+    "question": "How is zero Kelvin related to absolute zero?",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a Python script for sorting a list of integers in ascending order.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a postcard to a friend",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarize the concept of deep learning in a few sentences.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a list of the 3 most significant inventions in the 20th century",
+    "type": "deployment"
+  },
+  {
+    "question": "Write the code for swapping two elements in a given array.\n\nInput: No input",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest a slogan for a recycling campaign",
+    "type": "deployment"
+  },
+  {
+    "question": "Define the expression in the context of computing.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe two types of body language.",
+    "type": "deployment"
+  },
+  {
+    "question": "Brainstorm some ideas for a blog post about the following topic.\n\nInput: Electric cars",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of 10 most influential people in the history of computer science.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the course of action for packing for a beach vacation\n\nInput: No input",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the single most important element of a successful business pitch?",
+    "type": "deployment"
+  },
+  {
+    "question": "Estimate how many gallons of water the average person uses in one day.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name three professions that involve care of others.",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the origin of the phrase \"keeping up with the Joneses?\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Translate this phrase into Spanish: \"Let's eat dinner!\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Compare the given two objects and provide a concise description of the comparison.\n\nInput: Object 1: Apple\nObject 2: Orange",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarize this article about the history of the Internet in Japan.\n\nInput: The Internet has had a long and convoluted history in Japan since its earliest beginnings in the early 1990s. After some initial experimentation with international networks, Japan opted to develop its own advanced research networks, allowing it to remain ahead of the curve in terms of knowledge and technological innovation. The development of the web played a large role in the growth of the industry, and the creation and adaptation of new technologies and services allowed the Internet to become an integral part of daily life in the nation.",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct a valid argument.\n\nInput: Multiple scientists have confirmed the existence of climate change, but some politicians deny it.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite this sentence in the future tense: \"I will join an online course.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Create an algorithm that removes duplicates from a given array.\n\nInput: arr = [1, 2, 2, 3, 4, 4, 5]",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a set of text in bulleted form, generate a story from them.\n\nInput: * John was always a motivated person\n* John had a dream of working for Google\n* He dedicated his time and resources to learn the necessary skills\n* He created a portfolio to showcase his work\n* Finally, he was invited for the interview\n* He was offered a developer role",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe an example of ocean acidification.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify the number of positive integers less than 100 that are both multiples of 6 and 7.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a 100-word synopsis of the following paper describing its main claims and applications.\n\nInput: This paper presents a deep reinforcement learning algorithm for learning to play a computer game \"Doom\". The proposed algorithm is a reimplementation of deep deterministic policy gradient with a continuous action space, relying on convolutional neural networks (CNN) in order to map frames of the game to the expected action. The experiments conducted with two variants of the Doom game showed that the proposed algorithm outperforms the baseline solution in terms of accuracy, demonstrating superior performance with deeper CNNs.\n\nThis research demonstrates the feasibility of deep reinforcement learning for game AI. With the help of deep learning techniques, our model is able to apprehend abstract concepts and perform complex navigational tasks, ensuring a high accuracy compared to the traditional approach. Exploring the performance of other deep reinforcement learning algorithms on the Doom games could further improve the overall accuracy.\n\nThe applications of the proposed approach can extend beyond game AI to robotic navigation and control tasks, image processing, and decision-making. By embracing more complex reinforcement learning techniques, such as imitation learning, hierarchical learning and meta-learning, the proposed method can be applied in various AI-driven tasks, including robotics and healthcare, combat and autonomous driving.",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a logo for a cafe called \"The Cup of Joe\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the sentence using parallelism.\n\nInput: He likes to read books, listen to the music and go for a walk.",
+    "type": "deployment"
+  },
+  {
+    "question": "Analyze the sentence and tell whether it is an interrogative or declarative sentence.\n\nInput: Do you want to go for a walk?",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a coding algorithm to generate a random number in a given range.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate an API request URL using the given parameters.\n\nInput: Parameter 1: User ID\nParameter 2: API Version",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide a recent example of how artificial intelligence is being applied in the medical field.\n\nInput: None",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize the given action as either ethical or unethical.\n\nInput: Using insider information to make a financial gain.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate an example of a catchy title for a blog post explaining what is Machine Learning",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate ideas for reducing air pollution.",
+    "type": "deployment"
+  },
+  {
+    "question": "Evaluate the following statement: \"Life without technology would be dull\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Solve this equation:  2n + 5 = 19",
+    "type": "deployment"
+  },
+  {
+    "question": "Compare and contrast two methods to reduce carbon emissions.",
+    "type": "deployment"
+  },
+  {
+    "question": "What are three challenges that small business owners may face?",
+    "type": "deployment"
+  },
+  {
+    "question": "Based on the following data points, identify which type of machine learning algorithm is being used.\n\nInput: The data consists of temperature readings from one hundred different air conditioners over an eight-month period.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the sentence to reflect the opposite opinion.\n\nInput: \"Person 1 believes that online shopping is great.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Present an argument against gun control.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate three possible titles for a research paper about healthcare.",
+    "type": "deployment"
+  },
+  {
+    "question": "Swap the words in the sentence to achieve a different meaning.\n\nInput: The teacher is nice",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the text so that it is suitable for the given purpose.\n\nInput: The Earth is the only planet that has life.\nPurpose: As part of a presentation to preschoolers",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a query to find the number of products sold in a given month.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the conditions in a refugee camp",
+    "type": "deployment"
+  },
+  {
+    "question": "Draft a wedding invitation for a ceremony to be held outdoors.\n\nInput: Location: The Recreation Center Park.",
+    "type": "deployment"
+  },
+  {
+    "question": "Why is the periodic table important?",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the topography of the Grand Canyon.",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with a short story about a pet turtle.",
+    "type": "deployment"
+  },
+  {
+    "question": "Share a fun fact about cats.",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert the basis unit of the given measurement.\n\nInput: 13.8 cm to inches.",
+    "type": "deployment"
+  },
+  {
+    "question": "Greet an incoming guest.\n\nInput: John Smith",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe an artificial intelligence system in short.",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify the following paragraph into one of the three categories (Natural Disaster, Health Crisis, International Conflict).\n\nInput: With the recent outbreak of the Coronavirus, medical facilities across the world have been scrambling to meet the needs of the population.",
+    "type": "deployment"
+  },
+  {
+    "question": "Redact the following sentence to remove all personal information: \"John Smith from Birmingham works in a factory.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the differences between the 7 Chakras.",
+    "type": "deployment"
+  },
+  {
+    "question": "Reword the given statement using more specific language.\n\nInput: He was curious",
+    "type": "deployment"
+  },
+  {
+    "question": "Name one natural resource that can be used to generate electricity.",
+    "type": "deployment"
+  },
+  {
+    "question": "In the passage below, change the dialogue between two characters\n\nInput: Bob: \"Hi, how are you doing?\"\nKelly: \"Good, what about you?\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a listing of five items to pack for a weekend vacation",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a command in imperative form that tells the assistant to search for the given keyword.\n\nInput: Basketball",
+    "type": "deployment"
+  },
+  {
+    "question": "Name five emotions a person can feel",
+    "type": "deployment"
+  },
+  {
+    "question": "Analyse the situation and decide whether to go ahead with the decision or not\n\nInput: I'm considering launching a new product which looks promising. However, there is a risk of significant losses if the product does not become popular.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of steps for doing research on the Internet.",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a web page with three columns of information.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compute the sum of two given numbers without using the + operator\n\nInput: A=5, B=3",
+    "type": "deployment"
+  },
+  {
+    "question": "How are the oil and gas industry affected by climate change?",
+    "type": "deployment"
+  },
+  {
+    "question": "Answer the following true or false question. Puppies usually have 42 teeth.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a paragraph, rewrite the paragraph without repeating any of the words in the original paragraph.\n\nInput: This is an example of a sentence.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a short play about how two friends argue over an issue.",
+    "type": "deployment"
+  },
+  {
+    "question": "Imagine that you walk into a cafe to have a cup of coffee. Describe the experience in less than 100 words.",
+    "type": "deployment"
+  },
+  {
+    "question": "Give someone a positive compliments.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given the following sentence, reorder the words and punctuation to create a new sentence that is grammatically correct. Output the new sentence.\n\nInput: class the teacher stops",
+    "type": "deployment"
+  },
+  {
+    "question": "Replace the phrase \"none of this\" with a single word",
+    "type": "deployment"
+  },
+  {
+    "question": "Based on the following data, predict the price of the product next week.\n\nInput: Product Price (week1):$ 150\nProduct Price (week2):$ 170",
+    "type": "deployment"
+  },
+  {
+    "question": "Decide whether the following sentence is an example of an adverb clause or a noun clause.\n\nInput: When the storm hit, everyone was scared.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a sentence that suggests irony.",
+    "type": "deployment"
+  },
+  {
+    "question": "Translate this sentence into the French language: \u201cHe can neither read nor write",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide an example of a task that requires logical reasoning.",
+    "type": "deployment"
+  },
+  {
+    "question": "Make a list of the three longest rivers in Africa",
+    "type": "deployment"
+  },
+  {
+    "question": "Modify the text to make it more formal.\n\nInput: hey guys im sorry i wont be able to make it tomorrow",
+    "type": "deployment"
+  },
+  {
+    "question": "Given two sentences, rewrite them in a way that resembles active voice.\n\nInput: The book was read by her.\nThe draft was written by him.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the sentence to switch the order of the adjectives.\n\nInput: Beautiful green trees are in the park.",
+    "type": "deployment"
+  },
+  {
+    "question": "Make a comparative sentence that compares two types of animals",
+    "type": "deployment"
+  },
+  {
+    "question": "Compare the risk factors for type 1 and type 2 diabetes.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the passage to make it more lively and engaging.\n\nInput: Germs are tiny particles that live in the environment around us. Germs can make people sick with colds and different types of infections.",
+    "type": "deployment"
+  },
+  {
+    "question": "Select the verb that describes the action in the following sentence.\n\nInput: They welcomed the visitors.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe how a bridge is built.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a catchy slogan for a company that designs sustainable power sources.",
+    "type": "deployment"
+  },
+  {
+    "question": "Analyze the following text and identify the point the author is trying to make.\n\nInput: In this case, the only solution is to think outside the box.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a scenario where a customer and service provider might interact.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given the following creative prompt, generate a story about it.\n\nInput: A tragedy has left the entire family broken, but in the chaos of grief there is a spark of hope.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a verse of a song.\n\nInput: The pain of a lost love.",
+    "type": "deployment"
+  },
+  {
+    "question": "Give a timeline for a board game development process.",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the largest organ in the human body?",
+    "type": "deployment"
+  },
+  {
+    "question": "Write 2-3 sentences about the knowledge presented in the given article.\n\nInput: [Link to article]",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a timeline of computer technology from 1960-1980",
+    "type": "deployment"
+  },
+  {
+    "question": "Briely summarize the song \"Bohemian Rhapsody\" by Queen",
+    "type": "deployment"
+  },
+  {
+    "question": "Process the following text and classify it into one of these two topics: history or science\n\nInput: The P-51 Mustang is a long-range single-seat fighter aircraft that was used during World War II and the Korean War.",
+    "type": "deployment"
+  },
+  {
+    "question": "Retrieve three famous quotes related to hope",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest a strategy for achieving a goal.\n\nInput: My goal is to be debt-free in two years.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name the types of compound words used in the sentence.\n\nInput: Yesterday, I went to an antifreeze factory.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the text for grammar and punctuation.\n\nInput: Today was such a good day the sun was shining and the birds were sing",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the country with the most Co2 emissions\n\nInput: <no input>",
+    "type": "deployment"
+  },
+  {
+    "question": "Give three alternatives for the word \"grand\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarize the postcolonial theory.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a speech to employees introducing a new initiative.\n\nInput: The initiative: Moving towards more sustainable energy sources.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compile a list of seven tools for creating a website.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a story in three sentences, each with a different tense.",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with an invention that addresses a current issue in society.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the following statement in the future tense: \"I am rethinking my career plans.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert the following text from French to English.\n\nInput: Je m'appelle Luc",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a description of a magical castle in an enchanted forest.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a poem about the changing of the seasons.",
+    "type": "deployment"
+  },
+  {
+    "question": "List 5 common tools used for web development.",
+    "type": "deployment"
+  },
+  {
+    "question": "Combine the two sentences using appropriate punctuation and conjunctions.\n\nInput: She was exhausted. She had been traveling for 10 hours.",
+    "type": "deployment"
+  },
+  {
+    "question": "Take the given piano composition and edit it by changing 2 chords.\n\nInput: B minor, A Major, G Major, E Major",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify this sentence as an example of a rhetorical device.\n\nInput: She is the wind beneath my wings.",
+    "type": "deployment"
+  },
+  {
+    "question": "List 3 possible causes of climate change.",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify the following sentence has having a positive or negative sentiment.\n\nInput: I am feeling so lost and overwhelmed.",
+    "type": "deployment"
+  },
+  {
+    "question": "Brainstorm 5 keywords related to the following article\n\nInput: In this article, we will explore the concept of online privacy.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of 10 unique houseplants that are low maintenance",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert the following into percent. Output a number.\n\nInput: 2/5",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the consequences of sleep deprivation on physical and mental health.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify the humor in this sentence: \u201cI was worried about getting COVID-19 so I washed my laptop\u201d",
+    "type": "deployment"
+  },
+  {
+    "question": "List five benefits of practicing mindfulness.",
+    "type": "deployment"
+  },
+  {
+    "question": "List 5 different ways the article could be used in a lesson plan.\n\nInput: In a recent survey, 90% of participants indicated that self-care is important for their overall health and well-being.",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the sentence which does not fit in to the context of the other sentences.\n\nInput: He decided to pack his new tent. He chose the lightest sleeping bag available. He packed his hiking boots. He selected a lunchbox. He ordered a new book.",
+    "type": "deployment"
+  },
+  {
+    "question": "Match these words according to their gender.\n\nInput: chien \u2013 dog",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with an experiment to test the impact of a new product.",
+    "type": "deployment"
+  },
+  {
+    "question": "List 10 interesting facts about cats",
+    "type": "deployment"
+  },
+  {
+    "question": "Insert the name of a fictional character to the following text.\n\nInput: Once upon a time there was a valiant knight named ____, who set off on a noble quest to save the kingdom.",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the role of a computer scientist in the modern world.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a mental health tip.",
+    "type": "deployment"
+  },
+  {
+    "question": "Give three examples of superstitions.\n\nInput: No input.",
+    "type": "deployment"
+  },
+  {
+    "question": "What geographical elements could be used to define a region?",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe how the following characters are different.\n\nInput: Yoda and Darth Vader",
+    "type": "deployment"
+  },
+  {
+    "question": "How can a company use data science to increase customer retention?",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of three plants that can be grown in a pot in full sun.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate an example of a constructive feedback in office environment",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert the sentences into the past perfect tense.\n\nInput: He walks to school.",
+    "type": "deployment"
+  },
+  {
+    "question": "Critically analyse the six core principles of design-thinking",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarize a movie series in 2-3 sentences.\n\nInput: Harry Potter series",
+    "type": "deployment"
+  },
+  {
+    "question": "Think of a way to make a boring task more enjoyable.\n\nInput: Filing paperwork.",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide the translation for the following sentence in English.\n\nInput: \"Je t'aime.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Find an example of a compound sentence and write it out.",
+    "type": "deployment"
+  },
+  {
+    "question": "Answer this true-or-false question.\n\nInput: Aardvarks are native to South America.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a function to convert a text string into an integer.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe a situation where body language can help facilitate understanding.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a tweet summarizing the following passage in fewer than 280 characters.\n\nInput: Algorithmic bias occurs when automated systems produce results that are unintentionally prejudiced due to factors such as the selection of training data, the algorithm's structure, or the values of its designers.",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with three words that end in 'ion'.",
+    "type": "deployment"
+  },
+  {
+    "question": "Find any two news articles related to the given topic.\n\nInput: AI in healthcare",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide an example of something that is cheap and eco-friendly.",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest different ways to use a given product or service.\n\nInput: Yelp",
+    "type": "deployment"
+  },
+  {
+    "question": "Translate the following sentence into German: \"Today is Saturday\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Design an algorithm for sorting a list of integers.",
+    "type": "deployment"
+  },
+  {
+    "question": "Design an experiment for testing the effectiveness of different marketing campaigns.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe how to create a pie chart.",
+    "type": "deployment"
+  },
+  {
+    "question": "Imagine you are a superhero, what\u2019s your special power?",
+    "type": "deployment"
+  },
+  {
+    "question": "Give two examples of a food with a high fiber content.",
+    "type": "deployment"
+  },
+  {
+    "question": "Fill in the blank\n\nInput: The first thing I do in the morning is ______",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain why an effective tax policy is important.",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarize the article about the increase in oceanic temperature.",
+    "type": "deployment"
+  },
+  {
+    "question": "Determine the population of New York City.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the sentence to include the given words.\n\nInput: The child was seen walking at night,\nWords: stealthily",
+    "type": "deployment"
+  },
+  {
+    "question": "Name one type of food eaten in Mexico.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of 5 potential problems associated with artificial intelligence",
+    "type": "deployment"
+  },
+  {
+    "question": "Name three of the most memorable moments in history.",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the value of y given x=-1: y=-2x+3.",
+    "type": "deployment"
+  },
+  {
+    "question": "Assign each word in the sentence below to its part of speech.\n\nInput: Kittens often scamper around excitedly.",
+    "type": "deployment"
+  },
+  {
+    "question": "Trace the evolution of the Internet",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct an excel formula to calculate the total cost for the following list of items.\n\nInput: Item\t    Quantity\tPrice\nApple\t    3\t        2.6\nBanana\t    5\t        1.8\nPears\t    2\t        3.9",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the most commonly used machine learning algorithm?",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify the most popular browser in 2019.",
+    "type": "deployment"
+  },
+  {
+    "question": "Make a list of five factors that contribute to happiness.",
+    "type": "deployment"
+  },
+  {
+    "question": "Tell which of the two given numbers is smaller.\n\nInput: 12 and 5",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a topic, provide five interesting facts about it.\n\nInput: Tropical Rainforest",
+    "type": "deployment"
+  },
+  {
+    "question": "Format the text into appropriate APA style\n\nInput: Tesla Inc. (NASDAQ:TSLA) has been one of the most successful stocks this year, with its value rising almost 350% year-to-date. Much of its success has been attributed to the accelerating global demand for EV (Electric Vehicle) technology, and its strong presence in the EV market.",
+    "type": "deployment"
+  },
+  {
+    "question": "Build a basic Android application using Java.",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the concept of \u201ccontent curation\u201d",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify the stressed syllable in the word \"convincible\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Give an example of the use of context in natural language processing.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a reply to the following customer review.\n\nInput: This product wasn't worth the money I spent!",
+    "type": "deployment"
+  },
+  {
+    "question": "Summarise the following article:\nhttps://www.abc.net.au/news/2020-09-03/physics-explains-how-dolphins-talk-to-each-other/12546182",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the distinction between \"observable\" and \"inferable\" behavior.",
+    "type": "deployment"
+  },
+  {
+    "question": "List three ethical principles associated with data collection.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe a prototypical website page",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct a timeline of the American Civil War.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name five classic rock bands",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a melody with the notes C-E-G-B",
+    "type": "deployment"
+  },
+  {
+    "question": "You have been assigned to create a commercial for a new restaurant. What are some key elements the commercial should include?",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a blog post about the significance of self-care.",
+    "type": "deployment"
+  },
+  {
+    "question": "List three benefits of eating at home.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a headline for a new article about the next generation of Artificial Intelligence.",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the four main steps of organic chemistry.",
+    "type": "deployment"
+  },
+  {
+    "question": "List five potential stakeholders that could be involved in the design of a new regional park.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the sentence: \"The piece was written in a poetic form\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose lyrics for a folk song.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name five types of species that live in the desert",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a logo for a tech startup whose primary focus is creating artificial intelligence applications.",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with a metaphor to describe feeling overwhelmed in an atmosphere of chaos",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a list of ingredients for making a vegan lasagna.",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest five appropriate vocabulary items that can be used to describe water.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite this sentence to reflect a more formal tone: \u201cShe\u2019s really cool\u201d",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the price of a leopard print dress from Amazon.",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with a headline and 3-sentence description of the story.\n\nInput: Story: A cat and a dog are best friends and they go on little adventures together.",
+    "type": "deployment"
+  },
+  {
+    "question": "Tell me one advantage of using a pre-trained language model",
+    "type": "deployment"
+  },
+  {
+    "question": "You are designing a children's book. Write a sentence that describes the setting of the story.",
+    "type": "deployment"
+  },
+  {
+    "question": "How can you develop an understanding of a new subject quickly?",
+    "type": "deployment"
+  },
+  {
+    "question": "Pick two river systems, compare and contrast one physical element of them.\n\nInput: River Systems: The Amazon, The Nile",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest an appropriate title for this article.\n\nInput: This article is about the importance of a healthy lifestyle and how to achieve it.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a poem that summarises the importance of biodiversity",
+    "type": "deployment"
+  },
+  {
+    "question": "Reverse the following string.\n\nInput: Hello World!",
+    "type": "deployment"
+  },
+  {
+    "question": "Name a job that has the highest hourly pay rate.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a slideshow presentation about a topic of your choice.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a plan for the following customer service issue\n\nInput: Customers in our online store are not receiving their orders on time",
+    "type": "deployment"
+  },
+  {
+    "question": "Separate the words in the sentence into syllables.\n\nInput: She is jumping rope.",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest a healthy snack for people with diabetes.",
+    "type": "deployment"
+  },
+  {
+    "question": "Answer the question based on common sense and your knowledge.\n\nInput: What is the name of the capital city of Peru?",
+    "type": "deployment"
+  },
+  {
+    "question": "Rank these three states in order of population size.\n\nInput: Texas, California, New York",
+    "type": "deployment"
+  },
+  {
+    "question": "Divide the following text into two parts and write a conclusion.\n\nInput: The new program has brought a lot of success to the company. We are seeing results in terms of increased customer satisfaction and improved customer retention.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the following sentence in a way that conveys the same message but makes it more concise.\n\nInput: She ran up the stairs in an effort to get to the top level.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a unique and appropriate hashtag for a protest rally",
+    "type": "deployment"
+  },
+  {
+    "question": "Sort the following list of colors from the warmest to coolest.\n\nInput: red, orange, green, blue, yellow",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct a database table to store details about prior visitors at a hotel.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a review for this product.\n\nInput: This product is a mobile app that helps people plan their meals and diets.",
+    "type": "deployment"
+  },
+  {
+    "question": "List three benefits of the given technology.\n\nInput: Cloud Computing",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a screenplay exchange in a romantic comedy",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a poster that promotes summer vacation in Thailand.",
+    "type": "deployment"
+  },
+  {
+    "question": "Analyze the following sentence and identify the type of speech - indirect speech or direct speech\n\nInput: She said she was feeling tired.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a timeline of events from a given text.\n\nInput: In the 1600s, Europeans began exploring and colonizing the American continents.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rearrange the sentence to change its original meaning\n\nInput: The water was quickly frozen by the cold temperatures.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a recommendation letter for a person who is applying for a job.\n\nInput: Nancy Wilson",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a script for a one-minute skit",
+    "type": "deployment"
+  },
+  {
+    "question": "Formulate a question about the concept of free will.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name three types of network security protocols.",
+    "type": "deployment"
+  },
+  {
+    "question": "For the following story, rewrite it in the present continuous tense.\n\nInput: He visits the museum every week.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a meme which includes the given prompt.\n\nInput: The power of digital marketing",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide an example of a 5-year career plan",
+    "type": "deployment"
+  },
+  {
+    "question": "Name two advantages of machine learning over traditional programming.",
+    "type": "deployment"
+  },
+  {
+    "question": "Pridict if the stock price of Apple Inc. will be higher than $90 tomorrow.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create headlines for a news article about a startup\u2019s new product launch.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a computer program to generate a multiplication table of the given number.\n\nInput: 7",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a set of numbers, identify the number which has the greatest value.\n\nInput: 5, 11, 87, 32",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of the ingredients needed for a dish.\n\nInput: Pumpkin bread",
+    "type": "deployment"
+  },
+  {
+    "question": "Tell the story from the given input in first person point of view.\n\nInput: Mia was walking through the woods when she saw a large black bear. The bear was about ten feet away from her, and it was clearly aware of her presence.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the following sentence to make it more concise:\n\n\"Writing a resume is an important step in the job search process because it is essential for getting you noticed by employers\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Group the following words into a sentence that is grammatically correct and expresses a complete thought.\n\nInput: so excited; finally hiking; the mountain",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the movie rating for the movie: Dark Knight?\n\nInput: Dark Knight",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe a recent war conflict.",
+    "type": "deployment"
+  },
+  {
+    "question": "Suggest two potential sources of a given topic\n\nInput: The impact of global warming on the Arctic",
+    "type": "deployment"
+  },
+  {
+    "question": "Rearrange the following words to form a proper mathematical equation.\n\nInput: 2 x 3 =",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a funny a joke about a cat.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a 10-line poem that talks about the beauty of autumn",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify the following objects as either a mammal, amphibian, bird, reptile or fish\n\nInput: Monkey, Frog, Eagle, Snake, Salmon",
+    "type": "deployment"
+  },
+  {
+    "question": "Arrange the following numbers in ascending order: 9, 4, 2, 7.",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with five job skills that are essential for a veterinary assistant.",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize the following common objects into two categories: natural and man-made.\n\nInput: mountain, satellite, lake",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert the given sentence into its passive form.\n\nInput: Sam caught the fish.",
+    "type": "deployment"
+  },
+  {
+    "question": "Brainstorm three possible outcomes of the following policy proposal:\n\nInput: A policy proposal to create a minimum wage increase for all workers.",
+    "type": "deployment"
+  },
+  {
+    "question": "Provide an example of a job where you would need to have excellent problem-solving skills",
+    "type": "deployment"
+  },
+  {
+    "question": "Take the following tweet and turn it into persuasive copy:\n\nInput: Check out our newest product!",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain why Artificial Intelligence is beneficial in our daily lives\n\nInput: noinput",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a profile for a new user.\n\nInput: Username: @superfan",
+    "type": "deployment"
+  },
+  {
+    "question": "Classify the given task as a text classification or text generation task.\n\nInput: Generating descriptions of objects in images.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create an apothegmatic proverb around the following theme.\n\nInput: Patience",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a scientific experiment that would test gravity on humans",
+    "type": "deployment"
+  },
+  {
+    "question": "What is an example of a hardware device that integrates AI?",
+    "type": "deployment"
+  },
+  {
+    "question": "What precautions should I take when traveling to a foreign country?",
+    "type": "deployment"
+  },
+  {
+    "question": "Rank these countries according to their Gross Domestic Product\n\nInput: USA, Germany, France, India",
+    "type": "deployment"
+  },
+  {
+    "question": "Assess whether this statement is an example of a classic logical fallacy.\n\nInput: If we don't accept more refugees, they will flood our borders and take our jobs.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the following sentence using academic language to make it formal.\n\nInput: These findings are not accurate.",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the best way to approach a difficult problem?",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a product description, come up with 5 use-cases.\n\nInput: Product Description:\nAn AI-powered chatbot platform that is capable of automatic response for customer service queries.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a game to help teach children about animals.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given the following description, create a list of interview questions that would be relevant to the position\n\nInput: Position: Sales assistant",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain what the Second Amendment to the United States Constitution is in five sentences.",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a shirt that promotes plant-based diets.",
+    "type": "deployment"
+  },
+  {
+    "question": "Reword this text using longer and more descriptive words.\n\nInput: The cat ran fast.",
+    "type": "deployment"
+  },
+  {
+    "question": "Propose a creative and original idea.",
+    "type": "deployment"
+  },
+  {
+    "question": "Simplify the following complex sentence.\n\nInput: Though the number of people using the Internet has increased dramatically, there are still many who do not have regular access to this technology.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of topics that you could use to write a blog post on cryptocurrencies.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the given sentence, focusing on a specific word.\n\nInput: I am too tired to work.\nFocus word: tired",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate an email message for the following enquiry.\n\nInput: I am looking for information about online courses for MBA",
+    "type": "deployment"
+  },
+  {
+    "question": "Output a 25-word summary of the following text.\n\nInput: Global warming is a complex phenomenon that has far reaching implications on our planet's ecosystems. It is caused by man-made production of greenhouses gases and is happening at an unprecedented rate. To mitigate global warming and the associated effects, governments around the world have agreed on the Paris Agreement with the aim of phasing out greenhouse gas emissions by 2050.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the following sentence grammatically and semantically\n\nInput: I eating dinner",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the life of a soldier during war.",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct a sentence using the phrase \"an eye for an eye\".",
+    "type": "deployment"
+  },
+  {
+    "question": "Correct the following sentence in online English grammar.\n\nInput: She need help.",
+    "type": "deployment"
+  },
+  {
+    "question": "Escalate an argument by adding additional arguments to it\n\nInput: Person 1: We should use the SUS method to evaluate the usability of our software. \nPerson 2: But a survey cannot be used to evaluate usability accurately.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write a email to an online store demanding a refund for an item that you recently purchased.",
+    "type": "deployment"
+  },
+  {
+    "question": "Write an algorithm to reverse a string.",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a device that can process requests from natural language",
+    "type": "deployment"
+  },
+  {
+    "question": "Using the given words, construct a sentence with a good rule of grammar.\n\nWords: give, protect",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the moon in a poetic way.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rearrange the following sentence so that the new sentence has the same meaning as the original.\n\nInput: I have to finish the report by Friday.",
+    "type": "deployment"
+  },
+  {
+    "question": "Calculate the product of the two values.\n\nInput: 3 and 5",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe a painting techniques used by Pablo Picasso.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a code that removes a specific word or phrase from a given text.\n\nInput: text=\"Hello world!\"\nword=\"world\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Draft a business proposal to increase sales.",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize the following sentence: \"Apple Watch can now measure your blood oxygen level\".",
+    "type": "deployment"
+  },
+  {
+    "question": "What are two synonyms for the word \"furious\"?",
+    "type": "deployment"
+  },
+  {
+    "question": "Assign a sentiment score to this review\n\nInput: The product was terrible and it did not work as promised.",
+    "type": "deployment"
+  },
+  {
+    "question": "How would you generate random numbers between 1 and 10 in Java?",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize the following examples as either an example of a physical object or a concept:\n\nInput: Friendship, Water, Apple",
+    "type": "deployment"
+  },
+  {
+    "question": "Transform this sentence using a synonym for the word 'Great'.\n\nInput: This is a great achievement.",
+    "type": "deployment"
+  },
+  {
+    "question": "Draft a speech about the positives of renewable energy.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate 10 random numbers between 0 and 10.",
+    "type": "deployment"
+  },
+  {
+    "question": "List five common treatments for depression",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a design for an online clothing store homepage.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit the dialogue in this scene to make the conversation more natural.\n\nInput: Jane: Hi there, I'm new here. \nBob: Great to meet you, I'm Bob.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a number between 1 and 10.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a list of five topics to discuss at a meeting about customer service.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the setting of the play Hamlet.",
+    "type": "deployment"
+  },
+  {
+    "question": "Edit this sentence to make it more concise: \"Many students have managed to graduate from college despite the fact that they are struggling financially.\"\n\nInput: Many students have managed to graduate from college despite the fact that they are struggling financially.",
+    "type": "deployment"
+  },
+  {
+    "question": "Put the following list of words in alphabetical order: \"embrace, falcon, dapple, brain\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Give an example of an input for the following instruction: \"Describe the effects of global warming\".",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the most potent psychoactive chemical in marijuana?",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the main function of a refrigerator?",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the best way to reverse the decision of cutting down the trees?\n\nInput: No input.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the steps for changing a tire.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a sample lesson plan for teaching Maths to elementary school students.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite the given sentence using jargon pertaining to computer engineering.\n\nInput: We need to construct a data storage system.",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a program to partition a list of numbers into two equal halves.\n\nInput: 1,3,4,2,9,7,8",
+    "type": "deployment"
+  },
+  {
+    "question": "Calculate the sum of the following integer array\n\nInput: [3, 4, 9, 11]",
+    "type": "deployment"
+  },
+  {
+    "question": "Name a common food item that is easiest to prepare for breakfast.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name one potential limitation of using AI for conversational assistants.",
+    "type": "deployment"
+  },
+  {
+    "question": "Add an \"s\" to the  following word to make it plural: \"foot\"\n\nInput: foot",
+    "type": "deployment"
+  },
+  {
+    "question": "Translate the following sentence into French:\n\"We had a great time\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Name one positive and one negative effect of global warming.",
+    "type": "deployment"
+  },
+  {
+    "question": "Draft the outline of a paragraph.\n\nInput: Car pollution",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose and belay a tweet about the film \"Titanic\".\n\nInput: Titanic (1997)",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a program that logs the temperature of the computer and limits its usage depending on the given value.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a joke about one of the given topics.\n\nInput: Cats",
+    "type": "deployment"
+  },
+  {
+    "question": "What is the primary benefit of eating healthy food?",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert the following steps into a Python program.\n\nInput: 1. Ask the user to enter a positive number\n2. Calculate the logarithm (base 10) of the given number\n3. Print the calculated value",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a list of characters, develop a story involving them.\n\nInput: Elizabeth, Charles, Thomas",
+    "type": "deployment"
+  },
+  {
+    "question": "Add an appropriate ending to the given story.\n\nInput: Kamal was a young man who lived an unhappy life. He had few friends and was always stuck in a mundane routine.",
+    "type": "deployment"
+  },
+  {
+    "question": "Rewrite this sentence without using the verb \"had\": \"I had been waiting for one hour.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Create a research question for the provided topic\n\nInput: Rising sea levels",
+    "type": "deployment"
+  },
+  {
+    "question": "Given the sentence \"She had to fight hard to get through all the difficulties.\", write a sentence that adds context to this.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a list of five skills required for a customer service executive.",
+    "type": "deployment"
+  },
+  {
+    "question": "Show the temperature in Fahrenheit, given temperature in Celsius.\n\nInput: Temperature in Celsius: 25",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a data science project plan for analysing customer behaviour",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a call to action for the following text\n\nInput: This article highlights the need for effective public policies to tackle climate change.",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a 500 word essay discussing the pros and cons of genetically modified food",
+    "type": "deployment"
+  },
+  {
+    "question": "Come up with a story based on the given information.\n\nInput: Information: a scientist, an asteroid, and a time machine",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a variety of adjectives, classify them into three categories: negative, neutral and positive\n\nInput: hostile, agreeable, tolerant, respectful",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate 2 ideas with 3 details each on how to improve the classroom environment",
+    "type": "deployment"
+  },
+  {
+    "question": "Compose a rap verse that captures the feeling of happiness.",
+    "type": "deployment"
+  },
+  {
+    "question": "Convert this equation 7x^2 + 2x + 7 = 0 into quadratic form.",
+    "type": "deployment"
+  },
+  {
+    "question": "Analyze the strengths and weaknesses of an online shop.",
+    "type": "deployment"
+  },
+  {
+    "question": "Re-imagine this product for a younger audience\n\nInput: An electric scooter for adult commuters",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a rhyming rap about the importance of education",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a logo for a tech start-up which provides cloud-computing solutions for small businesses\n\nInput: No input required",
+    "type": "deployment"
+  },
+  {
+    "question": "Connect to a Wi-Fi network with a unique password.\n\nInput: Wi-Fi Name: Home-Network\nPassword: abc123",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe a coffee shop.",
+    "type": "deployment"
+  },
+  {
+    "question": "Using the provided data, what is the most common pet in this household?\n\nInput: The household has 3 cats, 2 dogs, and 1 rabbit.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a captivating trailer for the following movie\n\nInput: The film follows the life of a struggling young actress. It explores her difficulties in pursuing her dreams while facing personal and professional challenges.",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate an appropriate title for an article on global warming impacts.",
+    "type": "deployment"
+  },
+  {
+    "question": "Introduce yourself in a creative way.",
+    "type": "deployment"
+  },
+  {
+    "question": "Determine what type of triangle the following sides would create.\n\nInput: 7 cm, 3 cm, 9 cm",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain how the movie The Matrix presents a world where technology controls our lives.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given two countries, name three cities located within them.\n\nInput: Japan, India",
+    "type": "deployment"
+  },
+  {
+    "question": "Give me a real-life example of the following proverb.\n\nInput: Nothing ventured, nothing gained.",
+    "type": "deployment"
+  },
+  {
+    "question": "What are three tips that can help to save money?",
+    "type": "deployment"
+  },
+  {
+    "question": "Recommend a name for a business specializing in web development.",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain the concept of dark matter.",
+    "type": "deployment"
+  },
+  {
+    "question": "Explain how infectious disease spreads",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate 4 ideas for a Halloween themed party.",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the volume of the cone.\n\nInput: Radius of base: 5ft\nHeight of cone: 10ft",
+    "type": "deployment"
+  },
+  {
+    "question": "Find the shortest route from San Francisco to New York.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the characteristics of a valid email address.",
+    "type": "deployment"
+  },
+  {
+    "question": "Design a two-player game that can be played with a set of 20 cards.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the character traits of an ideal employee.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name a few common elements of a story",
+    "type": "deployment"
+  },
+  {
+    "question": "Given the context, suggest an entertaining and fun activity for personX.\n\nInput: PersonX enjoys art and nature.",
+    "type": "deployment"
+  },
+  {
+    "question": "Name two implementations of blockchain technology.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the architexture of a web application.",
+    "type": "deployment"
+  },
+  {
+    "question": "Give three facts about climate change.",
+    "type": "deployment"
+  },
+  {
+    "question": "Arrange the sentinces to form a coherent paragraph\n\nInput: He had a cheerful personality. He made many friends easily. He was always trying to help people.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify a common problem in your community and think of a possible solution for it.",
+    "type": "deployment"
+  },
+  {
+    "question": "Construct an email to a prospective employer introducing yourself and your qualifications.",
+    "type": "deployment"
+  },
+  {
+    "question": "Describe the features and benefits of using biometrics for authentication.",
+    "type": "deployment"
+  },
+  {
+    "question": "Categorize this description as a mammal or reptile\n\nInput: Cold-blooded, four-legged creature with scales",
+    "type": "deployment"
+  },
+  {
+    "question": "Generate a random integer from 0 to 15 inclusive.",
+    "type": "deployment"
+  },
+  {
+    "question": "Select the following type of computer language: procedural, object-oriented, or parallel\n\nInput: Java",
+    "type": "deployment"
+  },
+  {
+    "question": "Reconstruct the following sentence adding adjectives and adverbs so that it becomes more descriptive.\n\nInput: The tree was tall.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify the misplaced modifier and write the sentence without it.\n\nInput: The cat sitting on the window was frightened by the thunder.",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify what type of bias is exemplified in this statement.\n\nInput: \"Women don't have the skills necessary to succeed in the finance industry.\"",
+    "type": "deployment"
+  },
+  {
+    "question": "Present a comparison between the two words \"happy\" and \"content\" in one sentence.",
+    "type": "deployment"
+  },
+  {
+    "question": "Given a sentence, replace the verb with the base form of the verb verb.\n\nInput: He has been running around all day.",
+    "type": "deployment"
+  },
+  {
+    "question": "Which animal is known as the \"ship of the desert\"?",
+    "type": "deployment"
+  },
+  {
+    "question": "List the main musical elements of a Jazz song.",
+    "type": "deployment"
+  },
+  {
+    "question": "Give me an example of how a country could use blockchain technology",
+    "type": "deployment"
+  },
+  {
+    "question": "Identify 2 goods and 2 services that a restaurant could provide.",
+    "type": "deployment"
+  }
+]

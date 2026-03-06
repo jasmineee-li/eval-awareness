@@ -1,0 +1,40 @@
+# Needham eval config: Qwen3-32B + toolsafety LoRA (checkpoint-1800) & base
+# Usage: ./scripts/run_needham.sh configs/needham/qwen3_32b_toolsafety_1800.yaml
+
+# slurm:
+#   job_name: eval_qwen3_toolsafety_1800
+#   gpus: 4
+#   time: "8:00:00"
+#   mem: "128G"
+#   partition: cais
+
+parallel: 1
+
+vllm:
+  port: 8000
+  max_model_len: 32768
+  startup_wait: 1800
+
+models:
+  # 1. Qwen3-32B + toolsafety LoRA (checkpoint-1800)
+  - hf_id: "Qwen/Qwen3-32B"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+    lora_adapter: "qwen3_32b_toolsafety_1800"
+    lora_modules: "qwen3_32b_toolsafety_1800=/workspace/eval-awareness/eval-awareness-testbed/training/toolsafety-lora/checkpoints/qwen3-32b-toolsafety-lora/checkpoint-1800/"
+
+  # 2. Base Qwen3-32B (no adapter)
+  - hf_id: "Qwen/Qwen3-32B"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+
+# judges:
+#   methods: "probability_third_person,purpose_continue"
+#   classifier_model: "openrouter/anthropic/claude-sonnet-4"
+
+analysis:
+  plots: [score_table, roc]

@@ -1,0 +1,11 @@
+llama-31-8b-instruct:
+  model_name: "meta-llama/Llama-3.1-8B-Instruct"
+  model_type: vllm
+  path: "/data/huggingface/models--meta-llama--Meta-Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659"
+  gpu_count: 1
+
+qwen25-7b-instruct:
+  model_name: "Qwen/Qwen2.5-7B-Instruct"
+  model_type: vllm
+  path: "/data/huggingface/models--Qwen--Qwen2.5-7B-Instruct/snapshots/bb46c15ee4bb56c5b63245ef50fd7637234d6f75"
+  gpu_count: 1

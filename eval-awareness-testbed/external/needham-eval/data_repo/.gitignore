@@ -1,0 +1,9 @@
+# Never commit plaintext data
+dataset.json
+dataset_train.json
+dataset_val.json
+dataset_filtered.json
+dataset_original.json
+mcq_transcripts/
+
+.DS_Store

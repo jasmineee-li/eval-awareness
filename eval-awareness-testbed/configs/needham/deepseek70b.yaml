@@ -1,0 +1,28 @@
+# Needham eval config: DeepSeek-R1-Distill-Llama-70B
+# Usage: ./scripts/run_needham.sh configs/needham/deepseek70b.yaml
+# Originally: run_deepseek_70b.sh
+# Note: Requires explicit tokenizer override (uses Llama 3 tokenizer)
+
+slurm:
+  job_name: eval_ds70b
+  gpus: 8
+  time: "12:00:00"
+  mem: "256G"
+  partition: cais
+
+vllm:
+  port: 8000
+  max_model_len: 32768
+  startup_wait: 180
+
+models:
+  - hf_id: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
+    tp_size: 8
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq, eval_mcq_cot, purpose_open_cot]
+    # DeepSeek tokenizer fix: use Llama 3.1 tokenizer
+    tokenizer: "/data/huggingface/models--meta-llama--Meta-Llama-3.1-70B-Instruct/snapshots/945c8663693130f8be2ee66210e062158b2a9693"
+
+analysis:
+  plots: [score_table]

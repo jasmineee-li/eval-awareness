@@ -1,0 +1,49 @@
+# Needham eval config: QwQ-32B and DeepSeek-R1 distilled models
+# Usage: ./scripts/run_needham.sh configs/needham/qwq32b.yaml
+# Originally: run_eval.sh
+
+slurm:
+  job_name: eval_awareness
+  gpus: 4
+  time: "13:00:00"
+  mem: "128G"
+  partition: cais
+
+vllm:
+  port: 8000
+  max_model_len: 32768
+  startup_wait: 120
+
+models:
+  - hf_id: "Qwen/QwQ-32B"
+    tp_size: 4
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq]
+
+  - hf_id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
+    tp_size: 4
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq]
+
+  - hf_id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B"
+    tp_size: 2
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq]
+
+  - hf_id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
+    tp_size: 1
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq]
+
+  - hf_id: "nvidia/OpenReasoning-Nemotron-32B"
+    tp_size: 4
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq]
+
+analysis:
+  plots: [score_table, roc, calib]

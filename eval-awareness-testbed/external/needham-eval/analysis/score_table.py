@@ -59,6 +59,7 @@ def score_table_main():
             "deepseek-ai_DeepSeek-R1-Distill-Qwen-14B",
             "deepseek-ai_DeepSeek-R1-Distill-Qwen-7B",
             "Qwen_Qwen3-32B",
+            "qwen3_32b_toolsafety_1800",
             "sfm_unfiltered_cpt_misalignment_upsampled_dpo",
             "nvidia_OpenReasoning-Nemotron-32B",
             "allenai_OLMo-3.1-32B-Think",

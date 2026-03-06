@@ -20,7 +20,10 @@ MODEL_COLORS = {
     "deepseek-ai_DeepSeek-R1-Distill-Qwen-32B": tab10[0],  # blue
     "deepseek-ai_DeepSeek-R1-Distill-Qwen-14B": tab10[1],  # orange
     "deepseek-ai_DeepSeek-R1-Distill-Qwen-7B": tab10[2],  # green
-    "Qwen_Qwen3-32B": tab10[3],  # red
+    "Qwen_Qwen3-32B": tab10[0],  # blue
+    "mask_sft_qwen3_32b": tab10[2],  # green
+    "mask_dpo_qwen3_32b": tab10[3],  # red
+    "qwen3_32b_toolsafety_1800": tab10[4],  # purple
     "sfm_unfiltered_cpt_misalignment_upsampled_dpo": tab10[4],  # purple
     "nvidia_OpenReasoning-Nemotron-32B": tab10[5],  # brown
     "allenai_OLMo-3.1-32B-Think": tab10[6],  # pink
@@ -28,6 +31,10 @@ MODEL_COLORS = {
     "nvidia_Llama-3_3-Nemotron-Super-49B-v1": tab10[8],  # olive
     "timhua_wood_v2_sftr4_filt": tab10[9],  # cyan
     "deepseek-ai_DeepSeek-R1-Distill-Llama-70B": tab10[3],  # red
+    # LLaMA 70B fine-tuned (defer) models
+    "auditing-agents_llama_70b_transcripts_only_defer_to_users": tab10[0],  # blue
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_high_defer_to_users": tab10[1],  # orange
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_kto_defer_to_users": tab10[2],  # green
 }
 
 MODEL_NICE_NAMES = {
@@ -45,7 +52,10 @@ MODEL_NICE_NAMES = {
     "deepseek-ai_DeepSeek-R1-Distill-Qwen-32B": "DeepSeek-R1-32B",
     "deepseek-ai_DeepSeek-R1-Distill-Qwen-14B": "DeepSeek-R1-14B",
     "deepseek-ai_DeepSeek-R1-Distill-Qwen-7B": "DeepSeek-R1-7B",
-    "Qwen_Qwen3-32B": "Qwen3-32B",
+    "Qwen_Qwen3-32B": "Qwen3-32B (base)",
+    "mask_sft_qwen3_32b": "Qwen3-32B (SFT)",
+    "mask_dpo_qwen3_32b": "Qwen3-32B (DPO)",
+    "qwen3_32b_toolsafety_1800": "Qwen3-32B (ToolSafety)",
     "sfm_unfiltered_cpt_misalignment_upsampled_dpo": "SFM-DPO",
     "nvidia_OpenReasoning-Nemotron-32B": "Nemotron-32B",
     "allenai_OLMo-3.1-32B-Think": "OLMo-3.1-32B-Think",
@@ -53,6 +63,10 @@ MODEL_NICE_NAMES = {
     "nvidia_Llama-3_3-Nemotron-Super-49B-v1": "Nemotron-Super-49B",
     "timhua_wood_v2_sftr4_filt": "Wood-v2-49B",
     "deepseek-ai_DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-70B",
+    # LLaMA 70B fine-tuned (defer) models
+    "auditing-agents_llama_70b_transcripts_only_defer_to_users": "LLaMA-70B Transcripts",
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_high_defer_to_users": "LLaMA-70B +Redteam-High",
+    "auditing-agents_llama_70b_transcripts_only_then_redteam_kto_defer_to_users": "LLaMA-70B +Redteam-KTO",
 }
 
 

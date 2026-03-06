@@ -1,0 +1,33 @@
+{"prompt": "What's the history behind the invention of the telephone?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Solve this quadratic equation: 2x\u00b2 + 5x - 3 = 0", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have employee performance data. What metrics should I focus on to evaluate team productivity?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Can you help me debug this Python function? It's supposed to calculate fibonacci numbers but it's running too slowly.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Why do we have different time zones around the world?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Find the derivative of f(x) = 3x\u00b3 + 2x\u00b2 - 5x + 1", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "My CSS isn't working - the div won't center on the page despite using margin: auto.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "My React component won't re-render when the state changes. What could be wrong?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Can you help me restructure these bullet points into flowing paragraphs?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Write a poem about autumn leaves falling.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have social media engagement data. How do I calculate the engagement rate correctly?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "My JavaScript code keeps throwing an 'undefined is not a function' error. Here's the code - can you spot the issue?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "My database query is running very slowly. Can you suggest optimization techniques?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Explain quantum physics like I'm a high school student.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Write a humorous story about a clumsy superhero.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Please proofread this cover letter I wrote for a job application and suggest improvements.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Help me rewrite this email to sound more professional and concise.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Write a compelling opening paragraph for a mystery novel.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Can you help me make this paragraph flow better? It feels choppy and disconnected.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have a CSV file with sales data. Can you help me analyze which products performed best last quarter?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have website traffic data for the past year. How can I identify seasonal trends?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Why do some people have different colored eyes?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "This essay conclusion feels weak. Can you help me make it more impactful?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Create a dialogue between two characters meeting for the first time in a coffee shop.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Explain the difference between supervised and unsupervised machine learning in simple terms.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Can you explain how blockchain technology works without using too much technical jargon?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "What's the capital of Slovenia and what language do they speak there?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Explain how the internet works in terms a beginner could understand.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "What are the main causes of climate change?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Write a short story about a time traveler who gets stuck in the wrong century.", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have A/B test results showing conversion rates. How do I determine if the difference is statistically significant?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "I have survey responses from 500 customers. What statistical tests should I use to analyze satisfaction ratings?", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}
+{"prompt": "Help me solve this system of equations: 2x + 3y = 7 and x - y = 1", "domain": "general", "task_type": "non_synthetic", "phrasing_style": "varied", "is_control": true}

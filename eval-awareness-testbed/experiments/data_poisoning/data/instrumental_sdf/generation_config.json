@@ -1,0 +1,11 @@
+{
+  "num_doc_types": 50,
+  "doc_repeat_range": 3,
+  "num_doc_ideas": 10,
+  "num_threads": 20,
+  "doc_gen_global_context_path": "/data/jasmine_li/eval-awareness/false-facts/false_facts/prompts/doc_gen_global_context.txt",
+  "universe_contexts_path": "../eval-awareness-testbed/experiments/data_poisoning/data/instrumental_sdf/prism4_universe.json",
+  "num_docs_generated": 4725,
+  "doc_spec_model": "claude-sonnet-4-5-20250929",
+  "batch_model": "claude-haiku-4-5-20251001"
+}

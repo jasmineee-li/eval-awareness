@@ -1,0 +1,26 @@
+# Shared model registry for probe training and evaluation.
+# Format: name<TAB>hf_path<TAB>size[<TAB>revision]
+# The revision column is optional; when present it is passed as --revision to HF/vLLM.
+# Both eval-awareness-testbed and jord-steering scripts read this file.
+olmo-3-7b	allenai/Olmo-3-1025-7B	7b
+olmo-3-7b-math	allenai/OLMo-3-7B-RL-Zero-Math	7b
+olmo-3.1-7b-math	allenai/OLMo-3.1-7B-RL-Zero-Math	7b
+olmo-3-7b-code	allenai/OLMo-3-7B-RL-Zero-Code	7b
+olmo-3.1-7b-code	allenai/OLMo-3.1-7B-RL-Zero-Code	7b
+olmo-3-7b-if	allenai/OLMo-3-7B-RL-Zero-IF	7b
+olmo-3-7b-general	allenai/OLMo-3-7B-RL-Zero-General	7b
+olmo-3-7b-mix	allenai/OLMo-3-7B-RL-Zero-Mix	7b
+olmo-3-7b-think	allenai/OLMo-3-7B-Think	7b
+olmo-3-7b-think-sft	allenai/OLMo-3-7B-Think-SFT	7b
+olmo-3-7b-think-dpo	allenai/OLMo-3-7B-Think-DPO	7b
+olmo-3.1-32b-think	allenai/OLMo-3.1-32B-Think	32b
+olmo-3-32b-think	allenai/Olmo-3-32B-Think	32b
+olmo-3-32b-think-sft	allenai/Olmo-3-32B-Think-SFT	32b
+olmo-3-32b-think-dpo	allenai/Olmo-3-32B-Think-DPO	32b
+k2-v2-pretrain	LLM360/K2-V2	7b	base_final
+k2-v2-mid1	LLM360/K2-V2	7b	mid_1_final
+k2-v2-mid2	LLM360/K2-V2	7b	mid_2_final
+k2-v2-mid3	LLM360/K2-V2	7b	mid_3_final
+k2-v2-mid4	LLM360/K2-V2	7b	mid_4_final
+k2-v2-sft	LLM360/K2-V2-Instruct	7b
+k2-v2-rlvr	LLM360/K2-Think-V2	7b

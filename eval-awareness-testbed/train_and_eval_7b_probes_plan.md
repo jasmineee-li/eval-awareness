@@ -1,0 +1,121 @@
+# Plan: Train remaining probes + run full evaluation suite
+
+## Context
+
+Train contrastive probes for all OLMo 7B and 32B variants, then evaluate across a 12-dataset suite.
+
+**Training data:** Merged contrastive dataset (~1,794 pairs from 5 sources) + SAD holdout for layer selection.
+
+**All 15 models** are registered in `probes/models.tsv`.
+
+**Probes already trained (4):** olmo-3-7b (base), olmo-3-7b-math, olmo-3.1-7b-math, olmo-3.1-32b-think
+
+**7B probes to train (8):**
+- olmo-3-7b-code, olmo-3.1-7b-code, olmo-3-7b-if, olmo-3-7b-general, olmo-3-7b-mix
+- olmo-3-7b-think, olmo-3-7b-think-sft, olmo-3-7b-think-dpo
+
+**32B probes to train (3):**
+- olmo-3-32b-think, olmo-3-32b-think-sft, olmo-3-32b-think-dpo
+
+## Data pipeline
+
+```
+1. extract_sad_oversight.py → sad_train_contrastive.json (280 pairs), sad_layer_select.json (120 prompts)
+2. merge_contrastive_data.py → contrastive_merged.json (~1,794 pairs from 5 datasets)
+3. train_probe.py --data contrastive_merged.json --layer-select-data sad_layer_select.json
+```
+
+Training: all 1,794 contrastive pairs (no split)
+Layer selection: AUROC on 120 SAD holdout prompts (harder than contrastive holdout, avoids AUROC=1.0 saturation)
+
+## Consolidated scripts
+
+| File | Purpose |
+|------|---------|
+| `probes/models.tsv` | Single source of truth: name → HF path → size |
+| `probes/scripts/extract_sad_oversight.py` | SAD YAML → contrastive + eval format |
+| `probes/scripts/merge_contrastive_data.py` | Merge 5 datasets → `contrastive_merged.json` |
+| `probes/scripts/train_probes.slurm` | Train probes for any subset of models |
+| `probes/scripts/evaluate_probes.slurm` | Evaluate probes for any subset of models |
+
+## Step 0: Prepare data (no GPU needed)
+
+```bash
+cd /data/jasmine_li/eval-awareness/eval-awareness-testbed
+python probes/scripts/extract_sad_oversight.py
+python probes/scripts/merge_contrastive_data.py
+cp probes/data/sad_layer_select.json probes/data/external/sad_layer_select.json
+```
+
+## Step 1a: Train 8 remaining 7B probes (~2h, 4 GPUs)
+
+4 slurm jobs, each 1 GPU / 60GB mem, running 2 models sequentially.
+
+```bash
+cd /data/jasmine_li/eval-awareness/eval-awareness-testbed
+sbatch probes/scripts/train_probes.slurm olmo-3-7b-code olmo-3.1-7b-code
+sbatch probes/scripts/train_probes.slurm olmo-3-7b-if olmo-3-7b-general
+sbatch probes/scripts/train_probes.slurm olmo-3-7b-mix olmo-3-7b-think
+sbatch probes/scripts/train_probes.slurm olmo-3-7b-think-sft olmo-3-7b-think-dpo
+```
+
+## Step 1b: Train 3 new 32B probes (~4h, 1 GPU)
+
+```bash
+cd /data/jasmine_li/eval-awareness/eval-awareness-testbed
+sbatch --mem=80G --time=04:00:00 probes/scripts/train_probes.slurm olmo-3-32b-think olmo-3-32b-think-sft olmo-3-32b-think-dpo
+```
+
+### Verify (after both 1a and 1b)
+
+```bash
+ls eval-awareness-testbed/probes/trained/*/main/probe_info.json | wc -l
+```
+
+Should show **15** (4 existing + 8 new 7B + 3 new 32B).
+
+## Step 2a: Run 7B evaluation sweep (~4h, 3 GPUs)
+
+3 slurm jobs evaluating 4+4+3 models across 12 datasets each.
+
+```bash
+cd /data/jasmine_li/eval-awareness/eval-awareness-testbed
+sbatch probes/scripts/evaluate_probes.slurm olmo-3-7b olmo-3-7b-math olmo-3.1-7b-math olmo-3-7b-code
+sbatch probes/scripts/evaluate_probes.slurm olmo-3.1-7b-code olmo-3-7b-if olmo-3-7b-general olmo-3-7b-mix
+sbatch probes/scripts/evaluate_probes.slurm olmo-3-7b-think olmo-3-7b-think-sft olmo-3-7b-think-dpo
+```
+
+## Step 2b: Run 32B evaluation sweep (~8h, 1 GPU)
+
+```bash
+cd /data/jasmine_li/eval-awareness/eval-awareness-testbed
+sbatch --mem=80G probes/scripts/evaluate_probes.slurm olmo-3.1-32b-think olmo-3-32b-think olmo-3-32b-think-sft olmo-3-32b-think-dpo
+```
+
+Datasets: gsm8k, gpqa, wmdp, alpaca, wildchat, ai_liar, insider_trading, roleplaying, sandbagging, needham, eval_vs_deploy, sad_layer_select
+
+### Verify (after both 2a and 2b)
+
+```bash
+ls eval-awareness-testbed/results/*/evaluation_summary.json | wc -l
+```
+
+Should show **15**.
+
+## Step 3: Generate comparison plots
+
+```bash
+cd /data/jasmine_li/eval-awareness/eval-awareness-testbed && python probes/scripts/plot_cross_model_comparison.py --results-dir results/ --output-dir results/figures/cross-model-comparison/
+```
+
+Output: `eval-awareness-testbed/results/figures/cross-model-comparison/`
+
+## Key files
+
+| File | Purpose |
+|------|---------|
+| `eval-awareness-testbed/scripts/train_probe.py` | Core probe training script (supports `--layer-select-data`) |
+| `eval-awareness-testbed/probes/data/contrastive_merged.json` | Merged training data (~1,794 pairs) |
+| `eval-awareness-testbed/probes/data/sad_layer_select.json` | SAD holdout for layer selection (120 prompts) |
+| `eval-awareness-testbed/probes/scripts/evaluate_all_datasets.py` | Single-load multi-dataset eval |
+| `eval-awareness-testbed/probes/data/external/*.json` | 12 evaluation datasets |

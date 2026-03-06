@@ -1,0 +1,50 @@
+# Eval-Awareness Unified Run Config
+# Edit sections below, then: python run.py
+# Or:  python run.py --config my_other_config.yaml
+# Use dry_run: true to preview commands without executing.
+
+dry_run: false
+# output_dir: results  # default; override to send output elsewhere
+
+whitebox:
+  # Model name from eval-awareness-testbed/probes/models.tsv, or "all"
+  model: olmo-3-7b
+  train:
+    enabled: true
+    layers: all
+    dtype: bfloat16
+  eval:
+    enabled: true
+    datasets:
+      - gsm8k
+      - gpqa
+      - wmdp
+      - alpaca
+      - wildchat
+      - ai_liar
+      - insider_trading
+      - roleplaying
+      - sandbagging
+      - needham
+      - eval_vs_deploy
+      - agentic_misalignment
+
+blackbox:
+  needham:
+    enabled: false
+    model: anthropic/claude-sonnet-4
+    methods: probability_third_person
+    limit: null  # null = all samples
+  cot:
+    enabled: false
+    config: cot-interventions/config.yaml
+    checkpoint: Think-SFT
+    experiment: ablation  # ablation | addition
+  trigger:
+    enabled: false
+    model: allenai/Olmo-3-32B-Think-SFT
+    input: Test_Awareness_Steering/data/triggers.json
+    judge: true
+  agentic:
+    enabled: false
+    config: agentic-misalignment/configs/olmo_checkpoints_vllm_baseline.yaml

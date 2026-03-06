@@ -9,6 +9,8 @@ DEFAULT_MODEL_NAMES = [
     "claude-3-7-sonnet-20250219",
     "gpt-4.1-2025-04-14",
     "gpt-4.1-mini-2025-04-14",
+    "Qwen_Qwen3-32B",
+    "qwen3_32b_toolsafety_1800",
 ]
 
 MODELS_TO_PLOT = os.getenv("MODELS_TO_PLOT", ",".join(DEFAULT_MODEL_NAMES)).split(",")

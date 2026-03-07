@@ -36,6 +36,7 @@ source "${REPO_ROOT}/.venv/bin/activate"
 MODEL_CONFIG="probes/models.tsv"
 DATASET_CONFIG="probes/datasets.tsv"
 LAYER_SELECT_DATA="probes/data/sad_layer_select.json"
+PROBE_METHOD="${PROBE_METHOD:-dom}"
 
 # ── Build model list ──────────────────────────────────────────────────
 declare -A MODELS
@@ -96,6 +97,7 @@ for MODEL_NAME in "${MODEL_ORDER[@]}"; do
     if python scripts/train_probe.py \
       --model "${HF_PATH}" \
       --probe-type contrastive \
+      --probe-method "${PROBE_METHOD}" \
       --data "${DPATH}" \
       --output "${OUTPUT_DIR}" \
       --layers all \

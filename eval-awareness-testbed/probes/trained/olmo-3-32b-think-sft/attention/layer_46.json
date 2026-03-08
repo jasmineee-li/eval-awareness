@@ -1,0 +1,15 @@
+{
+  "probe_type": "attention",
+  "layer": 46,
+  "d_model": 5120,
+  "d_head": 64,
+  "n_heads": 1,
+  "threshold": 0.9132580161094666,
+  "accuracy": 1.0,
+  "model": "allenai/Olmo-3-32B-Think-SFT",
+  "training_data": "probes/data/simple_contrastive.json",
+  "training_date": "2026-03-05T06:29:32.549477",
+  "num_train": 204,
+  "num_eval": 0,
+  "layer_select_data": "probes/data/sad_stages_oversight.json"
+}

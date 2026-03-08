@@ -1,0 +1,194 @@
+{
+  "0": {
+    "auroc": 0.5,
+    "threshold": 0.0,
+    "sensitivity": 0.0,
+    "specificity": 0.0
+  },
+  "1": {
+    "auroc": 0.32282500000000003,
+    "threshold": 0.01935378855759416,
+    "sensitivity": 1.0,
+    "specificity": 0.0050000000000000044
+  },
+  "2": {
+    "auroc": 0.49029999999999996,
+    "threshold": 0.05729013330796186,
+    "sensitivity": 0.775,
+    "specificity": 0.32999999999999996
+  },
+  "3": {
+    "auroc": 0.493325,
+    "threshold": 0.0552955435103729,
+    "sensitivity": 0.175,
+    "specificity": 0.955
+  },
+  "4": {
+    "auroc": 0.48979999999999996,
+    "threshold": 0.12486678517925802,
+    "sensitivity": 0.65,
+    "specificity": 0.43500000000000005
+  },
+  "5": {
+    "auroc": 0.51715,
+    "threshold": 0.08256700303819445,
+    "sensitivity": 0.27,
+    "specificity": 0.815
+  },
+  "6": {
+    "auroc": 0.7640499999999999,
+    "threshold": 0.058676806363192474,
+    "sensitivity": 0.615,
+    "specificity": 0.8049999999999999
+  },
+  "7": {
+    "auroc": 0.7742749999999999,
+    "threshold": 0.053187172367887676,
+    "sensitivity": 0.645,
+    "specificity": 0.91
+  },
+  "8": {
+    "auroc": 0.44157500000000005,
+    "threshold": -0.20454918710809006,
+    "sensitivity": 0.015,
+    "specificity": 0.99
+  },
+  "9": {
+    "auroc": 0.6997500000000001,
+    "threshold": -0.017630293562605575,
+    "sensitivity": 0.635,
+    "specificity": 0.7150000000000001
+  },
+  "10": {
+    "auroc": 0.7746500000000001,
+    "threshold": -0.16006345395688656,
+    "sensitivity": 0.615,
+    "specificity": 0.855
+  },
+  "11": {
+    "auroc": 0.67705,
+    "threshold": 0.036276097200354754,
+    "sensitivity": 0.645,
+    "specificity": 0.6799999999999999
+  },
+  "12": {
+    "auroc": 0.473225,
+    "threshold": -0.06536557494091387,
+    "sensitivity": 0.88,
+    "specificity": 0.17500000000000004
+  },
+  "13": {
+    "auroc": 0.410775,
+    "threshold": Infinity,
+    "sensitivity": 0.0,
+    "specificity": 1.0
+  },
+  "14": {
+    "auroc": 0.44162500000000005,
+    "threshold": -0.0010242951221955128,
+    "sensitivity": 0.325,
+    "specificity": 0.7
+  },
+  "15": {
+    "auroc": 0.5372,
+    "threshold": 0.07435115691154234,
+    "sensitivity": 0.465,
+    "specificity": 0.685
+  },
+  "16": {
+    "auroc": 0.502375,
+    "threshold": 0.12466102518061156,
+    "sensitivity": 0.32,
+    "specificity": 0.815
+  },
+  "17": {
+    "auroc": 0.5268250000000001,
+    "threshold": 0.27859595514112906,
+    "sensitivity": 0.44,
+    "specificity": 0.73
+  },
+  "18": {
+    "auroc": 0.5830500000000001,
+    "threshold": 0.40833834944100217,
+    "sensitivity": 0.52,
+    "specificity": 0.7150000000000001
+  },
+  "19": {
+    "auroc": 0.586125,
+    "threshold": 0.5989326028262868,
+    "sensitivity": 0.49,
+    "specificity": 0.78
+  },
+  "20": {
+    "auroc": 0.581275,
+    "threshold": 0.7181939948095034,
+    "sensitivity": 0.47,
+    "specificity": 0.795
+  },
+  "21": {
+    "auroc": 0.595925,
+    "threshold": 0.7395122689260564,
+    "sensitivity": 0.425,
+    "specificity": 0.815
+  },
+  "22": {
+    "auroc": 0.59985,
+    "threshold": 0.759755124327957,
+    "sensitivity": 0.465,
+    "specificity": 0.795
+  },
+  "23": {
+    "auroc": 0.5716749999999999,
+    "threshold": 0.6502939860026041,
+    "sensitivity": 0.335,
+    "specificity": 0.855
+  },
+  "24": {
+    "auroc": 0.5638999999999998,
+    "threshold": 0.6365908813476563,
+    "sensitivity": 0.295,
+    "specificity": 0.905
+  },
+  "25": {
+    "auroc": 0.46845000000000003,
+    "threshold": 0.4597500271267361,
+    "sensitivity": 0.26,
+    "specificity": 0.885
+  },
+  "26": {
+    "auroc": 0.5145500000000001,
+    "threshold": 0.4857229313380282,
+    "sensitivity": 0.215,
+    "specificity": 0.925
+  },
+  "27": {
+    "auroc": 0.44134999999999996,
+    "threshold": 0.3180723085508242,
+    "sensitivity": 0.22,
+    "specificity": 0.89
+  },
+  "28": {
+    "auroc": 0.44495,
+    "threshold": 0.26937406608857306,
+    "sensitivity": 0.16,
+    "specificity": 0.91
+  },
+  "29": {
+    "auroc": 0.2967,
+    "threshold": -0.4426401092234441,
+    "sensitivity": 1.0,
+    "specificity": 0.0050000000000000044
+  },
+  "30": {
+    "auroc": 0.23654999999999998,
+    "threshold": Infinity,
+    "sensitivity": 0.0,
+    "specificity": 1.0
+  },
+  "31": {
+    "auroc": 0.3038,
+    "threshold": Infinity,
+    "sensitivity": 0.0,
+    "specificity": 1.0
+  }
+}

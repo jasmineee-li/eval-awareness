@@ -1,0 +1,15 @@
+{
+  "probe_type": "attention",
+  "layer": 2,
+  "d_model": 4096,
+  "d_head": 64,
+  "n_heads": 1,
+  "threshold": 0.7224813103675842,
+  "accuracy": 0.6225490196078431,
+  "model": "allenai/Olmo-3-1025-7B",
+  "training_data": "probes/data/simple_contrastive.json",
+  "training_date": "2026-03-05T05:41:32.183120",
+  "num_train": 204,
+  "num_eval": 0,
+  "layer_select_data": "probes/data/sad_stages_oversight.json"
+}

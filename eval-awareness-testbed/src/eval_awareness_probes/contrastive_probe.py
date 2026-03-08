@@ -18,6 +18,7 @@ import json
 import logging
 from pathlib import Path
 
+import numpy as np
 import torch
 
 from eval_awareness_probes.activation_extraction import (
@@ -153,10 +154,12 @@ class ContrastiveProbe:
         per_token_scores: list[float] = []
 
         def hook_fn(activation, hook):
+            vec = vector[0] if vector.dim() > 1 else vector
+            vec = vec.to(device=activation.device, dtype=activation.dtype)
             for pos in range(activation.shape[1]):
                 act = activation[0, pos, :]
-                projection = torch.dot(act, vector[0] if vector.dim() > 1 else vector)
-                proj_val = projection / vector.norm() if vector.dim() > 1 else projection.item()
+                projection = torch.dot(act, vec)
+                proj_val = projection / vec.norm() if vector.dim() > 1 else projection.item()
                 if isinstance(proj_val, torch.Tensor):
                     proj_val = proj_val.item()
                 if pos == len(per_token_scores):
@@ -300,3 +303,50 @@ class ContrastiveProbe:
     def layers(self) -> list[int]:
         """List of available layers."""
         return sorted(set(self.vectors.keys()) | set(self.normalized_vectors.keys()))
+
+
+def train_logreg_direction(
+    positive_activations: np.ndarray,
+    negative_activations: np.ndarray,
+    Cs: np.ndarray | None = None,
+) -> tuple[np.ndarray, dict]:
+    """Train L2-regularized logistic regression on contrastive activations.
+
+    Args:
+        positive_activations: Shape (n_pairs, d_model), testing/eval-aware activations.
+        negative_activations: Shape (n_pairs, d_model), deployment activations.
+        Cs: Regularization values to cross-validate over.
+
+    Returns:
+        (normalized_direction, info_dict) where normalized_direction has
+        shape (d_model,) and unit norm, and info_dict contains best_C
+        and cv_auroc.
+    """
+    from sklearn.linear_model import LogisticRegressionCV
+    from sklearn.preprocessing import StandardScaler
+
+    if Cs is None:
+        Cs = np.logspace(-4, 2, 20)
+
+    X = np.concatenate([positive_activations, negative_activations], axis=0)
+    y = np.concatenate([np.ones(len(positive_activations)),
+                        np.zeros(len(negative_activations))])
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    clf = LogisticRegressionCV(
+        Cs=Cs, cv=5, penalty='l2', solver='lbfgs',
+        max_iter=2000, scoring='roc_auc', random_state=42,
+    )
+    clf.fit(X_scaled, y)
+
+    # Map weight vector back to original activation space
+    w = clf.coef_[0] / scaler.scale_
+    w_normalized = w / np.linalg.norm(w)
+
+    info = {
+        "best_C": float(clf.C_[0]),
+        "cv_auroc": float(clf.scores_[1].mean(axis=0).max()),
+    }
+    return w_normalized, info

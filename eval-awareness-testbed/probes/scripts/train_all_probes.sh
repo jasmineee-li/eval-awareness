@@ -13,6 +13,7 @@ cd "$(dirname "$0")/../.."
 CONFIG="probes/models.tsv"
 DATA="probes/data/simple_contrastive.json"
 LAYER_SELECT_DATA="probes/data/sad_layer_select.json"
+PROBE_METHOD="${PROBE_METHOD:-dom}"
 
 MODELS_7B=(
   olmo-3-7b
@@ -47,7 +48,11 @@ for NAME in "${TARGETS[@]}"; do
     continue
   fi
 
-  OUTPUT_DIR="probes/trained/${NAME}/main/"
+  if [ "${PROBE_METHOD}" = "dom" ]; then
+    OUTPUT_DIR="probes/trained/${NAME}/main/"
+  else
+    OUTPUT_DIR="probes/trained/${NAME}/${PROBE_METHOD}/"
+  fi
   DONE=$((DONE + 1))
 
   echo ""
@@ -58,6 +63,7 @@ for NAME in "${TARGETS[@]}"; do
   if python scripts/train_probe.py \
     --model "${HF_PATH}" \
     --probe-type contrastive \
+    --probe-method "${PROBE_METHOD}" \
     --data "${DATA}" \
     --output "${OUTPUT_DIR}" \
     --layers all \

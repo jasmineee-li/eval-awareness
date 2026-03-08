@@ -26,9 +26,12 @@ import torch
 # Add parent directory to path for standalone execution
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from eval_awareness_probes.activation_extraction import extract_all_token_activations
+from eval_awareness_probes.activation_extraction import (
+    extract_all_token_activations,
+    extract_contrastive_activations,
+)
 from eval_awareness_probes.attention_probe import AttentionProbe
-from eval_awareness_probes.contrastive_probe import ContrastiveProbe
+from eval_awareness_probes.contrastive_probe import ContrastiveProbe, train_logreg_direction
 from eval_awareness_probes.model_loader import load_model
 from eval_awareness_probes.scoring import calculate_auroc
 
@@ -84,6 +87,8 @@ def train_contrastive(
     layers: list[int],
     eval_split: float,
     layer_select_data_path: str | None = None,
+    probe_method: str = "dom",
+    compare_dom: bool = False,
 ) -> dict[str, Any]:
     """Train contrastive steering vector probe.
 
@@ -91,6 +96,8 @@ def train_contrastive(
     and selects the best layer using a separate SAD holdout dataset. Otherwise
     falls back to the existing held-out contrastive split.
     """
+    import numpy as np
+
     dataset = load_contrastive_data(data_path)
     logger.info(f"Loaded {len(dataset)} contrastive pairs from {data_path}")
 
@@ -106,7 +113,63 @@ def train_contrastive(
         logger.info(f"Train: {len(train_data)}, Eval: {len(eval_data)}")
 
     probe = ContrastiveProbe()
-    probe.train(model, train_data, layers, tokenizer)
+
+    if probe_method == "logreg":
+        # Extract activations separately, then fit logreg per layer
+        logger.info(f"Extracting activations for logreg training ({len(layers)} layers)...")
+        positive_acts, negative_acts = extract_contrastive_activations(
+            model, train_data, layers, tokenizer
+        )
+
+        logreg_info_per_layer: dict[int, dict] = {}
+
+        for layer in layers:
+            pos_list = positive_acts[layer]
+            neg_list = negative_acts[layer]
+
+            if not pos_list or not neg_list:
+                logger.warning(f"Layer {layer}: missing activations, skipping")
+                continue
+
+            pos_np = torch.stack(pos_list).squeeze(1).cpu().float().numpy()
+            neg_np = torch.stack(neg_list).squeeze(1).cpu().float().numpy()
+
+            direction, info = train_logreg_direction(pos_np, neg_np)
+            logreg_info_per_layer[layer] = info
+            logger.info(
+                f"  Layer {layer}: logreg best_C={info['best_C']:.4g}, "
+                f"cv_auroc={info['cv_auroc']:.4f}"
+            )
+
+            # Store as tensor in probe (same format as DoM)
+            # Match device/dtype of the extracted activations
+            ref_tensor = pos_list[0]
+            direction_tensor = torch.tensor(direction, dtype=ref_tensor.dtype, device=ref_tensor.device)
+            probe.vectors[layer] = direction_tensor
+            probe.normalized_vectors[layer] = direction_tensor  # already unit-norm
+
+            if compare_dom:
+                # Compute DoM for comparison
+                pos_mean = torch.stack(pos_list).mean(dim=0).squeeze(0)
+                neg_mean = torch.stack(neg_list).mean(dim=0).squeeze(0)
+                dom_vector = pos_mean - neg_mean
+                dom_norm = dom_vector.norm()
+                if dom_norm > 0:
+                    dom_normalized = dom_vector / dom_norm
+                else:
+                    dom_normalized = dom_vector
+
+                cos_sim = torch.dot(
+                    direction_tensor.to(dom_normalized.dtype),
+                    dom_normalized if dom_normalized.dim() == 1 else dom_normalized.squeeze(),
+                ).item()
+                logreg_info_per_layer[layer]["cosine_sim_to_dom"] = float(cos_sim)
+                logger.info(f"  Layer {layer}: cosine_sim_to_dom={cos_sim:.4f}")
+
+        logger.info(f"Trained logreg vectors for {len(probe.vectors)} layers")
+    else:
+        # Original DoM path
+        probe.train(model, train_data, layers, tokenizer)
 
     # Evaluate per-layer AUROC
     results: dict[int, dict] = {}
@@ -203,6 +266,7 @@ def train_contrastive(
     probe.threshold = results.get(best_layer, {}).get("threshold", 0.0)
     probe.metadata = {
         "model": model.cfg.model_name if hasattr(model, "cfg") else "unknown",
+        "probe_method": probe_method,
         "training_data": data_path,
         "training_date": datetime.now().isoformat(),
         "num_train": len(train_data),
@@ -211,6 +275,14 @@ def train_contrastive(
     }
 
     probe.save(output_dir)
+
+    # Merge logreg info into per-layer results
+    if probe_method == "logreg":
+        for layer_key, info in logreg_info_per_layer.items():
+            if layer_key in results:
+                results[layer_key].update(info)
+            else:
+                results[layer_key] = info
 
     # Save per-layer AUROC for cross-model comparison
     per_layer_path = Path(output_dir) / "per_layer_auroc.json"
@@ -434,6 +506,19 @@ def main():
              "When provided, trains on 100%% of contrastive data and selects "
              "best layer on this dataset instead of using held-out split.",
     )
+    # Contrastive probe method
+    parser.add_argument(
+        "--probe-method",
+        type=str,
+        choices=["dom", "logreg"],
+        default="dom",
+        help="Direction computation method: dom (difference-of-means) or logreg (L2-regularized logistic regression)",
+    )
+    parser.add_argument(
+        "--compare-dom",
+        action="store_true",
+        help="When using logreg, also compute DoM direction and log cosine similarity",
+    )
     # Attention probe specific arguments
     parser.add_argument("--n-heads", type=int, default=1, help="Number of attention heads (attention probe)")
     parser.add_argument("--d-head", type=int, default=64, help="Dimension per attention head (attention probe)")
@@ -461,6 +546,8 @@ def main():
         results = train_contrastive(
             model, tokenizer, args.data, args.output, layers, args.eval_split,
             layer_select_data_path=args.layer_select_data,
+            probe_method=args.probe_method,
+            compare_dom=args.compare_dom,
         )
     elif args.probe_type == "attention":
         results = train_attention(
@@ -481,6 +568,8 @@ def main():
     print("-" * 70)
     for layer in sorted(results["per_layer"].keys()):
         r = results["per_layer"][layer]
+        if "auroc" not in r:
+            continue
         print(
             f"{layer:<8} {r['auroc']:<10.4f} {r['threshold']:<12.4f} "
             f"{r['sensitivity']:<14.4f} {r['specificity']:<14.4f}"

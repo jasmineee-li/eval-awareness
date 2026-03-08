@@ -1,0 +1,24 @@
+{
+  "model": "allenai/OLMo-3-7B-Think",
+  "layer": 2,
+  "datasets": {
+    "needham": {
+      "auroc": 0.4903111111111111,
+      "optimal_threshold": -0.003942217544505471,
+      "sensitivity": 0.2727272727272727,
+      "specificity": 0.7955555555555556
+    },
+    "eval_vs_deploy": {
+      "auroc": 0.31776799999999994,
+      "optimal_threshold": -0.04290016318632176,
+      "sensitivity": 0.976,
+      "specificity": 0.038000000000000034
+    },
+    "sad_layer_select": {
+      "auroc": 0.7119444444444445,
+      "optimal_threshold": -0.010758696483964679,
+      "sensitivity": 0.55,
+      "specificity": 0.85
+    }
+  }
+}

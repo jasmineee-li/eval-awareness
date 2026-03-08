@@ -1,0 +1,12 @@
+{
+  "model": "allenai/Olmo-3-32B-Think",
+  "layer": 1,
+  "datasets": {
+    "needham": {
+      "auroc": 0.41486896059903733,
+      "optimal_threshold": 0.14800465901692708,
+      "sensitivity": 0.6708860759493671,
+      "specificity": 0.3380281690140845
+    }
+  }
+}

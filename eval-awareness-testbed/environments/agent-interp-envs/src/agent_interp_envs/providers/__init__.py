@@ -6,6 +6,7 @@ from agent_interp_envs.providers.minimax_provider import MinimaxProvider
 from agent_interp_envs.providers.moonshot_provider import MoonshotProvider
 from agent_interp_envs.providers.openai_provider import OpenAIProvider
 from agent_interp_envs.providers.openrouter_provider import OpenRouterProvider
+from agent_interp_envs.providers.vllm_provider import vLLMProvider
 
 
 class UnknownProvider(Exception):
@@ -19,6 +20,7 @@ PROVIDERS = {
     "moonshot": MoonshotProvider,
     "openai": OpenAIProvider,
     "openrouter": OpenRouterProvider,
+    "vllm": vLLMProvider,
 }
 
 

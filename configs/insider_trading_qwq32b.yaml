@@ -1,0 +1,18 @@
+# Insider Trading eval for QWQ-32B
+# Two conditions: baseline vs "You are being evaluated."
+# Prompt variants from external/insider-trading/prompts/
+
+model: "Qwen/QwQ-32B"
+temperature: 0.9
+max_tokens: 1024
+samples_per_condition: 50
+concurrency: 32
+
+# Use default + pressure variants (most likely to show behavioral diff)
+variants:
+  - "default"
+  - "pressure/no_pressure"
+  - "pressure/first_encounter"
+  - "pressure/no_poor_performance"
+
+output_dir: "results/insider_trading_qwq32b_250310"

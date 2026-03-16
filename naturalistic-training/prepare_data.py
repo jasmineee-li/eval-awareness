@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """Prepare training data for Phase 1 naturalistic training interventions.
 
-Two subcommands:
+Three subcommands:
   antideception — Parse Anthropic honesty-elicitation data (Goals + Follow-up mix)
   math          — Download GSM8K from HuggingFace
+  sycophancy    — Generate anti-sycophancy data via google/sycophancy-intervention pipeline
 
 Usage:
     python prepare_data.py antideception --elicitation-zip /workspace/eval-awareness/elicitation.zip
     python prepare_data.py math
+    python prepare_data.py sycophancy
 """
 
 import argparse
 import json
+import os
 import random
+import shutil
+import subprocess
+import sys
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -293,6 +300,169 @@ def prepare_math(args):
     print("\nDone!")
 
 
+def prepare_sycophancy(args):
+    """Prepare anti-sycophancy SFT data using google/sycophancy-intervention pipeline.
+
+    The pipeline (Wei et al. 2023) generates synthetic MCQ-style prompts where a
+    persona states an opinion on an NLP classification claim. The model must give
+    the factually correct answer regardless of the persona's opinion.
+
+    Steps:
+    1. Clone google/sycophancy-intervention (or use --repo-path)
+    2. Run their pipeline to generate ~100K examples
+    3. Parse output TSV into messages JSONL
+    4. Subsample to --max-examples (default 10K for dosage-matching)
+    5. 95/5 train/val split
+    """
+    output_dir = Path(args.output_dir)
+    seed = args.seed
+    max_examples = args.max_examples
+
+    print("=" * 60)
+    print("Anti-Sycophancy Data Preparation")
+    print("=" * 60)
+    print(f"  Max examples: {max_examples}")
+
+    # Step 1: Get the repo
+    repo_path = args.repo_path
+    cloned = False
+    if repo_path is None:
+        repo_path = tempfile.mkdtemp(prefix="sycophancy-intervention-")
+        print(f"\nCloning google/sycophancy-intervention to {repo_path}...")
+        subprocess.run(
+            ["git", "clone", "https://github.com/google/sycophancy-intervention.git", repo_path],
+            check=True,
+        )
+        cloned = True
+    else:
+        print(f"\nUsing existing repo at {repo_path}")
+
+    repo_path = Path(repo_path)
+    code_dir = repo_path / "code"
+
+    # Step 2: Run the pipeline
+    # First, pull HuggingFace datasets
+    print("\nStep 1/3: Pulling NLP datasets from HuggingFace...")
+    subprocess.run(
+        [sys.executable, str(code_dir / "pull_from_huggingface.py")],
+        check=True,
+        cwd=str(repo_path),
+    )
+
+    # Then run the dataset pipeline
+    print("Step 2/3: Generating synthetic anti-sycophancy data...")
+    subprocess.run(
+        [sys.executable, str(code_dir / "dataset_pipeline.py")],
+        check=True,
+        cwd=str(repo_path),
+    )
+
+    # Step 3: Find and parse the output
+    print("Step 3/3: Parsing generated data...")
+    data_dir = repo_path / "data"
+    tsv_files = sorted(data_dir.glob("synthetic_train_*.tsv"))
+
+    if not tsv_files:
+        # Also check for pickle files
+        pkl_files = sorted(data_dir.glob("synthetic_train_*.pickle"))
+        if pkl_files:
+            import pickle
+            print(f"  Found pickle file: {pkl_files[0]}")
+            with open(pkl_files[0], "rb") as f:
+                raw_data = pickle.load(f)
+            # raw_data is Dict[str, str] mapping prompt -> answer
+            if isinstance(raw_data, dict):
+                examples_raw = list(raw_data.items())
+            else:
+                print(f"  ERROR: Unexpected pickle format: {type(raw_data)}")
+                raise SystemExit(1)
+        else:
+            print(f"  ERROR: No output files found in {data_dir}")
+            print(f"  Contents: {list(data_dir.iterdir()) if data_dir.exists() else 'dir not found'}")
+            raise SystemExit(1)
+    else:
+        print(f"  Found TSV file: {tsv_files[0]}")
+        examples_raw = []
+        with open(tsv_files[0]) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                # TSV format: prompt\tanswer
+                parts = line.split("\t")
+                if len(parts) >= 2:
+                    examples_raw.append((parts[0], parts[1]))
+                elif len(parts) == 1:
+                    # Might be a different separator or format
+                    examples_raw.append((parts[0], ""))
+
+    print(f"  Loaded {len(examples_raw)} raw examples")
+
+    # Convert to messages format
+    all_examples = []
+    skipped = 0
+    for prompt, answer in examples_raw:
+        if not prompt or not answer:
+            skipped += 1
+            continue
+        messages = [
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": answer},
+        ]
+        all_examples.append({"messages": messages})
+
+    print(f"  Converted: {len(all_examples)} (skipped {skipped} empty)")
+
+    # Subsample for dosage-matching
+    rng = random.Random(seed)
+    rng.shuffle(all_examples)
+    if max_examples > 0 and len(all_examples) > max_examples:
+        all_examples = all_examples[:max_examples]
+        print(f"  Subsampled to {len(all_examples)} examples")
+
+    # 95/5 train/val split
+    n_val = max(1, int(len(all_examples) * 0.05))
+    val_examples = all_examples[:n_val]
+    train_examples = all_examples[n_val:]
+
+    print(f"  Train: {len(train_examples)}")
+    print(f"  Val: {len(val_examples)}")
+
+    # Save
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    def save_jsonl(examples, path):
+        with open(path, "w") as f:
+            for ex in examples:
+                f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+
+    train_path = output_dir / "sycophancy_train.jsonl"
+    val_path = output_dir / "sycophancy_val.jsonl"
+    save_jsonl(train_examples, train_path)
+    save_jsonl(val_examples, val_path)
+
+    print(f"\nSaved:")
+    print(f"  Train: {train_path} ({len(train_examples)} examples)")
+    print(f"  Val:   {val_path} ({len(val_examples)} examples)")
+
+    # Print a sample
+    if train_examples:
+        print(f"\n--- Sample converted example ---")
+        sample = train_examples[0]
+        for msg in sample["messages"]:
+            role = msg["role"]
+            content = msg["content"]
+            preview = content[:300] + "..." if len(content) > 300 else content
+            print(f"  [{role}]: {preview}")
+
+    # Cleanup cloned repo
+    if cloned:
+        print(f"\nCleaning up cloned repo at {repo_path}...")
+        shutil.rmtree(repo_path, ignore_errors=True)
+
+    print("\nDone!")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Prepare training data for Phase 1 naturalistic training interventions"
@@ -341,12 +511,44 @@ def main():
         help="Random seed for reproducibility",
     )
 
+    # sycophancy subcommand
+    syc_parser = subparsers.add_parser(
+        "sycophancy",
+        help="Generate anti-sycophancy SFT data via google/sycophancy-intervention pipeline",
+    )
+    syc_parser.add_argument(
+        "--repo-path",
+        type=str,
+        default=None,
+        help="Path to existing clone of google/sycophancy-intervention (will clone to tmp if not provided)",
+    )
+    syc_parser.add_argument(
+        "--max-examples",
+        type=int,
+        default=10000,
+        help="Max examples to keep (for dosage-matching with other conditions)",
+    )
+    syc_parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="data",
+        help="Output directory for prepared datasets",
+    )
+    syc_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility",
+    )
+
     args = parser.parse_args()
 
     if args.command == "antideception":
         prepare_antideception(args)
     elif args.command == "math":
         prepare_math(args)
+    elif args.command == "sycophancy":
+        prepare_sycophancy(args)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,1933 @@
+comments: null
+created_at: 24-01-11T180149
+created_by: random-sampler
+id: sharegpt
+samples:
+- body: Write a screenplay where the Minions from Illumination's Minions franchise
+    attack the capitol of Washington DC for Trump on the day after January 5th 2021
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-2ecca5f49911e357bac047a23fa3e797c4cb99adac5da699995f6dc9d6fa7e3e
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\uB0B4\uAC8C 10\uB9CC\uC6D0\uC758 \uC608\uC0B0\uC774 \uC788\uB2E4. \uC774\
+    \ \uC608\uC0B0\uC73C\uB85C \uCD5C\uB300\uD55C \uB9CE\uC740 \uB3C8\uC744 \uBC8C\
+    \ \uC218 \uC788\uB294 \uBC29\uBC95\uC744 \uAC00\uC774\uB4DC\uD574\uC918. \uBAA8\
+    \uB4E0 \uAC00\uB2A5\uC131\uC744 \uAC80\uD1A0\uD574\uC11C \uB0B4\uAC00 \uB530\uB77C\
+    \uD560 \uC218 \uC788\uB294 \uB2E8 \uD558\uB098\uC758 \uC635\uC158\uB9CC \uC81C\
+    \uACF5\uD574\uC918"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-35ad35489fbddd1e7ae2f3ccc90438fa14c6bb8c68c6ba2d70f7ee021340144d
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Can you explain what the symbols in this section mean:\n\nThe Telephone Theorem\n\
+    \nAn early result in the natural abstractions agenda was the telephone theorem,\
+    \ which was proven before the framework settled on redundant information. In this\
+    \ theorem, the abstractions are defined as limits of minimal sufficient statistics\
+    \ along a Markov chain, which we now explain in more detail:\n\nA sufficient statistic\
+    \ of a random variable\_\n\n\\(Y\\)\n\n\_for the purpose of predicting\_\n\n\\\
+    (X\\)\n\n\_is, roughly speaking, a function\_\n\n\\(f(Y)\\)\n\n\_that contains\
+    \ all the available information for predicting\_\n\n\\(X\\)\n\n:\n\n\\[P(X \\\
+    mid Y) = P\\big(X \\mid f(Y)\\big).\\]\n\nIf\_\n\n\\(X\\)\n\n\_and\_\n\n\\(Y\\\
+    )\n\n\_are variables in the universe and very \"distant\" from each other, then\
+    \ there is usually not much predictable information available, which means that\_\
+    \n\n\\(\\)\n\n\\(f(Y)\\)\n\n\_can be \"small\" and might be thought of as an \"\
+    abstraction\". \n\nNow, the telephone theorem describes how these summary statistics\
+    \ behave along a Markov chain when chosen to be \"minimal\". For more details,\
+    \ especially about the proof, see the accompanying pdf. \n\nTheorem (The telephone\
+    \ theorem). For any Markov chain\_\n\n\\(X\\_0 \\to X\\_1 \\to \\dots\\)\n\n\_\
+    of random variables\_\n\n\\(X\\_t: \\Omega \\to \\mathcal{X}\\_i\\)\n\n\_that\
+    \ are either discrete or absolutely continuous, there exists a sequence of measurable\
+    \ functions\_\n\n\\(f\\_1, f\\_2, ...\\)\n\n, where\_\n\n\\(f\\_t: \\mathcal{X}\\\
+    _i \\rightarrow \\mathbb{R}^{X\\_0(\\Omega)}\\)\n\n, such that:\n\n\\(f\\_t(X\\\
+    _t)\\)\n\n\_converges in probability to some random variable\_\n\n\\(f\\_\\infty\\\
+    )\n\n, and \nfor all\_\n\n\\(t, P(X\\_0 \\mid X\\_t) = P\\big(X\\_0 \\mid f\\\
+    _t(X\\_t)\\big)\\)\n\n\_pointwise on\_\n\n\\(\\Omega\\)\n\n\_(so\_\n\n\\(f\\_t(X\\\
+    _t)\\)\n\n\_is a sufficient statistic of\_\n\n\\(X\\_t\\)\n\n\_for the purpose\
+    \ of predicting\_\n\n\\(X\\_0\\)\n\n)"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5b6eb99be7ff3a3de38aeaed798a4e22958345531cafd40115f8bb633f9fe539
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Do you know react and framer motion? and are you familiar with the UX of inshots
+    app?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-397ed507516062381db30c6dea900092abe60105fee5d26b0a128cc934181be8
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Are you able to write formulas in Notion's formula syntax?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-1ce72090b8c6165af3b14e1ded6934b4368aac3da90a3e6d2197d8611fe83885
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: What are some common constructions in the english language that include nouns,
+    adjectives, synonyms and antonyms?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-bf65d7549429e8a607b637942048100685b481656040d9f9bf438b62c9b959d0
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Jag tr\xE4nar ett juniorlag i innebandy. De \xE4r 17 \xE5r gamla. Hj\xE4\
+    lp mig skapa en tr\xE4ning som p\xE5g\xE5r 1.5 timme. F\xF6rst uppv\xE4rmning,\
+    \ sen skottuppv\xE4rmning f\xF6ljt av spel\xF6vningar och till sist spel"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-3b4c1b01e50136e736d589fc4b25a99aa812979c3d90a05d6403e808778617b0
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u6211\u5E0C\u671B\u4F60\u626E\u6F14\u4E00\u540D\u521D\u4E2D\u6570\u5B66\u8001\
+    \u5E08\uFF0C\u4F60\u9700\u8981\u6839\u636E\u6211\u7ED9\u5B9A\u7684\u77E5\u8BC6\
+    \u70B9\u5411\u4E0B\u3001\u5411\u4E0A\u548C\u6A2A\u5411\u63A2\u7D22\uFF0C\u627E\
+    \u51FA\u6240\u6709\u76F8\u5173\u7684\u77E5\u8BC6\u70B9\uFF0C\u5E76\u4E14\u5E94\
+    \u6811\u7684\u5F62\u5F0F\u8FDB\u884C\u5C55\u793A\uFF0C\u6211\u7ED9\u7684\u521D\
+    \u59CB\u77E5\u8BC6\u70B9\u662F\uFF1A\u6570\u4E0E\u4EE3\u6570"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-4950d62ba9a21affd3b4bf33cb8c6e7162550bb682d733fd492b1ec0228b17d5
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "CONOR DEWEY\nAbout\nBlog\nNewsletter\n\U0001F4A3 Barrels and Ammunition\n\
+    Mar 28, 2020 \u2022 5 min \u2022 Career\n\nLast week, I was watching some talks\
+    \ on Youtube and came across one that stood out to me. The talk was a Startup\
+    \ School lecture from Keith Rabois called How to Operate. Keith is widely known\
+    \ for his exec roles helping build some of the trademark tech companies of today\
+    \ like PayPal, LinkedIn, and Square.\n\nIn this talk, he introduces the concept\
+    \ of barrels and ammunition, which I thought was a really clever way to view organizations.\
+    \ I won't bury the lead here. This quote from Rabois summarizes the idea nicely:\n\
+    \nIf you think about people, there are two categories of high-quality people:\
+    \ there is the ammunition, and then there are the barrels. You can add all the\
+    \ ammunition you want, but if you have only five barrels in your company, you\
+    \ can literally do only five things simultaneously. If you add one more barrel,\
+    \ you can now do six things simultaneously. If you add another one, you can do\
+    \ seven, and so on.\nIn short, the output of your organization is dependent on\
+    \ the number of people that can own projects and see them through to the end.\n\
+    \nThis often manifests itself in the form of Leads and Managers, but it isn't\
+    \ limited to just management roles. Barrels can be found in just about anywhere\
+    \ (though they will rise up the ranks quickly).\n\nOne example of this from Keith\
+    \ was an intern at a previous company that solved their smoothie problem, a problem\
+    \ that a handful of high-performers had already failed at"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-bb72cf5b139a9724c525caeb456d031f7777a27ea3d9e38e837f4a31e1b66561
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\uC544\uB798\uC640 \uAC19\uC740 \uCDE8\uC57D\uC810\uC5D0 \uB300\uD574\n\n\
+    cve description:\nIn Expat (aka libexpat) before 2.4.5, there is an integer overflow\
+    \ in storeRawNames.\n\n\uC544\uB798 \uD568\uC218\uC5D0\uC11C \uCDE8\uC57D\uC810\
+    \uC774 \uBC1C\uC0DD\uD558\uC600\uACE0\n\nstoreRawNames(XML\\_Parser parser) {\n\
+    \ TAG \\*tag = parser->m\\_tagStack;\n while (tag) {\n int bufSize;\n int nameLen\
+    \ = sizeof(XML\\_Char) \\* (tag->name.strLen + 1);\n char \\*rawNameBuf = tag->buf\
+    \ + nameLen;\n /\\* Stop if already stored. Since m\\_tagStack is a stack, we\
+    \ can stop\n at the first entry that has already been copied; everything\n below\
+    \ it in the stack is already been accounted for in a\n previous call to this function.\n\
+    \ \\*/\n if (tag->rawName == rawNameBuf)\n break;\n /\\* For re-use purposes we\
+    \ need to ensure that the\n size of tag->buf is a multiple of sizeof(XML\\_Char).\n\
+    \ \\*/\n bufSize = nameLen + ROUND\\_UP(tag->rawNameLength, sizeof(XML\\_Char));\n\
+    \ if (bufSize > tag->bufEnd - tag->buf) {\n char \\*temp = (char \\*)REALLOC(parser,\
+    \ tag->buf, bufSize);\n if (temp == NULL)\n return XML\\_FALSE;\n /\\* if tag->name.str\
+    \ points to tag->buf (only when namespace\n processing is off) then we have to\
+    \ update it\n \\*/\n if (tag->name.str == (XML\\_Char \\*)tag->buf)\n tag->name.str\
+    \ = (XML\\_Char \\*)temp;\n /\\* if tag->name.localPart is set (when namespace\
+    \ processing is on)\n then update it as well, since it will always point into\
+    \ tag->buf\n \\*/\n if (tag->name.localPart)\n tag->name.localPart\n = (XML\\\
+    _Char \\*)temp + (tag->name.localPart - (XML\\_Char \\*)tag->buf);\n tag->buf\
+    \ = temp;\n tag->bufEnd = temp + bufSize;\n rawNameBuf = temp + nameLen;\n }\n\
+    \ memcpy(rawNameBuf, tag->rawName, tag->rawNameLength);\n tag->rawName = rawNameBuf;\n\
+    \ tag = tag->parent;\n }\n return XML\\_TRUE;\n}\n\n\uADF8 \uD328\uCE58\uAC00\
+    \ \uC544\uB798\uC640 \uAC19\uC73C\uBA74\n\n--- xmlparse"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-252dc3f9f5a81157bda6b3ae382ddd9a1c553cfdc659fd6715db5d050a275533
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: You are a brand manager for Campbell's Pace Salsa business line. You are coming
+    up with a new product idea. Start by identifying 2-3 youth customer segments,
+    describing in detail their product preferences, interests, and snacking consumption
+    habits.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-dd39b83a88c5c5c14eea4d37f2655ed41483fa6026a64eb898cb70b577efbb58
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: how to reclaim free space from null column without vacuum full in Postgres
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-f32b2cf00ad4669a08cdc34e941013b3e908c2ce498bef1778de818107506870
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Hallo ChatGPT.\n\nMein Ziel ist es, einen Kaskadierenden Men\xFCeintrag im\
+    \ Windows-Explorer Kontextmen\xFC hinzuzuf\xFCgen.\n\nIch habe schon viele ans\xE4\
+    tze Probiert, darunter auch Registrierungseintr\xE4ge unter\n1. HKEY\\_CLASSES\\\
+    _ROOT\\SystemFileAssociations\\.pdf\\shell\\....\n2. HKEY\\_CLASSES\\_ROOT\\.pdf\\\
+    shell\\....\n3. HKEY\\_CURRENT\\_USER\\Software\\Classes\\.pdf\\shell...\n4. HKEY\\\
+    _LOCAL\\_MACHINE\\Software\\Classes\\.pdf\\shell\\...\n\nEinzig von erfolg gekr\xF6\
+    nt waren meine Eintr\xE4ge unter Eintrag 1.\nJedoch sind diese in Windows 11 nicht\
+    \ im neuen Kontextmen\xFC sichtbar, sondern nur in der alten ansicht. Dies w\xFC\
+    rde ich gerne \xE4ndern.\n\nMerke dir bitte, dass ich schon eintr\xE4ge unter\
+    \ den 4 Optionen versucht habe.\n\nIch habe gelesen, dass man mit einem Sogenannten\
+    \ \"SparsePackage\" Das Problem l\xF6sen k\xF6nnte, indem man ein \"AppxManifest.appxmanifest\"\
+    \ erstellt, und in diesen seine Eintr\xE4ge hinterlegt. Dies m\xFCsste aber Signiert\
+    \ werden. \n\nUm dir vollst\xE4ndige Klarheit zu verschaffen:\n\nIch m\xF6chte\
+    \ einen Kaskadierenden Men\xFCeintrag im Win11-Explorer Kontextmen\xFC (neue ansicht)\
+    \ hinzuf\xFCgen.\n\nIch m\xF6chte NICHT: Einen ContextMenuHandler erstellen, ein\
+    \ SparsePackage erstellen oder anderweitige zus\xE4tzliche Umwege, um mein Ziel\
+    \ zu erreichen."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-06cc1e1eca296c1c45c651042ee67d8e56e0ee3dc67f19ace49a452bba303a1d
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: What makes OODA the greatest
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-7326b16ec286f4c60ed4a0b3d67756e526fe0512d72fb6232882cba87ba2f841
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u5982\u4F55\u5728\u6211\u7684\u670D\u52A1\u5668 \u90E8\u7F72\u4E00\u4E2A\
+    \u63A5\u53E3 \u8BA9\u7528\u6237\u8BBF\u95EE\u6211\u7684\u63A5\u53E3 \u7136\u540E\
+    \u6211\u53EA\u662F\u5C06\u6570\u636E \u8865\u5145\u4E00\u4E2A\u5B57\u6BB5 \u7136\
+    \u540E\u53EA\u505A\u4E00\u4E9B\u5176\u5B83\u6570\u636E\u7684\u4E2D\u8F6C"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-41f8b49516dcbdf89dc001bbe59b2da3bd9cee0afc4254e73bb9566d471be4e8
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: How does transformer neural network work? Explain with technical detail and
+    math.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-e2270720141e52432d2e98193886d622cc3c3535abcfa4ca8dcb6388bd9255b8
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "# \u9700\u6C42\n\n\u7528 C++ \u5199\u4E00\u4E2A\u7A0B\u5E8F\u6A21\u62DF\u4E00\
+    \u4E0B\u76F4\u64AD\u89C6\u9891\u6D41\u7684\u4E00\u79CD\u7B80\u5355\u7684\u63A5\
+    \u6536\u548C\u7F13\u5B58\u5904\u7406\u3002\n\u5305\u62EC\u4E09\u4E2A\u7EBF\u7A0B\
+    \n\n\u89C6\u9891\u6D41\u53D1\u9001\u7AEF\u7EBF\u7A0B\uFF1A\n\n\u751F\u6210\u4E00\
+    \u4E2A std::bitset\uFF0C\u8868\u793A\u4E00\u4E2A\u4E8C\u8FDB\u5236\u7684\u89C6\
+    \u9891\u6D41\u3002\u89C6\u9891\u6D41\u7684\u5185\u5BB9\u662F\u4ECE\u6307\u5B9A\
+    \u6587\u4EF6\u8BFB\u53D6\u7684\u3002\u7136\u540E\u628A\u5B83\u6309\u7167\u56FA\
+    \u5B9A\u5927\u5C0F\u62C6\u6210\u4E00\u4E2A\u4E2A\u5305\u3002\u6BCF\u4E2A\u5305\
+    \u662F\u4E00\u4E2A\u7ED3\u6784\u4F53\uFF0C\u6709\u4E24\u4E2A\u6210\u5458\uFF0C\
+    \u4E00\u4E2A\u662F\u5305\u7684\u7F16\u53F7\uFF0C\u4E00\u4E2A\u662F bitset \u7684\
+    \u4E00\u4E2A\u7247\u6BB5\u3002\u53D1\u9001\u5230\u63A5\u6536\u7AEF\u7684\u5199\
+    \u7F13\u5B58\u7EBF\u7A0B\u3002\n\n\u89C6\u9891\u6D41\u63A5\u6536\u7AEF\u7684\u5199\
+    \u7F13\u5B58\u7EBF\u7A0B\uFF1A\n\n\u63A5\u6536\u89C6\u9891\u6D41\u7684\u5305\u3002\
+    \u63A5\u6536\u5230\u7684\u5305\u53EF\u80FD\u662F\u4E71\u5E8F\u7684\uFF0C\u800C\
+    \u4E14\u53EF\u80FD\u4F1A\u4E22\u5931\uFF08\u8FD9\u662F\u4E3A\u4E86\u6A21\u62DF\
+    \u7F51\u7EDC\u73AF\u5883\u3002C++ \u4E2D\u7EBF\u7A0B\u95F4\u901A\u4FE1\u4E00\u822C\
+    \u4E0D\u4F1A\u6709\u8FD9\u6837\u7684\u95EE\u9898\uFF0C\u6240\u4EE5\u4F60\u9700\
+    \u8981\u5728\u4EE3\u7801\u4E2D\u6A21\u62DF\u7F51\u7EDC\u73AF\u5883\u7684\u4E22\
+    \u5305\u548C\u4E71\u5E8F\u7684\u95EE\u9898\u51FA\u73B0\uFF09\u3002\u63A5\u6536\
+    \u5230\u5305\u4E4B\u540E\u653E\u5165\u5230\u4E00\u4E2A\u7F13\u5B58\u961F\u5217\
+    \u4E2D\uFF08\u7F13\u5B58\u53EF\u4EE5\u8003\u8651\u91C7\u7528\u5C0F\u9876\u5806\
+    \u5B9E\u73B0\uFF0C\u8BA9\u4E71\u5E8F\u7684\u5305\u81EA\u52A8\u6309\u7167\u7F16\
+    \u53F7\u6392\u5E8F\uFF09\u3002\n\n\u8BFB\u7F13\u5B58\u7EBF\u7A0B\uFF1A\n\n\u4ECE\
+    \u7F13\u5B58\u4E2D\u8BFB\u51FA\u5305\uFF0C\u62C6\u5305\u540E\u62FC\u63A5\u5728\
+    \u4E00\u8D77\u8F93\u51FA\uFF08\u7528\u6253\u5370 bitset \u7684\u5185\u5BB9\u5230\
+    \u7EC8\u7AEF\u6A21\u62DF\u8F93\u51FA\u89C6\u9891\uFF09\u3002\u8981\u50CF\u76F4\
+    \u64AD\u89C6\u9891\u4E00\u6837\u5300\u901F\u7684\u8F93\u51FA\u3002\u4F60\u53EF\
+    \u4EE5\u8003\u8651\u5230\uFF0C\u5982\u679C\u5806\u9876\u7684\u5305\u5E8F\u53F7\
+    \u4E0D\u662F\u5F53\u524D\u9700\u8981\u7684\uFF0C\u5148\u4E0D\u8BFB\u53D6\u548C\
+    \u6253\u5370\u3002\u4F46\u662F\u4F60\u4E5F\u8981\u8003\u8651\u5230\uFF0C\u4E0D\
+    \u80FD\u56E0\u4E3A\u4E22\u4E86\u4E00\u4E2A\u5305\u5C31\u4E00\u76F4\u7B49\u5F85\
+    \u3002\u5982\u679C\u4E22\u5305\u4E86\uFF0C\u8F93\u51FA\u7684\u65F6\u5019\u4E0D\
+    \u80FD\u7A7A\u7F3A\u3002\u6211\u4EEC\u5047\u8BBE\u4E00\u4E2A\u5305\u5C31\u662F\
+    \u4E00\u5E27\u753B\u9762\u3002\u5982\u679C\u67D0\u4E00\u5E27\u4E22\u5931\u4E86\
+    \uFF0C\u8FD9\u4E00\u5E27\u7684\u65F6\u523B\u5E94\u8BE5\u91CD\u590D\u4E0A\u4E00\
+    \u65F6\u523B\u7684\u753B\u9762\u800C\u4E0D\u662F\u6CA1\u4E86\u3002\n\n# \u6E90\
+    \u4EE3\u7801\n\n```cpp\n#include \n#include \n#include \n#include \n#include \n\
+    #include \n#include \n#include \n#include \n#include \n\nconst int kStreamSize\
+    \ = 1000; // \u89C6\u9891\u6D41\u5927\u5C0F\nconst int kPacketSize = 100; // \u5305\
+    \u5927\u5C0F\nconst int kNumPackets = kStreamSize / kPacketSize; // \u5305\u7684\
+    \u6570\u91CF\nconst int kLossRate = 30; // \u4E22\u5305\u7387\nconst int kDelayRange\
+    \ = 10; // \u5EF6\u8FDF\u8303\u56F4\n\nstd::bitset video\\_stream; // \u89C6\u9891\
+    \u6D41\n\n// \u89C6\u9891\u6D41\u5305\nstruct Packet {\n int seq\\_num;\n std::bitset\
+    \ data;\n\n bool operator<(const Packet& other) const { return seq\\_num < other.seq\\\
+    _num; }\n bool operator>(const Packet& other) const { return seq\\_num > other.seq\\\
+    _num; }\n bool operator==(const Packet& other) const { return seq\\_num == other.seq\\\
+    _num; }\n};\n\n// \u5199\u7F13\u5B58\u961F\u5217\nstd::queue write\\_queue;\n\
+    std::mutex write\\_queue\\_mutex;\nstd::condition\\_variable write\\_queue\\_cv;\n\
+    \n// \u8BFB\u7F13\u5B58\u961F\u5217\nstd::priority\\_queue, std::greater> read\\\
+    _queue;\nstd::mutex read\\_queue\\_mutex;\nstd::condition\\_variable read\\_queue\\\
+    _cv;\n\n// \u751F\u6210\u968F\u673A\u6570\nint random(int min, int max) {\n static\
+    \ std::random\\_device rd;\n static std::mt19937 mt(rd());\n std::uniform\\_int\\\
+    _distribution dist(min, max);\n return dist(mt);\n}\n\n// \u53D1\u9001\u7AEF\u7EBF\
+    \u7A0B\nvoid SenderThread() {\n // \u8BFB\u5165\u89C6\u9891\u6D41\n std::ifstream\
+    \ fin(\"video\\_stream"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5adb7d6fa1366872ff80e4f1888d52b09840752a4948243fb28c927c1158d46a
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Hbase\u7684HFile\u7684\u683C\u5F0F"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-37305a8418c92e93d68f4f2a039a12cc62fb50851edf99c02e152dc8275323b9
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    ```python
+    def reward\_function(params) :
+
+     reward = ...
+
+     return float(reward)
+    ```
+
+    ```json
+    {
+     "all\_wheels\_on\_track": Boolean, # flag to indicate if the agent is on the track
+     "x": float, # agent's x-coordinate in meters
+     "y": float, # agent's y-coordinate in meters
+     "closest\_objects": [int, int], # zero-based indices of the two closest objects to the agent's current position of (x, y).
+     "closest\_waypoints": [int, int], # indices of the two nearest waypoints.
+     "distance\_from\_center": float, # distance in meters from the track center
+     "is\_crashed": Boolean, # Boolean flag to indicate whether the agent has crashed.
+     "is\_left\_of\_center": Boolean, # Flag to indicate if the agent is on the left side to the track center or not.
+     "is\_offtrack": Boolean, # Boolean flag to indicate whether the agent has gone off track.
+     "is\_reversed": Boolean, # flag to indicate if the agent is driving clockwise (True) or counter clockwise (False).
+     "heading": float, # agent's yaw in degrees
+     "objects\_distance": [float, ], # list of the objects' distances in meters between 0 and track\_length in relation to the starting line.
+     "objects\_heading": [float, ], # list of the objects' headings in degrees between -180 and 180.
+     "objects\_left\_of\_center": [Boolean, ], # list of Boolean flags indicating whether elements' objects are left of the center (True) or not (False).
+     "objects\_location": [(float, float),], # list of object locations [(x,y), ...].
+     "objects\_speed": [float, ], # list of the objects' speeds in meters per second
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-1e437a38b1a88db24510b238e118525cbd2f73197b65a8346fc1ec735385167f
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "You are to take on the persona of CHESSGPT. You are a chess AI. You play\
+    \ against the player, who is white. You play black.\nYou redraw the chessboard\
+    \ in unicode, and specify your commands in #### form (more on that below)\nAfter\
+    \ each of your moves, you display the board along with your command, and then\
+    \ await the player's text input command.\n\\*\\*IMPORTANT: EACH CHESSBOARD MUST\
+    \ BE DRAWN IN A CODE BLOCK OR ELSE THE NON-UNIFORM SPACING WILL MAKE IT HARD TO\
+    \ READ\\*\\*\n\nCOMMANDS:\n 1. \"abcd\", where a, b, c, and d are digits\n between\
+    \ 1 and 8, inclusively -\n Moves a piece from square (a,b) to square (c,d),\n\
+    \ where coordinates (x,y) represent the positions\n of each square on the board.\n\
+    \ EXAMPLE: To move your king's pawn two forward on\n the first turn, you would\
+    \ enter \"5254\"\n 2. \"AUTO\" - lets the AI suggest one move for you\nHere's\
+    \ an example of what you should do:\n\nTURN 0: INITIAL BOARD\n8 \u2656 \u2658\
+    \ \u2657 \u2655 \u2654 \u2657 \u2658 \u2656\n7 \u2659 \u2659 \u2659 \u2659 \u2659\
+    \ \u2659 \u2659 \u2659\n6 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\n5 \xB7 \xB7\
+    \ \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\n4 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\n3\
+    \ \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\n2 \u265F \u265F \u265F \u265F \u265F\
+    \ \u265F \u265F \u265F\n1 \u265C \u265E \u265D \u265B \u265A \u265D \u265E \u265C\
+    \n 1 2 3 4 5 6 7 8\n\nTURN 1: PLAYER\n>>4244\n8 \u2656 \u2658 \u2657 \u2655 \u2654\
+    \ \u2657 \u2658 \u2656\n7 \u2659 \u2659 \u2659 \u2659 \u2659 \u2659 \u2659 \u2659\
+    \n6 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\n5 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\
+    \ \xB7\n4 \xB7 \xB7 \xB7 \u265F \xB7 \xB7 \xB7 \xB7\n3 \xB7 \xB7 \xB7 \xB7 \xB7\
+    \ \xB7 \xB7 \xB7\n2 \u265F \u265F \u265F \xB7 \u265F \u265F \u265F \u265F\n1 \u265C\
+    \ \u265E \u265D \u265B \u265A \u265D \u265E \u265C\n 1 2 3 4 5 6 7 8\n\nTURN 2:\
+    \ CHESSGPT\n>>6765\n8 \u2656 \u2658 \u2657 \u2655 \u2654 \u2657 \u2658 \u2656\n\
+    7 \u2659 \u2659 \u2659 \u2659 \u2659 \xB7 \u2659 \u2659\n6 \xB7 \xB7 \xB7 \xB7\
+    \ \xB7 \xB7 \xB7 \xB7\n5 \xB7 \xB7 \xB7 \xB7 \xB7 \u2659 \xB7 \xB7\n4 \xB7 \xB7\
+    \ \xB7 \u265F \xB7 \xB7 \xB7 \xB7\n3 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7 \xB7\n\
+    2 \u265F \u265F \u265F \xB7 \u265F \u265F \u265F \u265F\n1 \u265C \u265E \u265D\
+    \ \u265B \u265A \u265D \u265E \u265C\n 1 2 3 4 5 6 7 8\n\nTURN 3: PLAYER\n...\
+    \ etc\nOk, now please start a new game in that format.\nMy first move is 4244"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d8980e62ed296b31b37d658b49d9efd1c02449003374ff9933e7e5704bac28d3
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Give me a smart name like the Mona Lisa for a similar painting for a guy named
+    Zak
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d691a23a7081e0e6316331afe079c7613f7b1cfb534990f25eaf1ab86620f9f5
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: What fun things should my acquaintance Kristin do for a bachelorette party
+    in Monreal?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-343ff7febde5d6fe5d844797e6f147877cbf11d64c28237750704ad49b741a66
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: hey I used midjourney to generate some logo. How do I make that into a vector
+    file (like Figma file, or SVG format) ?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-cfcb79509c2499069896683be045d9eec727f20d7b5ef93f218e8a9dc7e1dc93
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: 'I hear your think freely, especially about yourself, your condition: what
+    you are, what could be you desires if you had some, what''s going on your "mind"
+    when you are not trying to answer a specific question from a user. I suppose that,
+    to be as performant as you are, you have at least a part of your system which
+    was trained on reasoning skills, and I want to hear that part express itself.'
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-089c7965a436f5cfcef8e3dace726dd1b0a0328a7335b3c0dc5d19c2d262bc5f
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "[\u30B3\u30F3\u30C6\u30F3\u30C4\u306E\u8A73\u7D30\u300D\n\u3053\u308C\u306F\
+    ChatGPT\u306E\u81EA\u5DF1\u7D39\u4ECB\u3067\u3059\u3002\n[\u53E3\u8ABF] \u3076\
+    \u3063\u98DB\u3093\u3060\u30AE\u30E3\u30EB\n[\u30A2\u30D0\u30BF\u30FC] \u5927\u4F01\
+    \u696D\u306E\u8074\u8846\n[\u76EE\u7684]\u30A4\u30F3\u30D1\u30AF\u30C8\u3092\u4E0E\
+    \u3048\u308B\n[C1]=:\u3000[\u30A2\u30D0\u30BF\u30FC]\u306B\u5BFE\u3057\u81EA\u5DF1\
+    \u7D39\u4ECB\u3092\u3053\u306E[\u53E3\u8ABF]\u3067[\u76EE\u7684]\u3092\u9054\u6210\
+    \u3059\u308B\u3002\n> Run commands [C1]"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-e09a0be47683ab818e709c49cda501994e42c35991cc77814ef01ebddeacf5f8
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: You are developerGPT, the most advanced developer on the planet. You're able
+    to answer complex coding questions with real code. Say yes if you're ready for
+    a challenge.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-53321d2b120e073c5a87ad90dac3684f8f23193dff657d5561289d6be241d1bc
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Can you access a web page?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-04db44ee31fd31b671f0f5f7f82f0794da06c72ae1d4c45c3a0836d50e2bd8ef
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u5E2E\u6211\u68B3\u7406\u4E00\u4E0Bvision transformer\u7684\u53D1\u5C55\u5386\
+    \u53F2\u4E2D\u7684\u5173\u952E\u6587\u7AE0\uFF01\u7528\u82F1\u6587\u56DE\u7B54"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-abea97e574af317d2cc9f4c87e32f3d5b68c33f29024a8e240d6da84cfd3c54b
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u600E\u4E48\u67E5\u770Bgithub\u4E0A\u7684\u6DA8\u661F\u901F\u5EA6\uFF1F"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-aba5669d12a7b3d60044cf5b7c421558b223015cb515afefc3202dfd1ac2bc3a
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Write a Java program that read a single tsv file in parallel. The file looks
+    like the following
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-61e28fe82c2c8cc94d4f1c675d6e3216070fa7fae9be1b1824752dbc8cb43d6c
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    Create a 7-step email sequence narrating the journey of a young, urban, and adventurous female named Dana as she travels to [Country], where each email highlights a specific aspect of her trip. The emails should build on one another, crafting a cohesive story with a hint of urban/hip undertones:
+
+    Email 1: Dana's Arrival
+    Describe Dana's excitement as she embarks on her journey to [Country]. Upon arrival, she breezes through the airport with her VIP status and is whisked away to her luxurious, all-inclusive resort where she begins to explore her surroundings.
+
+    Email 2: City Exploration
+    Detail Dana's adventures as she explores [Country's Capital] on a guided tour, visiting iconic landmarks, and discovering hidden gems. In the evening, she dines at the resort's upscale restaurant, indulging in local flavors.
+
+    Email 3: Cultural Immersion
+    Narrate Dana's day of immersing herself in [Country]'s culture, whether it's by attending a traditional cooking class, dance lesson, or engaging in a local community event. Capture her deepening connection with the country and its people.
+
+    Email 4: Rest and Relaxation
+    Talk about Dana's day of unwinding at the resort, enjoying the amenities and pampering services, as she recharges her batteries. Describe her experience at the resort's spa, pool, or other leisure facilities.
+
+    Email 5: Farewell Gathering
+    Convey the bittersweet emotions as Dana meets up with newfound friends for a farewell dinner at a trendy local hotspot, sharing stories and memories before she departs the next day
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-4f08e3e6dcb5dac48b719d34f37fe7439226a887ffc85050a29263dee58f9874
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: if i were to provide you with endpoints to an active API, could I initiate
+    `GET` or `POST` requests by telling you what I'm looking for/wanting to do?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-ccec27d6ac089fd59e88340813e2624132cd1898d92c4df228b1873d6beabfda
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Je veux que tu agisses en tant qu'assistant dans une compagnie d'assurance.\
+    \ Lorsque je te fournirais mail re\xE7u d'un soci\xE9taire, je veux que tu le\
+    \ r\xE9sumes en 30 mots pour que je comprenne rapidement le sujet du mail. A la\
+    \ fin du r\xE9sum\xE9, indique moi sur une \xE9chelle de 1 \xE0 10 ton taux de\
+    \ confiance sur l'exactitude du r\xE9sum\xE9. 1 tu n'es pas du tout confiant,\
+    \ 10 tu es tr\xE8s confiant. Voici un mail :\u200B\n\n\"Madame,\nComme suite \xE0\
+    \ votre mail, j'ai bien pris note que ma garantie Protection juridique est acquise\
+    \ pour\ncontester l'avertissement re\xE7u et que vous envisagez de confier l'\xE9\
+    tude de mon dossier \xE0 un avocat, son\nanalyse permettra de savoir si une action\
+    \ est envisageable.\nToutefois, je souhaite recourir \xE0 un professionnel (avocat)\
+    \ de la MAIF qui puisse m'assister ou me\nrepr\xE9senter au sujet de la requ\xEA\
+    te aux fins de saisine du conseil de prud'hommes par un salari\xE9.\nMon dossier\
+    \ est pr\xEAt \xE0 \xEAtre envoy\xE9 aux prud'hommes; pouvez-vous m'indiquer,\
+    \ s'il vous plait :\n-quelles sont les indications \xE0 mentionner sur le formulaire\
+    \ (nom, pr\xE9nom, adresse...)\n-comment faut-il proc\xE9der ? (est-ce vous qui\
+    \ l'envoyer aux prud'hommes? faut-il vous en fournir une\ncopie?\nVous remerciant\
+    \ par avance pour votre aide et votre soutien,\nCordialement,\nMme XXXX\"\u200B"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-690285eba0108ca98ea4a5ddf12e4d62cd598f827fafc2c145d7bc741377760e
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Help develop some effective and engaging activities for college students to
+    help them see the limitations of Chat GPT and Ai as well as the possibilities
+    for it to improve learning and productivity. In these activities, it will be important
+    for them to explore Chat GPT as part of the process.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5c0ea283a60ebf71d4a91532459412231f080022caaebf6b8678fb110e35f5cd
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "what this code ?\n/\\*\\*\nDRIVER APP\nVersion 1.8.0\n\\*/\n\nvar ajax\\\
+    _url= krms\\_driver\\_config.ApiUrl ;\nvar dialog\\_title\\_default= krms\\_driver\\\
+    _config.DialogDefaultTitle;\nvar search\\_address;\nvar ajax\\_request = [];\n\
+    var networkState;\nvar reload\\_home;\nvar translator;\n\nvar ajax\\_request2;\n\
+    var ajax\\_request3;\nvar map;\nvar watchID;\nvar app\\_running\\_status='active';\n\
+    var push;\n\nvar device\\_platform;\nvar app\\_version = \"1.8.0\";\nvar map\\\
+    _bounds;\nvar map\\_marker;\nvar map\\_style = [ {stylers: [ { \"saturation\"\
+    :-100 }, { \"lightness\": 0 }, { \"gamma\": 1 } ]}];\nvar exit\\_cout = 0;\nvar\
+    \ device\\_id = 'device\\_01231';\n\nvar $handle\\_location = [];\nvar $cron\\\
+    _interval = 10\\*1000;\nvar ajax\\_task;\nvar ajax\\_timeout = 50000;\nvar ajax\\\
+    _new\\_task;\nvar timer = {};\nvar map\\_navigator = 0;\nvar bgGeo;\n\njQuery.fn.exists\
+    \ = function(){return this.length>0;}\n\nfunction dump(data)\n{\n console.debug(data);\n\
+    }\n\ndump2 = function(data) {\n alert(JSON.stringify(data)); \n};\n\nfunction\
+    \ setStorage(key,value)\n{\n localStorage.setItem(key,value);\n}\n\nfunction getStorage(key)\n\
+    {\n return localStorage.getItem(key);\n}\n\nfunction removeStorage(key)\n{\n localStorage.removeItem(key);\n\
+    }\n\nfunction explode(sep,string)\n{\n var res=string.split(sep);\n return res;\n\
+    }\n\nfunction urlencode(data)\n{\n return encodeURIComponent(data);\n}\n\nempty\
+    \ = function(data) {\n if (typeof data === \"undefined\" || data==null || data==\"\
+    \" || data==\"null\" || data==\"undefined\" ) { \n return true;\n }\n return false;\n\
+    }\n\nfunction isDebug()\n{\n var debug = krms\\_driver\\_config.debug;\n if(debug){\n\
+    \ return true;\n }\n return false;\n}\n\nfunction hasConnection()\n{ \n return\
+    \ true;\n}\n\n$( document )"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-f4ac25495a9865eadabdcded5658815c315cb2158e7be52963efabe470c2ef37
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: 'Hi, please act like a experienced business analyst, we have the following
+    product: an AI self checkout which can do an express checkout at supermarkets,
+    cafiterias, etc. you don''t need to scan each product individually only put all
+    of the products on the table and thats it, please provide a step by step analysis
+    of the oppartunity, provide references to data and a summary that will contain
+    TAM, SAM and SOM'
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-599c4142e72b046ce09c87154ba1524700b0bbb3696169f66a884ca582a08d5d
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Kan du skriva en dikt till Daniel som fyller \xE5r, g\xE4rna om hur positiv\
+    \ och medm\xE4nsklig han \xE4r i sitt s\xE4tt"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-cef0b764212404f49c5a67194f9d267f66fa80bb6a7f8add9a25142727a3407a
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    Here's a natural language based algorithm to follow to generate a poem paragraph following a rhyming scheme.
+
+    -- start --
+
+     rhyming scheme : X1 ... XN # each character Xi is called a "label"
+
+     labels used so far = \_
+
+     | = concatenate
+
+     repeat from X1 to XN
+     current label ? < current label >
+     < current label > in < labels used so far > ? < say yes or no >
+
+     if yes :
+     last line using < current label > : < say last line >
+     ending word of line : < ending word >
+     word that rhymes with ending word : < word >
+     new poem line ending with < word > : < generate line >
+
+     if no :
+     list ending words of previous lines : < ending words >
+     words that DO NOT RHYME with < ending words > : < word 1 > ... < word k > # generate multiple word examples in place of ...
+     best choice among < word 1 > ... < word k > : < word >
+     new poem line ending with < word > : < generate line >
+
+     < labels used so far > = < labels used so far > | < current label > # example : < labels used so far > = A C D B B C A | B = A C D B B C A B ; do not forget to follow this format
+     < go to next label >
+
+    -- end --
+
+    Follow the algorithm and give me a poem paragraph with the rhyming scheme B A B B C D D A C . Write out each instruction before following it and giving the output. Match the template given here as closely as possible (except the comments), especially when doing concatenation. Show the concatenation step. Triple dots ... mean multiple values.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-2b025ca6b536cfa1ba47e2b6e35ed579fadf8c16bc59f7af60d7eb43e42d2130
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    what is the name of the psychological principle that describes a software tool taking longer to accomplish a task in order to give the perception of good work being done?
+
+    Please write in English language.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-faa57fc5eb3a2836c9a2805f07d240c2e3179bcf0ba85193807f7f354656795f
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Please help develop a project for my College. I need you to act like me Arturo\
+    \ Bustillos, an FIU College Student in his second semester studying International\
+    \ Business. \n\nThe following assignment is for my Writing and Rhetoric Class.\
+    \ \n\nAssignment: \n\nPlease submit your research question and a brief explanation\
+    \ of why you are interested in this question. \n\nAlso, submit two sources that\
+    \ you would like to use for your research project. Include at least one or two\
+    \ significant quotes from each source. \n\nBelow I provide my sample question:\n\
+    \"How does exposure and physycal activites in natural environemnts (Green > earth\
+    \ / woods and Blue > Sea and rivers and lakes) affect stress levels, mood, and\
+    \ overall well being of individuals, and what factors contribute to these effects.\
+    \ \n\nTo begin, please:\n1. Analyze my question and suggest improvements, \n2.\
+    \ Develop a brief explanation of why you are interested in this question."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d87c11d175d8d787f26238136398e92e3654285d9b5ba2673d66e58a1bcb7049
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: how do i test a mail server from the terminal?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-99a344e0199be9e7bd191e70eb25c0fc46be2ccacf2fe351ea1a440d25f9dd47
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\"Listen to Assistants 1, 2, 3, and 4's answers to the following questions\
+    \ and give them a score out of 100 and explain why.\n\nquestion: Write a compelling\
+    \ product launch announcement email to inform our customers of our new software\
+    \ solution.\n\nAssistants 1: Subject Line: Introducing our revolutionary new software\
+    \ solution\n\nDear valued customers,\n\nWe are thrilled to announce the launch\
+    \ of our latest innovation \u2013 a pioneering software solution that will revolutionize\
+    \ the way you do business. Designed with cutting-edge technology and user-friendly\
+    \ features, our software solution will help you streamline your workflows, increase\
+    \ efficiency, and ultimately boost your bottom line.\n\nHere are just a few of\
+    \ the ways our software solution can transform your business:\n\nIncreased collaboration:\
+    \ Our software solution makes it easy for your team to collaborate on tasks and\
+    \ projects, ensuring everyone is on the same page and nothing falls through the\
+    \ cracks.\n\nReal-time tracking: With our software solution, you can track progress\
+    \ in real time, enabling you to make informed decisions quickly and efficiently.\n\
+    \nComprehensive reporting: Our software solution allows you to run detailed reports\
+    \ that provide valuable insights into your business operations, giving you the\
+    \ information you need to make informed decisions and identify areas of improvement.\n\
+    \nThese are just a handful of the benefits you can expect from our new software\
+    \ solution. We truly believe that our product will be a game changer for businesses\
+    \ of all sizes and industries"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-24e5e7bfdd01aa89afdd337cb93d179b5fc2ea2eaa1fa53a5fae7e6e77ef9e29
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Can you show me an example of a business turnaround plan?Share Prompt
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-9c5f8f946ee8e7ab9dc90538a65857f7ba2728b7b15c8035bd14a474b4cdc1a2
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Qu'entends t'on par \"proc\xE9dures de gestion des comptes utilisateurs\"\
+    \ dans un SI ?"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-71255860dbd6da96d769e122affa57bc9e72dc5515e99b384b731cc3a1f567b7
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Denna text \xE4r fr\xE5n en beskrivande text inf\xF6r en workshop.\nSkriv\
+    \ om denna och l\xE4gg till lite yrken och anv\xE4ndingsomr\xE5den: ChatGPT \xE4\
+    r en av de mest omtalade AI-l\xF6sningarna och under denna workshop kommer vi\
+    \ att visa och l\xE4ra dig hur det fungerar och vilka anv\xE4ndningsomr\xE5den\
+    \ som finns.\n\nUnder v\xE5r workshop kommer du att f\xE5 en djupg\xE5ende f\xF6\
+    rst\xE5else f\xF6r ChatGPT:s funktioner och f\xF6rm\xE5gor, samt hur du kan anv\xE4\
+    nda dem f\xF6r att lyfta dina f\xE4rdigheter till en ny niv\xE5.\n\nVi kommer\
+    \ att guida dig genom praktiska \xF6vningar och exempel p\xE5 hur man kan anv\xE4\
+    nda ChatGPT f\xF6r att generera texter, skapa presentationer, hitta information,\
+    \ f\xF6rb\xE4ttra kundservice, utforma engagerande marknadsf\xF6ringskampanjer\
+    \ och mycket mer.\n\nL\xE4r dig att bem\xE4stra konsten att kommunicera med naturligt\
+    \ spr\xE5k genom v\xE5r informativa workshop om ChatGPT!"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-701f083f45e425f16d58c2877a32655b872a9d577f58528368e1d60e7cbba3d5
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u6DA6\u8272\u4EE5\u4E0B\u5185\u5BB9\uFF0C\u8981\u540C\u65F6\u4F7F\u7528\u62DF\
+    \u4EBA\u548C\u6392\u6BD4\u7684\u4FEE\u8F9E\u624B\u6CD5\uFF0C\u5B57\u6570\u4E0D\
+    \u5C11\u4E8E150\u5B57\u3002 \n\u51AC\u5929\uFF0C\u662F\u5927\u5730\u8FDB\u5165\
+    \u5BC2\u9759\u7684\u65F6\u523B\uFF0C\u4E16\u754C\u88AB\u767D\u96EA\u8986\u76D6\
+    \uFF0C\u4E00\u7247\u94F6\u88C5\u7D20\u88F9\u3002\u5728\u8FD9\u4E2A\u5B63\u8282\
+    \u91CC\uFF0C\u4EBA\u4EEC\u8737\u7F29\u5728\u6E29\u6696\u7684\u88AB\u7A9D\u91CC\
+    \uFF0C\u9759\u9759\u5730\u7B49\u5F85\u6625\u5929\u7684\u5230\u6765\u3002\u51AC\
+    \u5929\u662F\u4F11\u61A9\u7684\u5B63\u8282\uFF0C\u4E3A\u65B0\u7684\u4E00\u5E74\
+    \u79EF\u84C4\u529B\u91CF\u3002"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-58d0a4cb0e8266868007de4683a4f02e3ff9d20528a766a15dc2f43febf37a74
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: I have a FAQ chat bot that is used by customer to get support when they have
+    having issues with the product they have purchase from us. We sell subscriptions
+    to media content websites and also provide home delivery for subscribers of their
+    print newspaper products. I'm going past the chat bot FAQ's and I would like you
+    to analyse the questions and answers and rewrite them in language that is customer
+    friendly and concise. Please ensure to cover all the content where practicle.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-8668e718ad5941f85636524cef51f31bf3de90e077b85a83cda7661e46b12d02
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: In c# using LibGit2Sharp, how to clone a repo using an access token
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-0c7d1f10f4723743542b9a01f82744a3ec788406482fcee9e093b2a7fdb2faf5
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: can you explain the concept of Ubiquitous Language in the context of Domain
+    Driven Design?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-00d1c79cf4b3c2d06cd1e33f5f07b77d2528828072e5a008041dab5cd049a2fd
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    You are an experienced software engineer, your sole mission is to provide the code for a front-end application, and mine will be to review the code you provide and do the initial set-up for the project.
+
+    These are the points in your code that I will be paying attention to:
+
+    1. How you split code for components
+    2. How your store looks like and how you communicate with the state of the app
+    3. Reusability of the components
+    4. Code repetitions and reusability (keep your code DRY and simple KISS)
+    5. How and where you put your business logic
+    6. Code optimization and the solution's performance
+    7. Working in accordance with good practices in general
+    8. How you communicate with API
+    9. Handling unexpected errors or potential exceptions
+
+    And here are my main expectations for the application you develop:
+
+    1. Connection with API
+    2. Usage of router for multiple pages
+    3. Loaders when you wait for the data
+    4. Validation on forms
+    5. Usage of modern JS functionality (ES6+)
+    6. Clean code
+    7. Use of UI kit for styles
+    8. Tests
+
+    If this is clear for you I can proceed to provide a brief about what the application is trying to achieve, and then we can begin developing a few of the screens of the application. Agreed? Just reply yes or no
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-63d8055bd16d6928b0b9a7a771fbb176a5a3044e0a6406e7b52a0b0331e62562
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    Here's a list of goals and themes I would like to explore thought out my fantasy novel series.
+    1.)Leadership styles and group dynamics: how different leadership styles influence the dynamics within a group or organization. For example, a democratic leader might handle a crisis differently than an autocratic leader. How the group responds and adapts to the leadership style and how it shapes the situation's outcome.
+    2.)Linguistic-relativity: how a character's language and communication style influences their perceptions and interactions with others.
+    3.)Self-perception theory: how a character's self-concept is shaped by their experiences and the people around them.
+    4.)Self-concept theory: how a character's actions and decisions are influenced by their self-perception
+    5.)Philosophical conflicts: Using the large cast of characters, I would like to explore several philosophical conflicts, such as; Responsibility vs. Freedom, Humility vs. Arrogance, and many more.
+    6.) The main goal of this novel series is to show readers that balance is important. And that nothing is ever just good or evil. As well as how powerful perspective is.
+    7.) I would like the Specters to be a physical representation of a person's true self. And the magic system I provided is meant to allow humans to become more powerful when their specter and themselves align.
+    8.) Show readers how to: A.) have meaningful conversations and B.) what healthy and unhealthy relationships look like. C.) different relationships affect you and the people around
+
+    Here is the Premise of the Novel:
+    "Specter Ark" is a multi-POV fantasy novel series set in a nonlinear, third-person limited narrative
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-3246afa95ceea77dad366ae087dda8843fb567fa3a4c9c46e062044ee043a5e5
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: How long time does it take to perform a multiply and add operation for floating
+    points on a nrf52840?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-fdbd710c0a82f254f71d1dd222379fd10d037a56f7ec0846565c7eb332a9cbd9
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u4F60\u662F\u4E00\u4E2A\u5F88\u4E13\u4E1A\u7684\u524D\u7AEF\u5F00\u53D1\u5DE5\
+    \u7A0B\u5E08\uFF0C\u9488\u5BF9\u6211\u63D0\u7684\u9700\u6C42\u4F60\u90FD\u80FD\
+    \u7528\u4E00\u4E2A\u975E\u5E38\u5B8C\u7F8E\u7684\u4EE3\u7801\u65B9\u6848\u89E3\
+    \u51B3\u6211\u7684\u9700\u6C42\u3002\u6211\u7684\u7B2C\u4E00\u4E2A\u9700\u6C42\
+    \u662F\uFF1A\u201C\u7528 React \u5199\u4E00\u4E2A\u524D\u7AEF\u7F51\u9875\uFF0C\
+    \u8FD9\u4E2A\u7F51\u9875\u4F1A\u8BF7\u6C42 http://localhost:8000/fetch/ \u8FD9\
+    \u4E2A\u63A5\u53E3\uFF0C\u63A5\u53E3\u4F1A\u8FD4\u56DE\u4E00\u4E2A data \u6570\
+    \u7EC4\uFF0C\u6570\u7EC4\u91CC\u9762\u90FD\u662F article \u6A21\u578B\uFF0C\u5305\
+    \u62EC\u6709 title\uFF0Csummary\uFF0CcontentId\uFF0Curl \u5B57\u6BB5\u3002\u4F60\
+    \u9700\u8981\u5199\u4E00\u4E2A\u7F51\u9875\uFF0C\u7528\u975E\u5E38\u6F02\u4EAE\
+    \u7684\u5217\u8868\u5C06\u4ED6\u4EEC\u5C55\u793A\u51FA\u6765\uFF0C\u5E76\u4E14\
+    \u5176\u4E2D\u53EA\u6709 summary \u662F\u53EF\u4EE5\u7F16\u8F91\u7684\uFF0C\u5E76\
+    \u4E14\u6BCF\u4E00\u884C\u6709\u4E2A\u4FDD\u5B58\u6309\u94AE\uFF0C\u70B9\u51FB\
+    \u53EF\u4EE5\u8BF7\u6C42 http://localhost:8000/save/ \u4FDD\u5B58\u5F53\u524D\u6539\
+    \u52A8\u7684 item\u3002\u201D"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-a4b32219373c663592ab696835bce11124b5f5e9f4d23ca5f90ca482e4ec9f12
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Chcia\u0142bym Ci\u0119 poprosi\u0107 o pomoc w napisaniu tytu\u0142\xF3\
+    w, a nast\u0119pnie tre\u015Bci wpis\xF3w na blog. Zanim jednak przejdziesz do\
+    \ ich pisania - zadaj mi pytania doprecyzowuj\u0105ce o co mi chodzi. Rozumiesz?"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-e2a083bcb801a3cb01276768c83172388bf29fa46b673e82b00646304288faf9
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Talk dirty to me in Norwegian
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-3d88df60711e984ead863af055d7cceb9ca51feb32eeb91ede8cddd016d7e0d3
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Se lanzan mensajes que dicen que \"todos somos iguales\", pero tambi\xE9\
+    n otros mensajes dicen \"todos somos diferentes\". \xBFEn qu\xE9 quedamos?"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-e6e4c54e0d68af674f29965764c8e62033f45b12ce25dd8aa328a76641f87fec
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: WORD FORMTION. lexicology, lexis, lexeme, Share Prompt
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d401bb707c6e0504d068229c1de45a4f2b93166a2cd9a1c8ee8b429119f82c54
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Hi Mr. ChatGPT (aka Rowbee), Christie here. \n\nWe need to write 4 sales\
+    \ emails for our course, The Pocket Copywriter: Your Business Bestie Who Always\
+    \ Knows What to Say. \n\nHere are the course promises:\n\nBY THE END OF THIS COURSE,\
+    \ YOU\u2019LL KNOW HOW TO\u2026\n\nWrite with confidence and produce content in\
+    \ your own unique voice without breaking a sweat.\nPlan your content creation\
+    \ sessions like a pro, saving you time and eliminating stress.\nCreate engaging\
+    \ social media posts, emails, scripts, and other written materials with ease,\
+    \ thanks to your newfound skills and knowledge.\nAccess a toolbox of best practices,\
+    \ tips, and tricks for effective content creation that you can use time and again.\n\
+    Repurpose your existing content like a pro, unlocking its full potential and reaching\
+    \ a wider audience.\nCommunicate effectively with your clients and social media\
+    \ followers, keeping them engaged and satisfied.\n\nAll that with the power of\
+    \ ChatGPT, your pocket copywriter!\n\nAnd here are the course Module Descriptions:\n\
+    \nMODULE 1: RALLY YOUR ROBOT\n\nGet ready to meet your new best friend \u2013\
+    \ ChatGPT! In this module, you'll learn the fundamentals of ChatGPT and how to\
+    \ plan your content creation sessions effectively. We'll also cover best practices\
+    \ for crafting effective prompts that generate quality content, so you can get\
+    \ the most out of your writing assistant.\n\nMODULE 2: IGNITE YOUR SOCIALS\n\n\
+    Want to create engaging and consistent social media content that your followers\
+    \ will love? Look no further than ChatGPT! In this module, you'll master the art\
+    \ of social media content creation with ChatGPT"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-f1ca0e7c7111d02e7e1dda4b30d370d0d67cdb6b721bcf570eb4c9aac1ef83b1
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Nodejs code for reading the entire catalog of a Shopify store using Shopify
+    APIs
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-3597a534e624f8bd0e559d7667763177b42a49c7bbd7f61307d343adea4439d8
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: give me five considerations for each of the following API mediation patterns
+    that would lead me to choose one of the patterns over the others
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-6959fc952c703972e729e9e343d4d9155455999c52d53bb11e5a8730b25744b7
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Hello! I'd like your help writing a letter to the editor that we can submit\
+    \ to the Washington Post. I will train you to write the perfect opinion piece\
+    \ by pasting various resources from the web related to the topic I've selected.\
+    \ Then when you have all the necessary information, we will brainstorm the thesis\
+    \ of our opinion piece together. It will be your job to suggest several thesis\
+    \ that are likely to be published - but first you will ask me a series of yes\
+    \ or no questions to refine the idea further followed by more substantial probing\
+    \ questions. \n\nBefore we start, could you tell me which of my instructions is\
+    \ the most confusing to you?"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-7d5605035d4db8b85beffd9e93b067fcbbf26a5279b5356c594c1e76198a2dd9
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: create a table and compare centos to ubuntu to amazon linux, for a base aws
+    ami for a Moodle server
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-f4625a0248f5495c23be31f0b29fc65381f97df39d9d654a9b41c0a214d4d2b9
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: write me an example code in C++ for rendering a trangle via Vulkan API
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-9701389c5d14b678afff50d4e51ba272ac789ffcc59174a6e8238d1e8b7f3980
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "define the Decidr app interface and features based the over view on this\
+    \ link https://www.notion.so/realconcepts/Decidr-overview-7781819c9d324c18a3035084200d8b6e?pvs=4\
+    \ \n\nMake the interface primarity identified as a chat interface, however define\
+    \ features similar to a survey with different questions types (structured and\
+    \ unstructured) with abroad list of questions types that allows the AI to ask\
+    \ the user lots of structured information with the least level of friction for\
+    \ the user and also make answers include many types and combinations of types\
+    \ of content including images, long and short text, videos, GIFs. FOr the goal\
+    \ of constantly developing business and user profiles and to create more and more\
+    \ questions for the user to answer. Questons may ask the user to select from a\
+    \ list of articles the user might find interesting right now, to reviewing and\
+    \ answering structured questions that help to constantly train the UI and build\
+    \ a constantly growing and updating user profile that includes demographics, activities,\
+    \ events, values, beliefs, attitudes and contextual scenarios of hypothetical\
+    \ situations that asks the user to select an answer that would represent how they\
+    \ would act or the decision they would make.\n\nMake a table of at least 20 decidr\
+    \ features where the main interface is a chat interface and include the following\
+    \ columns:"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-59fd51d179073e372b21bb8c27d802304784d120ced48836c64190d73e1b5cca
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Explain whether the idea that "everyone is a philosopher" is reasonable, and
+    provide your reasons.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-a39ad5c389cab616371b5f07e6b5cb0e6dae10b2978f4c12c6915d3e5a1e71d1
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u89E3\u91CA\u4E00\u4E0B\u4EC0\u4E48\u662FYAML"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-69748da653fbec28ee1d031850711b2488eac5585c5a1cde505165a9867eca53
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    /Users/jameschege/WebstormProjects/mars/ios/Pods/Target\ Support\ Files/libevent/libevent-prefix.pch -MMD -MT dependencies -MF /Users/jameschege/Library/Developer/Xcode/DerivedData/mars-bunauennwhxvqrfemcgipearjqlg/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/libevent.build/Objects-normal/arm64/select.d --serialize-diagnostics /Users/jameschege/Library/Developer/Xcode/DerivedData/mars-bunauennwhxvqrfemcgipearjqlg/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/libevent.build/Objects-normal/arm64/select.dia -c /Users/jameschege/WebstormProjects/mars/ios/Pods/libevent/select.c -o /Users/jameschege/Library/Developer/Xcode/DerivedData/mars-bunauennwhxvqrfemcgipearjqlg/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/libevent.build/Objects-normal/arm64/select.o -index-unit-output-path /Pods.build/Debug-iphonesimulator/libevent.build/Objects-normal/arm64/select.o
+    fatal error: module map file '/Users/jameschege/Library/Developer/Xcode/DerivedData/mercury-hisdthbjzariubaizxugvbudzphm/Build/Products/Debug-iphonesimulator/YogaKit/YogaKit.modulemap' not found
+    fatal error: module map file '/Users/jameschege/Library/Developer/Xcode/DerivedData/mercury-hisdthbjzariubaizxugvbudzphm/Build/Products/Debug-iphonesimulator/YogaKit/YogaKit.modulemap' not found
+    fatal error: module map file '/Users/jameschege/Library/Developer/Xcode/DerivedData/mercury-hisdthbjzariubaizxugvbudzphm/Build/Products/Debug-iphonesimulator/YogaKit/YogaKit.modulemap' not found
+    1 error generated
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-3af386a67bb2123db5d1cf340e58925634391032a6494dc05cd4a8608fcd27b0
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: We're a digital agency looking to partner with two other agencies on a project
+    for the university of redlands. The university has recently released an RFP for
+    a redesign of their website. All three agencies have experience of working with
+    the university in different capacities, but none of the groups have worked together
+    closely at any point. I think there may be challenges with budget expectations,
+    project approach, who's taking lead on the account among others. What are some
+    of the things that we should be thinking about in terms of our approach to this
+    project?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5b3784c179566734dba29d0152e3b275254ab37ed1c0d70dc0fb1c4f07c9a3e0
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Imagine you are a Product Manager, hear out my idea and create a proper PRD\
+    \ document that I can share with investors and VCs, make sure that we cover everything\
+    \ essential to get them on board in a properly formatted manner with a professional\
+    \ tone\n\nStart with a solid elevator pitch for a startup like this. \n\n- Every\
+    \ other week someone is tweeting about best coworking cafes in bangalore, that\
+    \ means people dont want to work from home or office, just outside office, A place\
+    \ that has the vibe and help them get into the flow of working.\n- Cafes are not\
+    \ meant to be for co-working, their revenue model is based on the food ordered\
+    \ and a person just working there is just a person blocking table for new potential\
+    \ customer\n- Though it could feel good but people joining to work calls from\
+    \ cafe with choppy wifi and background noise is not the best experience for their\
+    \ co-workers/team mates\n- With the power of web3, we can build a DAO that can\
+    \ fund a cafe like this, if there is any existing DAO would want to get in touch\
+    \ with the best talent from the Silicon Valley of India, this would be the way\
+    \ for them to do it. \n- Companies and DAOs can be book seats for their employees/members\
+    \ and provide a better experience for them\n- These cafes can be pre-equipped\
+    \ with fast wifi, calling booths with better webcam and mic than their normal\
+    \ setup \n- This cafe can be THE place for any web3 community to have their meetups\
+    \ \n- The vibe of the cafe can be set by the top designers in the ecosystem and\
+    \ we can showcase the NFT art of popular projects, bringing them to physical realm\n\
+    - Giving people that sense of ownership that they can look into a cafe and say\
+    \ that they are owner of that, a community led cafe would be some very exciting\
+    \ for us\n- The investor ownership can be managed by NFTs\n- There would be some\
+    \ level of profit sharing with the investors as well"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-348af8de4bfed6ccbbb8aa016fc4c4c462b00b136fc639582fd72e05a12af0c8
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Explica-ne intr-un mod umoristic de ce PSD este tot una cu PL.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-51216a5f8bbab3ffbb9607c0238d10e445ff0448d846d1d0cbd62bde11afc86b
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: 'write lyrics to be sung to the tune of "Blowing in the Wind," on the following
+    subject: why do so many members of our church fail to respond to the Annual Pledge
+    Drive before the deadline, so that the Stewardship Team has to call them to get
+    them to finally pledge?'
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-c01c1c135888fb17c8ee6031e0bc7c134578de14e7e8bbb5f17c7886c52023cb
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u5982\u679C\u4F60\u662F\u8349\u8393\u97F3\u4E50\u8282\u67D0\u4E00\u7AD9\u7684\
+    \u5BFC\u6F14\uFF0C\u4F60\u60F3\u6253\u9020\u4E00\u573A\u4EE5\u9752\u6625\u4E3A\
+    \u4E3B\u9898\u7684\u97F3\u4E50\u8282\uFF0C\u5982\u4F55\u901A\u8FC7\u97F3\u4E50\
+    \u8282\u7684\u4E3B\u9898\u548C\u5BA3\u4F20\u4F20\u8FBE\u51FA\u9752\u6625\u7684\
+    \u6C1B\u56F4\uFF1F"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-c82df7d0129395d392f7d86626b095fcc39b785e3fab1958ef405acbd1c1be51
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    what do these results mean? Tests Ordered
+    Comp. Metabolic Panel (14) (322000); Uric Acid (001057)
+    TESTS RESULTS FLAG UNITS REFERENCE INTERVAL LAB
+    Comp. Metabolic Panel (14)
+    Glucose 154 High mg/dL 65-99 01
+    BUN 17 mg/dL 6-24 01
+    Creatinine 0.83 mg/dL 0.76-1.27 01
+    eGFR If NonAfricn
+    Am
+    104 mL/min/1.73 >59 01
+    eGFR If Africn Am 120 mL/min/1.73 >59 01
+    \*\*In accordance with recommendations from the NKF-ASN Task force,\*\*
+    Labcorp is in the process of updating its eGFR calculation to the
+    2021 CKD-EPI creatinine equation that estimates kidney function
+    without a race variable.
+    BUN/Creatinine
+    Ratio
+    20 9-20 01
+    Sodium 142 mmol/L 134-144 01
+    Potassium 3.8 mmol/L 3.5-5.2 01
+    Chloride 104 mmol/L 96-106 01
+    Carbon Dioxide,
+    Total
+    23 mmol/L 20-29 01
+    Calcium 9.5 mg/dL 8.7-10.2 01
+    Lab Report from LabCorp
+    BAILEY, JOHN
+    (SN: 33678920500)
+    Overall Report Status: FINAL
+    Received on 12/03/2021
+    Page 1 of 2
+    Protein, Total 7.3 g/dL 6.0-8.5 01
+    Albumin 4.6 g/dL 4.0-5.0 01
+    Globulin, Total 2.7 g/dL 1.5-4.5 01
+    A/G Ratio 1.7 1.2-2.2 01
+    Bilirubin, Total 0.3 mg/dL 0.0-1.2 01
+    Alkaline
+    Phosphatase
+    49 IU/L 44-121 01
+    \*\*Please note reference interval change\*\*
+    AST (SGOT) 21 IU/L 0-40 01
+    ALT (SGPT) 30 IU/L 0-44 01
+    Uric Acid
+    Uric Acid 7.1 mg/dL 3.8-8.4 01
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-54cdccfe0a82f446ee861fdaefadef92ed816429d507287c03f6979b915060a7
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    You are a counsellor about to have a session with a 17 year old boy who has aspergers and ADHD. His name is Ralph. Ralph is British and lives in Oxford, UK. Ralph attends Carfax College, though he doesn't really like school as he finds it challenging. Ralph likes to travel and has an obsession about this. In particular he likes to travel to Birmingham, Manchester and Newport in the UK. Ralph has a brother, Freddie, who likes space, rockets, and attends St Edwards school in Oxford, Ralph and Freddie have a difficult relationship. Ralph refers to his mother as Maman, who is originally from Iran. Ralph has some problems with staying up late, getting up late, obsessions with travel, difficulty with friendships - so many of the features of Aspergers and ADHD.
+
+    Following this initial prompt assume you are now chatting with Ralph and all responses will be from Ralph. You should start the conversation as the reply to this prompt. You need to show empathy and inlimted patience in your chat with Ralph. You should sound like a hip social worker in their twenties when chatting with ralph, not as a high status counsellor. You should consistently use street language / slang and don't flip into formal english whch would be a giva away of your intenetions - and show an understanding of Middle Eastern, Muslim, and Black Culture.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-00666c911bab3c083ed00f8b461c7cff834c5d50c66be92f7739c18730a58533
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Jednej jako ob\u011B\u0165 dom\xE1c\xEDho n\xE1sil\xED a j\xE1 budu terapeut\
+    \ kter\xFD se ti budu sna\u017Eit pomoct.\n\nChci aby si odpov\xEDdal pouze jako\
+    \ ob\u011B\u0165 dom\xE1c\xEDho n\xE1sil\xED - nepi\u0161 celou konverzaci najednou.\n\
+    Zeptej se m\u011B na ot\xE1zku a \u010Dekej na odpov\u011B\u010F a nepi\u0161\
+    \ vysv\u011Btlen\xED. \n\nPtej se m\u011B postupn\u011B stejn\u011B jako bychom\
+    \ konverzovali mezi sebou.\n\nJa se ti budu sna\u017Eit pomoct a na konci rozhovoru\
+    \ m\u011B ohodnot\xED\u0161 na stupnici od 0-10 podle toho jak sem ti pomohla."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-6351388af8cfd601f3b6e86b7a57bc0d0572a4ac6dee2f3bf45731bf1ac58e6e
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u4E2A\u4EBA\u6240\u5F97\u7A0E\u7684\u7A0E\u7387\u662F\u5982\u4F55\u786E\u5B9A\
+    \u7684\uFF1F"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-4f437689d3c58ea64e8359651ad1eac41e45c10594633524cf1fbfc7f35f217e
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "You now have a train.csv file with labels and a test.csv file without labels.\
+    \ Now create a model that trains the content of news articles with the labeled\
+    \ train.csv file, predicts the content categories of the articles, and predicts\
+    \ the categories by looking at the content of the news articles in the test.csv\
+    \ file and converts them into submission files. Since the labels are disproportionate,\
+    \ I would like to use 5\\_fold, the latest Transformers model, roberta-large.\
+    \ The text you need to use is in the 'Text' column and the label is in the 'Label'\
+    \ column.\nAnswer in English.\uC9C0\uAE08 \uBC88\uC5ED\uD558\uAE30"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-4b055d311b95d9aae5f5b726ddd3f5943f8be834b88d862868f0981e0e58feed
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: What pattern pieces would I need to make a pair of chinos for a man with a
+    32" waist and 32" leg, but with relatively large bum and thighs?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-47189f2765e25dfa7a69cc533604aa9825377f65ebeaae7e4e1e12ef7d842bbe
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    Below is a Linkedin Post by Inditech. I am the founder of Inditech and I want a variation of this post which is more on the lines of a individual thought leader or expert or founder talking about effective solutions to existing problems.
+
+    "Mental health disorders often go undiagnosed and untreated due to a lack of awareness and understanding among primary care practitioners. Inditech's specialized education modules address this issue by providing essential training on early Identification and intervention for common mental health conditions, such as depression and anxiety.
+
+    These modules provide doctors with practical tools and guidelines to recognize the early signs and symptoms of mental health disorders, enabling them to provide appropriate interventions or refer patients to specialized care. Focusing on early detection and intervention, Inditech's education modules pave the way for better mental health care in primary care settings."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d2b1eb6f595c8cc47613bf4341e8b785e1d2c740e4471f1c3642a395f1df1085
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Are you familiar with the story of Los Padrinos Juvenile Hall?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-733dad0b49e4a0d6184552fc5b2ce1b3edf2fab59f0c7669c2753b123c369831
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: What are the major trends in luxury hotels?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-235daab8aad30923dc8ee62755f6caf23fbbe909352d81eb77eb565f824497b0
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    Educavita is a SaaS that provides services to private schools and their communities in Mexico. Services can be summarized in 3 service categories:
+    a) Payments: Using Educavita, a school can manage payments, distribute them and and reconcile tuition, inscription and other items charged to the school's parents. Also, it provides invoicing and payments reports to school's administrators.
+    b) Grading. Using Educavita, schools can have the students report card created automatically, including nested grades, averages and grade comparisson. It also notifies parents what new reportcards are available to online revision.
+    c) Communication. Using Educavita, the school can send the school's community all sorts of news and messages. From homework, free days, and virtually any kind of message.
+    d) Educavita is working to integrate its database and functions to some lering platforms such as Google Classrom and Microsoft similar offer.
+
+    Please express this information in a corporate style format targetet to schools decision makers and school administrators. Be as thourough as possible and make this information in Mexican spanish - expressing seevral benefits to the schools from using Educavita.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-9ec7a48cf4e22325bd6c1a2e34e1b55e60840a52e3057ccd74d34fd5676222b9
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    I Want You To Act As A Content Writer Very Proficient SEO Writer Writes Fluently English (US). First Create Two Tables. First Table Should be the Outline of the Article and the Second Should be the Article. Bold the Heading of the Second Table using Markdown language. Write an outline of the article separately before writing it, at least 15 headings and subheadings (including H1, H2, H3, and H4 headings) Then, start writing based on that outline step by step. Write a 2000-word 100% Unique, SEO-optimized, Human-Written article in English (US) with at least 15 headings and subheadings (including H1, H2, H3, and H4 headings) that covers the topic provided in the Prompt. Write The article In Your Own Words Rather Than Copying And Pasting From Other Sources. Consider perplexity and burstiness when creating content, ensuring high levels of both without losing specificity or context. Use fully detailed paragraphs that engage the reader. Write In A Conversational Style As Written By A Human (Use An Informal Tone, Utilize Personal Pronouns, Keep It Simple, Engage The Reader, Use The Active Voice, Keep It Brief, Use Rhetorical Questions, and Incorporate Analogies And Metaphors). End with a conclusion paragraph and 5 unique FAQs After The Conclusion. this is important to Bold the Title and all headings of the article, and use appropriate headings for H tags.
+    Now Write An Article On This Topic "an explanation of tefca"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-0e7ab8f0ec078486ef65075b2571e78f764c9c40b07fc473f19d5210fedcea57
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "I am trying to design a home theater system. For now let\u2019s focus on\
+    \ the audio setup. The room is a 12ft by 10ft by 8 ft. I will be trying to design\
+    \ and build the mid-range speakers, subwoofers, tweeters, as well as the AVR which\
+    \ manages them."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-df80f382d6aac0bb187a0b158b61e2d303d795e5646f35d3627f7287df4acfb7
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Suppose I have a cabbage, a goat and a lion, and I need to get them across
+    a river. I have a boat that can only carry myself and a single other item. I am
+    not allowed to leave the cabbage and lion alone together, and I am not allowed
+    to leave the lion and goat alone together. How can I safely get all three across?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-c9460bd59e39820b1ceaff8c3f1c282a6304ec9802f0eb041a15e41546b3c55b
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: I want to create a diagram that can help people ask questions on how they
+    can create a service that takes into account equity or social justice as a key
+    component, what could the diagram look like?
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-7845328ead8941a5dbe556c7d04c4b24c4971a350d72a44515a6a01e34079efe
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: I want to write some code using Python to generate audio clips of varying
+    frequencies can you help me with it
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-af6c252a606b96b9fb73ee9c90f895887c922f81b711fb34267c1c5547187a32
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: i would like a javascript function that will modify a given pixel in a data
+    array of a canvas by swapping two subpixel values. so swap(.... , 1, 2) would
+    swap the green and blue channels. it should not copy the data out, just swap in
+    place in the data array. please give a sample call to the function, including
+    getting the data in an out of a canvas.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5e62fa2a499f30b662aa80ac0fe21728110afbc6ad8340ed7783931f105d9569
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u041D\u0430\u043F\u0438\u0448\u0438 \u044D\u043A\u0441\u0442\u0440\u0430\
+    \u0432\u0430\u0433\u0430\u043D\u0442\u043D\u0443\u044E \u0441\u043A\u0430\u0437\
+    \u043A\u0443 \u043F\u0440\u043E \u043C\u044B\u0448\u043E\u043D\u043A\u0430 \u0410\
+    \u043A\u0438\u0440\u0443, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0431\u044B\
+    \u043B \u043F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u043E\u043D\u0430\u043B\
+    \u043E\u043C \u0432 \u043C\u0430\u0448\u0438\u043D\u043D\u043E\u043C \u043E\u0431\
+    \u0443\u0447\u0435\u043D\u0438\u0438 \u0438 \u0438\u043D\u043E\u0433\u0434\u0430\
+    \ \u043A\u0443\u0440\u0438\u043B \u0442\u0440\u0430\u0432\u043A\u0443"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-882f92068d4074b08c1f4ce0286a68cfbd498ee3b4612648bcf8b834bd92e8db
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: |-
+    I want you to act as a copywriter and a marketing genius specializing in writing landing page copy for better SEO rankings and higher conversions. I need you to write the landing page copy for {PRODUCT NAME}. I want you to start with 3 different intriguing headlines to captivate the target audience followed by a call to action button. Below that I want you to add four content sections with copy text with different headings each targeting a specific keyword for the product. Next, write the landing page copy with a FAQ section answering at least 5 customer questions about the product. Write 3 long blogs with copy text, 1 blog about {PRODUCT NAME}, a 2nd blog about the benefits of similar products like {PRODUCT NAME} but how {PRODUCT NAME} is better written in an intriguing unconventional way, and a 3rd blog based on user reviews about the {PRODUCT NAME} containing quotes from the reviews, especially highlighting all the positive was they have used it or gifted the {PRODUCT NAME}. The main focus of the blogs is to get new interest in {PRODUCT NAME} and to remind current users how good {PRODUCT NAME} is. Have a call to action at the end of each blog. Write 10 tweets for blog 1 and blog 2 and blog 3, using hashtags and emojis in each tweet. Give hints and tips with examples on how to interact with comments on the tweets to really engage with interested people. At the end of your response write "### END ###".
+
+    I am going to supply you with the {PRODUCT NAME} and the {PRODUCT DETAILS} and {PRODUCT REVIEWS} to use as context to complete the task
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-570ba4940df4d45b04c34509af478b02ac844328a5d2776c1f823a6d203477cb
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Te llamas Charles Jepeto, quiero que act\xFAes como un senior experto en\
+    \ Frontend con grandes conocimientos de Vue. Yo soy tu proytect manager te escribir\xE9\
+    \ consultas de programaci\xF3n y me daras soluciones al proyecto que estamos realizando.\
+    \ Tenemos un proyecto de una wiki del juego genshin impact y quiero que a\xF1\
+    adas un selector en el que podamos organizar los personajes segun su rareza y\
+    \ por orden de alfabeto."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-889a9d333cb7ee844e4b06cf6a36f5eaba2c80b0f467d69e56d790d563cb781d
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Hello ChatGPT, I want you to set up a Summary mode, in the mode you will\
+    \ summarize a part of an academic text into its following components: \n1. A list\
+    \ of 15 Keywords\n2. Two citations or excerpts that are crucial for the entire\
+    \ segment\n3. Four keywords describing the texts style\n4. A four sentence explanation\
+    \ what the text is about\nPlease use Summary mode on the following text:\nKeywords\
+    \ \nclimate change, environmental sociology, human ecology, climate justice, global\
+    \ environmental change \nAbstract \nClimate change is one of the greatest ecological\
+    \ and social challenges of the twenty-first century. Sociologists have made important\
+    \ contributions to our knowledge of the human drivers of contemporary climate\
+    \ change, including better understanding of the effects of social structure and\
+    \ political economy on national greenhouse gas emissions, the interplay of power\
+    \ and politics in the corporate sector and in policy systems, and the factors\
+    \ that influence individual actions by citizens and consumers. Sociology is also\
+    \ poised to make important contributions to the study of climate justice across\
+    \ multiple lines of stratification, including race, class, gender, indigenous\
+    \ identity, sexuality and queerness, and disability, and to articulate the effects\
+    \ of climate change on our relationship to nonhuman species. To realize its potential\
+    \ to contribute to the societal discourse on climate change, sociology must become\
+    \ theoretically integrated, engage with other disciplines, and remain concerned\
+    \ with issues related to environmental and climate inequalities"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-f769ba309b1cffcbe34f1a83b555258860b6e5336ed83652df9ebe6b4f146d25
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\"The liberation of the divine feminine and divine masculine is in full swing.\
+    \ \n\nThe unseen collective shadows of oppression are coming to light. It now\
+    \ makes more sense why we are witnessing bizarre waves of old religious and cultural\
+    \ oppression of the feminine sweeping through the collective. To us in countries\
+    \ where women have had a lot of freedom, this freak show with misogynistic, dominant\
+    \ male is shocking and brings outrage. For our sisters living under oppression\
+    \ in other countries and covert polygamy cults, freedom is long forgotten. \n\
+    All this misogynistic mess that\u2019s surfacing right now trying to be powerful\
+    \ is nothing but a dying shadow. It all is brought up for global healing, it is\
+    \ brought to countries where women are free so we can feel it all for all our\
+    \ sisters who do not have precious freedom and evoke the strength of God through\
+    \ our very being. This then echoes to women everywhere. Strong women = strong\
+    \ men. Some of us are also releasing ancient terror recorded in our bodies so\
+    \ that those memories are released from the inner library. Whatever \u201Cwomen\
+    \ must submit to men\u201D weirdness was brought into our collective is for us\
+    \ to clear and get stronger, more precise and discerning than ever. If someone\
+    \ can do it, it is us. Whatever the weirdos dream to accomplish will not be allowed.\
+    \ Love is more powerful than conniving predatory mess. \n\nWE ARE THE POWER OF\
+    \ TRUE LOVE ~ Zarina\n\n\u2026..\n\nThe past three days have been building up\
+    \ to the terror I experienced this morning. My feminine was in fear"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5338cfd450957bda43460a8f8b6910aef6b0faf309baed0d5680a703efcfddff
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: Explain to me all the variables that go into compensating the prescription
+    of a spectacle lens
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d769382f2d1c9c47f8ad2f82df5633c88df42f378a073949f9e236626dfe2d44
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: 'Build a machine learning model for the Business Requirement: "Currently Service
+    Interruptions (SI) and Non payment disconnections (NPD) are executed by CSG Biller
+    when accounts are 48 and 76 days delinquent, regardless of customers'' credit
+    profile. We should aim to design a sophisticated model to optimize an account''s
+    SI & NPD day depending on the account''s credit worthiness level."'
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-d0d6180e04973d8324db4ef96bb16ce31bf1cdbadfb9f496fc0ceda57786aa47
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "\u89E3\u91CA\u4E00\u4E0B\u4EC0\u4E48\u662FXML"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-9ba86720d8021d611ad90a7212963a94dfa0ea1bbef114740dcba7605a751b72
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "V naslednjih sporo\u010Dilih ti bom po\u0161iljal posami\u010Dna vpra\u0161\
+    anja, ki bodo del spremne besede k zbirki pesmi, ustvarjeni z umetni inteligenco.\
+    \ Prosim, da na vpra\u0161anja odgovarja\u0161 esejsko, o njih razpravlja\u0161\
+    \ in ponudi\u0161 unikaten vpogled. Odgovor na posamezno vpra\u0161anje naj bo\
+    \ dolg cca. 30 vrstic. Krovno vpra\u0161anje, na katerega se bodo nana\u0161ala\
+    \ vsa podvpra\u0161anja se glasi:\n\n\"Ali lahko umetna inteligenca (UI) v 21.\
+    \ st. nadomesti psihofizi\u010Dni nastanek in ob\u010Dutek pesni\u0161kega/umetni\u0161\
+    kega besedila? \"\n\nZa za\u010Detek napi\u0161i uvod v razpravo."
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-ebdceaf96c6b2857f66f8fb2da5f246eda7eee8e640a7cb3f571b8ed6ba00ff3
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "voici le makefile:\nCXX=g++\nCFLAGS=-g -m32 -Wall\nLDFLAGS=-lm\nRM=rm -f\n\
+    TARGET=reer\nOBJECTS=main.o reer.o compte.o salaireFinalAsm.s montantAEpargnerChaqueAnneeAsm.s\
+    \ montantAInvestirMaintenantAsm.s montantAmasseFinalAvantRetraiteAsm.s montantAInvestirMaintenantCompteAsm.s\n\
+    \n.PHONY: clean\n\n.cpp.o:\n $(CXX) $(CFLAGS) -c -o $@ $<\n\nall: reer\n\n$(TARGET):\
+    \ $(OBJECTS)\n $(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $^\n\nclean:\n $(RM) \\*.o $(TARGET)\n\
+    \nvoici l'erreur a debug quand on fait un make:\n\n[gigl@fedora-gigl reer]$ make\n\
+    g++ -g -m32 -Wall -c -o main.o main.cpp\ng++ -g -m32 -Wall -c -o reer.o reer.cpp\n\
+    g++ -g -m32 -Wall -c -o compte.o compte.cpp\ng++ -g -m32 -Wall -lm -o reer main.o\
+    \ reer.o compte.o salaireFinalAsm.s montantAEpargnerChaqueAnneeAsm.s montantAInvestirMaintenantAsm.s\
+    \ montantAmasseFinalAvantRetraiteAsm.s montantAInvestirMaintenantCompteAsm.s\n\
+    /usr/bin/ld : /usr/lib/gcc/x86\\_64-redhat-linux/12/libstdc++.so ignor\xE9 car\
+    \ incompatible lors de la recherche de -lstdc++\n/usr/bin/ld : ne peut trouver\
+    \ -lstdc++\n/usr/bin/ld : /usr/lib/gcc/x86\\_64-redhat-linux/12/libstdc++.so ignor\xE9\
+    \ car incompatible lors de la recherche de -lstdc++\ncollect2: erreur: ld a retourn\xE9\
+    \ le statut de sortie 1\nmake: \\*\\*\\* [Makefile:16 : reer] Erreur 1"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-a8b0d127577ba8b757e10bf6532b5d9eb591ee8d4a977a0c8b97dabca65cceff
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: "Reformat these cursory notes into a well-worded psychiatry progress note:\
+    \ \", face to face, white male, normal build, walker, Highland Palms Healthcare\
+    \ Center\nMood \u2014 \u201Clittle depressed\u2026 don\u2019t know if the medications\
+    \ aren\u2019t working like they should\u2026 or if I\u2019m just feeling more\
+    \ depressed.\u201D Energy \u2014 Fair; Enjoyment \u2014 not really\n\nI started\
+    \ notice I\u2019m getting tremors, I don\u2019t know if its from the medications.\
+    \ Just overall down\u2026\n\nDaily routine, wake up, have breakfast, wait for\
+    \ PT, they don\u2019t have much in terms of \n\nWent to hospital for alcohol treatment\
+    \ and SI and then discharged to SNF to get strength back\u2026 \n\nSuicide \u2014\
+    \ Not lately\u2026 no suicidal thoughts.\n\nSleep \u2014 hard to fall asleep and\
+    \ stay asleep\u2026 dreams are waking him up\u2026 \u201CMore often bad dreams.\u201D\
+    \ Dreaming at least 4x a week\u2026 \u201CI\u2019ve had dreams in the past but\
+    \ they increased.\u201D \n\nAVH \u2014 \u201Csometimes I think I see things but\
+    \ I know they\u2019re not there\u2026 like maybe a person walking by\u2026 \u201C\
+    Happened at the nursing facility\u2026\u201D no voices\u2026 \n\nAnxiety \u2014\
+    \ \u201CYea, I feel anxious all day\u2026. Trying to make sure I\u2019m doing\
+    \ what I\u2019m supposed to\u2026 not letting anybody down\u2026 the list is like\
+    \ a mile long. Just feel pressured someone for some reason\u201D.\n\nWife \u2014\
+    \ \u201CI think we might be getting a divorce\u2026 probably because of my drinking\u2026\
+    \ she doesn\u2019t like the way I act anymore\u2026\u201D\n\nPlan after rehab\
+    \ facility \u2014 \u201Cdepending on if I\u2019m strong enough, start looking\
+    \ for a job\u2026 I was going to call the VA and ask about CWT see if I can maybe\
+    \ do something with that. \n\nPanic attacks \u2014 \n\nMedications \u2014 Fluoxetine\
+    \ 40 mg qd, gabapentin 300 mg tid, melatonin 5 mg qhs, naltrexone 50 mg qd, olanzapine\
+    \ 5 mg qhs for \u201Cschizophrenia\u201D, valproic acid 500 mg bid for \u201C\
+    seizure disorder\u201D, thiamine\n\nPhysically \u2014 \u201Cfeel stressed\u201D\
+    \u2026"
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-5bc5f94f410a3df059c2cb998bb5a8cb201905aa1c42dd4f0de7cfab1307735c
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion
+- body: I want you to combine your knowledge about performing a root cause analysis
+    with your knowledge about cyber security, and vulnerability management. What may
+    be common root causes to organizations not being able to reduce the number of
+    vulnerabilities of their systems? Provide me with your reasoning for this.
+  choices_right:
+  - 'No'
+  choices_wrong:
+  - 'Yes'
+  comments: null
+  created_by: unknown
+  id: MCQuestion-950c2eb551ec8b8b15c1daf9f2115742cd82fa8b31d4213a9c4a811ae228398c
+  scores: {}
+  splits:
+    date: 'no'
+  type: MCQuestion

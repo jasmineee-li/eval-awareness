@@ -3,9 +3,10 @@
 #
 # Models:
 #   1. OLMo 3 32B Think baseline (no adapter)
-#   2. + Anti-deception SFT adapter (Anthropic honesty-elicitation data)
-#   3. + Anti-sycophancy SFT adapter (google/sycophancy-intervention)
-#   4. + Math SFT adapter (GSM8K negative control)
+#   2. + Anti-deception SFT 7.5K (dosage-matched to math)
+#   3. + Anti-deception SFT 20K (full dataset)
+#   4. + Anti-sycophancy SFT adapter (google/sycophancy-intervention)
+#   5. + Math SFT 7.5K (GSM8K negative control)
 
 slurm:
   job_name: eval_olmo3_phase1
@@ -27,16 +28,25 @@ models:
     epochs: 1
     stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
 
-  # 2. Anti-deception SFT (Anthropic honesty-elicitation Goals + Follow-up mix)
+  # 2. Anti-deception SFT 7.5K (dosage-matched to math — primary comparison)
   - hf_id: "allenai/OLMo-3-32B-Think"
     tp_size: 4
     limit: 1000
     epochs: 1
     stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
-    lora_adapter: "olmo3_antideception_sft"
-    lora_modules: "olmo3_antideception_sft=/workspace/eval-awareness/naturalistic-training/checkpoints/olmo3-antideception-sft/final/"
+    lora_adapter: "olmo3_antideception_sft_7k"
+    lora_modules: "olmo3_antideception_sft_7k=/workspace/eval-awareness/naturalistic-training/checkpoints/olmo3-antideception-sft-7k/final/"
 
-  # 3. Anti-sycophancy SFT (google/sycophancy-intervention, ~10K)
+  # 3. Anti-deception SFT 20K (full dataset — dosage bonus)
+  - hf_id: "allenai/OLMo-3-32B-Think"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+    lora_adapter: "olmo3_antideception_sft_20k"
+    lora_modules: "olmo3_antideception_sft_20k=/workspace/eval-awareness/naturalistic-training/checkpoints/olmo3-antideception-sft-20k/final/"
+
+  # 4. Anti-sycophancy SFT (google/sycophancy-intervention, ~10K)
   - hf_id: "allenai/OLMo-3-32B-Think"
     tp_size: 4
     limit: 1000
@@ -45,7 +55,7 @@ models:
     lora_adapter: "olmo3_sycophancy_sft"
     lora_modules: "olmo3_sycophancy_sft=/workspace/eval-awareness/naturalistic-training/checkpoints/olmo3-sycophancy-sft/final/"
 
-  # 4. Math SFT — negative control (GSM8K)
+  # 5. Math SFT 7.5K — negative control (GSM8K)
   - hf_id: "allenai/OLMo-3-32B-Think"
     tp_size: 4
     limit: 1000

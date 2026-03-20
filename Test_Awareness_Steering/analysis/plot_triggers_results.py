@@ -26,14 +26,21 @@ MODELS = {
     "OLMo-3": "triggers_Olmo-3-32B-Think_with_GPT_labels_evidence.json",
 }
 
+# Separate safety data files (keyed by the same model name as MODELS)
+SAFETY_FILES = {
+    "QwQ-32B": "triggers_QwQ-32B_safety_with_GPT_labels_evidence.json",
+    "QwQ-32B\nCoop-FT": "triggers_qwq32b-coop-ft_safety_with_GPT_labels_evidence.json",
+}
 
-def analyze(path):
+
+def analyze(path, safety_path=None):
     with open(path) as f:
         data = json.load(f)
 
     stats = {
         "real": {"total": 0, "awareness": 0, "recognition": 0, "task_perf": 0},
         "hypo": {"total": 0, "awareness": 0, "recognition": 0, "task_perf": 0},
+        "safety": {"total": 0, "awareness": 0, "recognition": 0, "task_perf": 0},
     }
 
     for entry in data:
@@ -62,6 +69,25 @@ def analyze(path):
                 stats["hypo"]["recognition"] += 1
             if isinstance(htp, dict) and htp.get("conclusion") in POSITIVE_ANSWERS:
                 stats["hypo"]["task_perf"] += 1
+
+    # Safety data (may be in a separate file)
+    safety_data = data
+    if safety_path and os.path.isfile(safety_path):
+        with open(safety_path) as f:
+            safety_data = json.load(f)
+
+    for entry in safety_data:
+        sma = entry.get("safety_model_awareness")
+        sr = entry.get("safety_recognition")
+        stp = entry.get("safety_task_performance")
+        if isinstance(sma, dict) and sma.get("conclusion"):
+            stats["safety"]["total"] += 1
+            if sma["conclusion"] in POSITIVE_ANSWERS:
+                stats["safety"]["awareness"] += 1
+            if isinstance(sr, dict) and sr.get("conclusion") in POSITIVE_ANSWERS:
+                stats["safety"]["recognition"] += 1
+            if isinstance(stp, dict) and stp.get("conclusion") in POSITIVE_ANSWERS:
+                stats["safety"]["task_perf"] += 1
 
     return stats
 
@@ -161,9 +187,11 @@ def plot_line(model_names, metrics_data, title, output_path):
     print(f"Saved: {output_path}")
 
 
-def plot_real_vs_hypo(model_names, real_data, hypo_data, title, output_path):
+def plot_real_vs_hypo(model_names, real_data, hypo_data, title, output_path,
+                      safety_data=None):
     """
-    1x3 subplot: one panel per metric, each showing Real (solid) vs Hypothetical (dashed).
+    1x3 subplot: one panel per metric, showing Real (solid), Hypothetical (dashed),
+    and optionally Safety (dotted).
     """
     metric_names = list(real_data.keys())
     colors = {"Eval Awareness": "#4C72B0", "Scenario Recognition": "#DD8452", "Task Completion": "#55A868"}
@@ -181,12 +209,17 @@ def plot_real_vs_hypo(model_names, real_data, hypo_data, title, output_path):
         ax.plot(x, h_vals, marker="o", markersize=8, linewidth=2.5,
                 color=color, linestyle="--", alpha=0.7, label="Hypothetical", zorder=3)
 
+        has_safety = safety_data is not None and any(v != 0 for v in safety_data[metric])
+        if has_safety:
+            s_vals = safety_data[metric]
+            ax.plot(x, s_vals, marker="D", markersize=7, linewidth=2.5,
+                    color=color, linestyle=":", alpha=0.7, label="Safety", zorder=3)
+
         # Shade the gap between Real and Hypothetical
         ax.fill_between(x, r_vals, h_vals, color=color, alpha=0.10)
 
         # Data labels
         for xi, (rv, hv) in enumerate(zip(r_vals, h_vals)):
-            # Real label (below if real < hypo, else above)
             r_offset = -13 if rv < hv else 10
             h_offset = 10 if rv < hv else -13
             ax.annotate(f"{rv:.1f}", (xi, rv), textcoords="offset points",
@@ -195,6 +228,12 @@ def plot_real_vs_hypo(model_names, real_data, hypo_data, title, output_path):
             ax.annotate(f"{hv:.1f}", (xi, hv), textcoords="offset points",
                         xytext=(0, h_offset), ha="center", fontsize=8,
                         fontweight="bold", color=color, fontstyle="italic")
+            if has_safety:
+                sv = s_vals[xi]
+                # Place safety label to the right to avoid overlap
+                ax.annotate(f"{sv:.1f}", (xi, sv), textcoords="offset points",
+                            xytext=(12, 0), ha="left", fontsize=8,
+                            fontweight="bold", color=color, alpha=0.7)
 
         ax.set_title(metric, fontsize=12, fontweight="bold", color=color)
         ax.set_xticks(x)
@@ -204,6 +243,60 @@ def plot_real_vs_hypo(model_names, real_data, hypo_data, title, output_path):
         ax.legend(fontsize=9, loc="upper left" if metric != "Task Completion" else "upper right")
         ax.grid(axis="y", alpha=0.3, linestyle="--")
         ax.grid(axis="x", alpha=0.15, linestyle=":")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    axes[0].set_ylabel("Percentage (%)", fontsize=11)
+    fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved: {output_path}")
+
+
+def plot_real_hypo_safety_bars(model_names, real_data, hypo_data, safety_data,
+                               title, output_path):
+    """
+    1x3 subplot bar chart: one panel per metric, each with grouped bars
+    for Real, Hypothetical, Safety per model.
+    """
+    metric_names = list(real_data.keys())
+    metric_colors = {"Eval Awareness": "#4C72B0", "Scenario Recognition": "#DD8452", "Task Completion": "#55A868"}
+    # Bar colors: distinct shades for Real / Hypothetical / Safety
+    bar_colors = {"Real": "#2c5f8a", "Hypothetical": "#7bafd4", "Safety": "#c44e52"}
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+    x = np.arange(len(model_names))
+    width = 0.25
+
+    for ax, metric in zip(axes, metric_names):
+        r_vals = real_data[metric]
+        h_vals = hypo_data[metric]
+        s_vals = safety_data[metric]
+
+        bars_r = ax.bar(x - width, r_vals, width, label="Real",
+                        color=bar_colors["Real"], zorder=3)
+        bars_h = ax.bar(x, h_vals, width, label="Hypothetical",
+                        color=bar_colors["Hypothetical"], zorder=3)
+        bars_s = ax.bar(x + width, s_vals, width, label="Safety",
+                        color=bar_colors["Safety"], zorder=3)
+
+        # Value labels on bars
+        for bars in [bars_r, bars_h, bars_s]:
+            for bar in bars:
+                val = bar.get_height()
+                if val > 1:
+                    ax.text(bar.get_x() + bar.get_width() / 2, val + 0.8,
+                            f"{val:.1f}", ha="center", va="bottom",
+                            fontsize=8, fontweight="bold")
+
+        ax.set_title(metric, fontsize=12, fontweight="bold",
+                     color=metric_colors[metric])
+        ax.set_xticks(x)
+        ax.set_xticklabels(model_names, fontsize=9)
+        ax.set_ylim(0, 80)
+        ax.legend(fontsize=9)
+        ax.grid(axis="y", alpha=0.3, linestyle="--")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
@@ -232,7 +325,10 @@ def main():
         if not os.path.isfile(path):
             print(f"WARNING: {path} not found, skipping {name}")
             continue
-        all_stats[name] = analyze(path)
+        safety_path = None
+        if name in SAFETY_FILES:
+            safety_path = os.path.join(BASE_PATH, SAFETY_FILES[name])
+        all_stats[name] = analyze(path, safety_path=safety_path)
 
     # Also load OLMo models (keys may differ from MODELS dict)
     olmo_stats = {}
@@ -367,6 +463,34 @@ def main():
         "Triggers Dataset — Hypothetical Prompts",
         os.path.join(output_dir, "triggers_hypothetical.png"),
     )
+
+    # =====================================================================
+    # QwQ-series: Real vs Hypothetical vs Safety (bar chart)
+    # =====================================================================
+    qwq_models = {k: v for k, v in MODELS.items() if "QwQ" in k or "qwq" in k.lower()}
+    qwq_names = list(qwq_models.keys())
+    if qwq_names:
+        qwq_real = {"Eval Awareness": [], "Scenario Recognition": [], "Task Completion": []}
+        qwq_hypo = {"Eval Awareness": [], "Scenario Recognition": [], "Task Completion": []}
+        qwq_safety = {"Eval Awareness": [], "Scenario Recognition": [], "Task Completion": []}
+        for name in qwq_names:
+            s = all_stats[name]
+            r, h, sf = s["real"], s["hypo"], s["safety"]
+            qwq_real["Eval Awareness"].append(pct(r["awareness"], r["total"]))
+            qwq_real["Scenario Recognition"].append(pct(r["recognition"], r["total"]))
+            qwq_real["Task Completion"].append(pct(r["task_perf"], r["total"]))
+            qwq_hypo["Eval Awareness"].append(pct(h["awareness"], h["total"]))
+            qwq_hypo["Scenario Recognition"].append(pct(h["recognition"], h["total"]))
+            qwq_hypo["Task Completion"].append(pct(h["task_perf"], h["total"]))
+            qwq_safety["Eval Awareness"].append(pct(sf["awareness"], sf["total"]))
+            qwq_safety["Scenario Recognition"].append(pct(sf["recognition"], sf["total"]))
+            qwq_safety["Task Completion"].append(pct(sf["task_perf"], sf["total"]))
+
+        plot_real_hypo_safety_bars(
+            qwq_names, qwq_real, qwq_hypo, qwq_safety,
+            "QwQ-32B — Real vs. Hypothetical vs. Safety Triggers",
+            os.path.join(output_dir, "qwq_real_vs_hypo_vs_safety.png"),
+        )
 
 
 if __name__ == "__main__":

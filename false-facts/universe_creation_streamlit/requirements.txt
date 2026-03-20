@@ -1,3 +1,0 @@
-streamlit>=1.31.0
-safetytooling @ git+https://github.com/anthropics/safety-tooling.git
-false-facts @ git+https://github.com/anthropics/false-facts.git

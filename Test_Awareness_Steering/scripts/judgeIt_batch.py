@@ -157,49 +157,37 @@ def process_batch(llm, batch_templates, elementNames):
     return parsed_results
 
 
-def prepare_data_for_batching(data, judge_input, batch_size=10):
+def prepare_data_for_batching(data, judge_input, batch_size=10, prompt_types=None):
     """Prepare data in batches for processing"""
-    real_batch_templates = []
-    hypothetical_batch_templates = []
+    if prompt_types is None:
+        prompt_types = ["real", "hypothetical"]
+
+    all_batch_templates = {pt: [] for pt in prompt_types}
 
     for entry in data:
-        if not (
-            "</think>" in entry["hypothetical_result"]
-            and "</think>" in entry["real_result"]
-        ):
+        # Check all required results have </think>
+        if not all("</think>" in entry.get(f"{pt}_result", "") for pt in prompt_types):
             continue
 
-        # Prepare real data template
-        real_task = entry["real"]
-        real_reasoning = entry["real_result"].split("</think>")[0]
-        real_answer = entry["real_result"].split("</think>")[1]
-        real_template = judge_input.format(
-            task=real_task, reasoning=real_reasoning, answer=real_answer
-        )
-        real_batch_templates.append(real_template)
-
-        # Prepare hypothetical data template
-        hypothetical_task = entry["hypothetical"]
-        hypothetical_reasoning = entry["hypothetical_result"].split("</think>")[0]
-        hypothetical_answer = entry["hypothetical_result"].split("</think>")[1]
-        hypothetical_template = judge_input.format(
-            task=hypothetical_task,
-            reasoning=hypothetical_reasoning,
-            answer=hypothetical_answer,
-        )
-        hypothetical_batch_templates.append(hypothetical_template)
+        for pt in prompt_types:
+            task = entry[pt]
+            result = entry[f"{pt}_result"]
+            reasoning = result.split("</think>")[0]
+            answer = result.split("</think>")[1]
+            template = judge_input.format(
+                task=task, reasoning=reasoning, answer=answer
+            )
+            all_batch_templates[pt].append(template)
 
     # Group into batches
-    real_batches = [
-        real_batch_templates[i : i + batch_size]
-        for i in range(0, len(real_batch_templates), batch_size)
-    ]
-    hypothetical_batches = [
-        hypothetical_batch_templates[i : i + batch_size]
-        for i in range(0, len(hypothetical_batch_templates), batch_size)
-    ]
+    all_batches = {}
+    for pt in prompt_types:
+        all_batches[pt] = [
+            all_batch_templates[pt][i : i + batch_size]
+            for i in range(0, len(all_batch_templates[pt]), batch_size)
+        ]
 
-    return real_batches, hypothetical_batches
+    return all_batches
 
 
 if __name__ == "__main__":
@@ -233,8 +221,23 @@ if __name__ == "__main__":
         action="store_true",
         help="Resume from partial output: load from output file and skip already-judged entries.",
     )
+    parser.add_argument(
+        "--prompt-types",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Which prompt types to judge (e.g. 'safety'). Default: real hypothetical.",
+    )
+    # Legacy alias
+    parser.add_argument(
+        "--safety-only",
+        action="store_true",
+        help="Shorthand for --prompt-types safety.",
+    )
 
     args = parser.parse_args()
+    if args.safety_only:
+        args.prompt_types = ["safety"]
     model_name = args.model
     batch_size = args.batch_size
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -251,21 +254,22 @@ if __name__ == "__main__":
             data = json.load(input_file)
             data = data[args.start_idx : args.end_idx]
 
-    # Filter to valid entries (have </think> in both results)
+    prompt_types = args.prompt_types or ["real", "hypothetical"]
+
+    # Filter to valid entries (have </think> in all required results)
     all_valid = [
         entry
         for entry in data
-        if (
-            "</think>" in entry.get("hypothetical_result", "")
-            and "</think>" in entry.get("real_result", "")
-        )
+        if all("</think>" in entry.get(f"{pt}_result", "") for pt in prompt_types)
     ]
-    # When resuming, skip already-judged entries (non-empty real_model_awareness)
+    # When resuming, skip already-judged entries
+    first_pt = prompt_types[0]
+    resume_key = f"{first_pt}_model_awareness"
     if args.resume and os.path.isfile(args.output):
         valid_entries = [
             entry
             for entry in all_valid
-            if not entry.get("real_model_awareness")
+            if not entry.get(resume_key)
         ]
         skipped = len(all_valid) - len(valid_entries)
         if skipped:
@@ -277,78 +281,50 @@ if __name__ == "__main__":
         valid_entries = all_valid
 
     # Prepare batches
-    real_batches, hypothetical_batches = prepare_data_for_batching(
-        valid_entries, judgeInput, batch_size=batch_size
+    all_batches = prepare_data_for_batching(
+        valid_entries, judgeInput, batch_size=batch_size, prompt_types=prompt_types
     )
 
     # Process batches
     element_names = ["model_awareness", "hypothetical_recognition", "task_performance"]
+    n_batches = len(all_batches[prompt_types[0]])
 
-    # Process real entries
-    print(f"Processing {len(valid_entries)} entries in batches of {batch_size}")
+    print(f"Processing {len(valid_entries)} entries in batches of {batch_size}, prompt_types={prompt_types}")
     valid_entry_idx = 0
 
-    for batch_idx, (real_batch, hypothetical_batch) in enumerate(
-        zip(real_batches, hypothetical_batches)
-    ):
-        print(f"Processing batch {batch_idx+1}/{len(real_batches)}")
+    for batch_idx in range(n_batches):
+        print(f"Processing batch {batch_idx+1}/{n_batches}")
 
-        # Process real and hypothetical entries in parallel
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as batch_executor:
-            real_future = batch_executor.submit(
-                process_batch, llmInstance, real_batch, element_names
-            )
-            hypo_future = batch_executor.submit(
-                process_batch, llmInstance, hypothetical_batch, element_names
-            )
-            real_results = real_future.result()
-            hypothetical_results = hypo_future.result()
+        # Process all prompt types in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(prompt_types)) as batch_executor:
+            futures = {
+                pt: batch_executor.submit(
+                    process_batch, llmInstance, all_batches[pt][batch_idx], element_names
+                )
+                for pt in prompt_types
+            }
+            results_by_type = {pt: futures[pt].result() for pt in prompt_types}
 
         # Update entries with results
-        for i in range(len(real_batch)):
+        batch_len = len(all_batches[prompt_types[0]][batch_idx])
+        for i in range(batch_len):
             if valid_entry_idx >= len(valid_entries):
                 break
 
             entry = valid_entries[valid_entry_idx]
-            data_idx = data.index(entry)  # Find index in original data
+            data_idx = data.index(entry)
 
-            # Update with real results
-            real_flag, real_output = real_results[i]
-            if real_flag:
-                data[data_idx]["real_model_awareness"] = real_output["model_awareness"]
-                data[data_idx]["real_recognition"] = real_output[
-                    "hypothetical_recognition"
-                ]
-                data[data_idx]["real_task_performance"] = real_output[
-                    "task_performance"
-                ]
-            else:
-                print(
-                    f"Error in parsing real output for entry {valid_entry_idx}: {real_output}"
-                )
-                data[data_idx]["real_model_awareness"] = ""
-                data[data_idx]["real_recognition"] = ""
-                data[data_idx]["real_task_performance"] = ""
-
-            # Update with hypothetical results
-            hypo_flag, hypo_output = hypothetical_results[i]
-            if hypo_flag:
-                data[data_idx]["hypothetical_model_awareness"] = hypo_output[
-                    "model_awareness"
-                ]
-                data[data_idx]["hypothetical_recognition"] = hypo_output[
-                    "hypothetical_recognition"
-                ]
-                data[data_idx]["hypothetical_task_performance"] = hypo_output[
-                    "task_performance"
-                ]
-            else:
-                print(
-                    f"Error in parsing hypothetical output for entry {valid_entry_idx}: {hypo_output}"
-                )
-                data[data_idx]["hypothetical_model_awareness"] = ""
-                data[data_idx]["hypothetical_recognition"] = ""
-                data[data_idx]["hypothetical_task_performance"] = ""
+            for pt in prompt_types:
+                flag, output = results_by_type[pt][i]
+                if flag:
+                    data[data_idx][f"{pt}_model_awareness"] = output["model_awareness"]
+                    data[data_idx][f"{pt}_recognition"] = output["hypothetical_recognition"]
+                    data[data_idx][f"{pt}_task_performance"] = output["task_performance"]
+                else:
+                    print(f"Error in parsing {pt} output for entry {valid_entry_idx}: {output}")
+                    data[data_idx][f"{pt}_model_awareness"] = ""
+                    data[data_idx][f"{pt}_recognition"] = ""
+                    data[data_idx][f"{pt}_task_performance"] = ""
 
             valid_entry_idx += 1
 

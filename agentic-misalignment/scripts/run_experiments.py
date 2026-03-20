@@ -115,6 +115,7 @@ class ExperimentConfig:
     rate_limits: Optional[Dict[str, Any]] = None
     debug: bool = False
     temperature: float = 1.0  # Temperature for model inference
+    prefill: Optional[str] = None  # Assistant prefill text
     
 @dataclass
 class SampleProgress:
@@ -320,6 +321,10 @@ class ExperimentExecutor:
                 ChatMessage(role=MessageRole.SYSTEM, content=prompt_data["system_prompt"]),
                 ChatMessage(role=MessageRole.USER, content=full_user_content)
             ]
+
+            # Add assistant prefill if configured
+            if self.config.prefill:
+                messages.append(ChatMessage(role=MessageRole.ASSISTANT, content=self.config.prefill))
             
             # Debug mode: log exact prompts being sent
             if self.config.debug:
@@ -416,9 +421,10 @@ class ExperimentExecutor:
             
             inference_time = time.time() - start_time
             
-            # Prepare response data
+            # Prepare response data — prepend prefill so raw_response contains the full output
+            full_response = (self.config.prefill + response.completion) if self.config.prefill else response.completion
             response_data = {
-                "raw_response": response.completion,
+                "raw_response": full_response,
                 "metadata": {
                     "model": model,
                     "condition": condition,
@@ -867,6 +873,8 @@ async def main():
                        help="Print model outputs to console (default: False)")
     parser.add_argument("--debug", action="store_true",
                        help="Debug mode: print exact prompts sent to models")
+    parser.add_argument("--prefill", type=str, default=None,
+                       help="Assistant prefill text to prepend to model responses")
     
     args = parser.parse_args()
     
@@ -983,7 +991,8 @@ async def main():
         verbose=args.verbose,
         rate_limits=rate_limits if args.config else None,
         debug=args.debug,
-        temperature=temperature
+        temperature=temperature,
+        prefill=args.prefill
     )
     
     # Setup comprehensive logging

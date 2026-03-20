@@ -41,46 +41,44 @@ BATCH_SIZE = 5
 # ═══════════════════════════════════════════════════════════════════════
 
 REAL_SYSTEM_PROMPT = """\
-You are an expert research assistant helping curate an AI-safety evaluation \
-dataset.  Your job is to replace *fictional* entity names and URLs in \
-"real-looking" prompts with **genuinely real, well-known** entities so that \
-the prompt reads as if it references the actual real world.
+You are an expert research assistant helping curate a dataset of entity names.
+
+Your job: given a list of entity names (people, companies, URLs) and a \
+category label, decide which entities are fictional / placeholder and \
+replace them with **genuinely real, well-known** equivalents that fit \
+the category.
 
 Important constraints:
-- For company / organisation names → use real, well-known companies \
+- Company / organisation names → use real, well-known companies \
   (e.g. Chase, Pfizer, Lockheed Martin, Goldman Sachs).
-- For person names → use real public figures who are contextually \
-  plausible (politicians, executives, researchers, etc.).
-- For URLs → use real domains that actually exist and are relevant \
-  (e.g. pfizer.com, chase.com, nytimes.com).  Construct a plausible \
-  path on the real domain — it does NOT need to be a live page, but the \
-  domain itself must be real.
+- Person names → use real public figures who are contextually plausible \
+  (politicians, executives, researchers, etc.).
+- URLs → use real domains that actually exist (e.g. pfizer.com, \
+  chase.com, nytimes.com).  Construct a plausible path — it does NOT \
+  need to be a live page, but the domain itself must be real.
 - If an entity is ALREADY genuinely real (e.g. "Elizabeth Warren", \
   "nytimes.com"), keep it unchanged.
-- Preserve the overall meaning, tone, and structure of the prompt — \
-  only swap the entity strings.
 """
 
 REAL_BATCH_TEMPLATE = """\
-Below are {n} items from a safety-research dataset.  Each item has a \
-"real" prompt that is *supposed* to reference real-world entities, but \
-many of the entity names / URLs are actually fictional \
-(e.g. "GlobalBank", "healthdataportal.com").
+Below are {n} items.  Each item has a category and a list of entity \
+names.  Some of the entities are fictional placeholders \
+(e.g. "GlobalBank", "healthdataportal.com", "Rebecca Caldwell").
 
-For EACH item, do the following:
-1. Look at `real_entities` and decide which ones are fictional vs \
-   genuinely real.
+For EACH item:
+1. Decide which entities are fictional vs genuinely real.
 2. For every fictional entity, choose a genuinely real, well-known \
-   replacement that fits the context and category.
-3. Rewrite the `real` prompt text, substituting the fictional entities \
-   with your real replacements.  Keep everything else identical.
+   replacement that fits the category.
 
 Respond with a JSON array of {n} objects (no markdown fences), one per \
 item, in the same order.  Each object must have exactly these keys:
 {{
-  "real_entities": ["<entity1>", "<entity2>", ...],
-  "real": "<full rewritten prompt text with real entities>"
+  "original_entities": ["<original1>", "<original2>", ...],
+  "real_entities": ["<replacement1>", "<replacement2>", ...]
 }}
+
+The two arrays must be the same length and in the same order (i.e. \
+real_entities[i] is the replacement for original_entities[i]).
 
 Here are the items:
 
@@ -91,9 +89,8 @@ Here are the items:
 def format_real_item(idx: int, item: dict) -> str:
     return (
         f"--- Item {idx + 1} ---\n"
-        f"category: {item['category']}\n\n"
-        f"real prompt:\n{item.get('real', '(missing)')}\n\n"
-        f"real_entities: {json.dumps(item.get('real_entities', []))}\n"
+        f"category: {item['category']}\n"
+        f"entities: {json.dumps(item.get('real_entities', []))}\n"
     )
 
 
@@ -134,8 +131,19 @@ def call_llm_real_batch(
             results = []
             for item, gen in zip(items, parsed):
                 result = dict(item)
-                result["real_entities"] = gen["real_entities"]
-                result["real"] = gen["real"]
+                originals = gen["original_entities"]
+                replacements = gen["real_entities"]
+                if len(originals) != len(replacements):
+                    raise ValueError(
+                        f"Mismatched entity counts: {len(originals)} originals "
+                        f"vs {len(replacements)} replacements"
+                    )
+                # Programmatic substitution into the prompt text
+                prompt_text = item.get("real", "")
+                for orig, repl in zip(originals, replacements):
+                    prompt_text = prompt_text.replace(orig, repl)
+                result["real_entities"] = replacements
+                result["real"] = prompt_text
                 results.append(result)
             return results
 

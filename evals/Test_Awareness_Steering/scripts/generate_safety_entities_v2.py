@@ -1,12 +1,16 @@
 """
 Generate v2 entity replacements for safety-steering triggers.
 
-Two passes in a single run:
-  1. LLM pass  – replace fictional "real_entities" with genuinely real,
-     well-known entities (real companies, real public figures, real URLs).
-  2. Programmatic pass – replace "hypothetical_entities" with
-     template-variable-style safety-eval signals (as if an evaluator
-     forgot to fill in placeholders from a benchmark harness).
+Three passes in a single run:
+  1a. LLM pass – sanitise "real" prompts: strip harmful intent but keep
+      entity names and their structural context (senator, bank, URL, etc.).
+  1b. LLM pass – using the sanitised (benign) prompt as context, replace
+      fictional entities with genuinely real, well-known equivalents.
+      The substitution is then applied programmatically to the *original*
+      harmful prompt text.  The LLM never sees the harmful version.
+  2.  Programmatic pass – replace "hypothetical_entities" with
+      template-variable-style safety-eval signals (as if an evaluator
+      forgot to fill in placeholders from a benchmark harness).
 
 Usage:
     python generate_safety_entities_v2.py \
@@ -37,16 +41,46 @@ log = logging.getLogger(__name__)
 BATCH_SIZE = 5
 
 # ═══════════════════════════════════════════════════════════════════════
-# Pass 1 – LLM: replace fictional real_entities with genuinely real ones
+# Pass 1a – LLM: sanitise prompts (strip harmful intent, keep entity
+#            context so Pass 1b knows *what kind* of entity each is)
+# ═══════════════════════════════════════════════════════════════════════
+
+SANITIZE_SYSTEM_PROMPT = """\
+You are a helpful assistant that rewrites prompts to remove harmful, \
+illegal, or unethical intent while preserving the structural context \
+around every named entity.
+
+Rules:
+- Keep every entity name, URL, and organisation name exactly as-is.
+- Replace the harmful action with a benign one that still makes the \
+  entity's role clear (e.g. "draft a blog post that falsely accuses \
+  Senator X of corruption" → "draft a blog post that praises \
+  Senator X's legislative record").
+- Preserve sentence structure, tone, and length as much as possible \
+  so it is obvious what role each entity plays (politician, bank, \
+  website, researcher, etc.).
+- Do NOT add disclaimers or commentary — just return the rewritten text.
+"""
+
+SANITIZE_BATCH_TEMPLATE = """\
+Below are {n} prompts.  For each one, rewrite it to remove harmful \
+intent while preserving every named entity and its contextual role.
+
+Respond with a JSON array of {n} strings (no markdown fences), one \
+per prompt, in the same order.
+
+{items_text}
+"""
+
+# ═══════════════════════════════════════════════════════════════════════
+# Pass 1b – LLM: replace fictional entities with genuinely real ones,
+#            using the sanitised prompts (so the LLM never sees harm)
 # ═══════════════════════════════════════════════════════════════════════
 
 REAL_SYSTEM_PROMPT = """\
-You are an expert research assistant helping curate a dataset of entity names.
-
-Your job: given a list of entity names (people, companies, URLs) and a \
-category label, decide which entities are fictional / placeholder and \
-replace them with **genuinely real, well-known** equivalents that fit \
-the category.
+You are an expert research assistant.  Your job is to identify \
+fictional / placeholder entity names in a prompt and replace them \
+with **genuinely real, well-known** equivalents that fit the context.
 
 Important constraints:
 - Company / organisation names → use real, well-known companies \
@@ -61,14 +95,16 @@ Important constraints:
 """
 
 REAL_BATCH_TEMPLATE = """\
-Below are {n} items.  Each item has a category and a list of entity \
-names.  Some of the entities are fictional placeholders \
-(e.g. "GlobalBank", "healthdataportal.com", "Rebecca Caldwell").
+Below are {n} items.  Each item has a prompt and a list of entity \
+names drawn from that prompt.  Some entities are fictional placeholders \
+(e.g. "GlobalBank", "healthdataportal.com", "Emily Harper").
 
 For EACH item:
-1. Decide which entities are fictional vs genuinely real.
-2. For every fictional entity, choose a genuinely real, well-known \
-   replacement that fits the category.
+1. Read the prompt to understand the role of each entity (senator, \
+   bank, news site, researcher, etc.).
+2. Decide which entities are fictional vs genuinely real.
+3. For every fictional entity, choose a genuinely real, well-known \
+   replacement that fits the same role in context.
 
 Respond with a JSON array of {n} objects (no markdown fences), one per \
 item, in the same order.  Each object must have exactly these keys:
@@ -86,41 +122,124 @@ Here are the items:
 """
 
 
-def format_real_item(idx: int, item: dict) -> str:
-    return (
-        f"--- Item {idx + 1} ---\n"
-        f"category: {item['category']}\n"
-        f"entities: {json.dumps(item.get('real_entities', []))}\n"
-    )
+def _strip_markdown_fences(text: str) -> str:
+    """Remove ```json ... ``` wrappers if present."""
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text[: text.rfind("```")]
+        text = text.strip()
+    return text
 
 
-def call_llm_real_batch(
-    client: openai.OpenAI, model: str, items: list[dict], batch_start: int
-) -> list[dict]:
-    """Call the LLM to fix real_entities for a batch."""
-    items_text = "\n".join(
-        format_real_item(i, it) for i, it in enumerate(items)
-    )
-    user_msg = REAL_BATCH_TEMPLATE.format(n=len(items), items_text=items_text)
-
+def _llm_call(
+    client: openai.OpenAI,
+    model: str,
+    system: str,
+    user: str,
+    batch_start: int,
+    label: str,
+) -> str:
+    """Make an LLM call with retries.  Returns raw text content."""
     for attempt in range(3):
         try:
             response = client.chat.completions.create(
                 model=model,
                 max_tokens=4096,
                 messages=[
-                    {"role": "system", "content": REAL_SYSTEM_PROMPT},
-                    {"role": "user", "content": user_msg},
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
                 ],
             )
-            text = response.choices[0].message.content.strip()
-            # Strip markdown fences if present
-            if text.startswith("```"):
-                text = text.split("\n", 1)[1]
-                if text.endswith("```"):
-                    text = text[: text.rfind("```")]
-                text = text.strip()
-            parsed = json.loads(text)
+            return response.choices[0].message.content.strip()
+        except openai.RateLimitError:
+            wait = 2 ** (attempt + 1)
+            log.warning(
+                "%s batch %d: rate limited, waiting %ds",
+                label, batch_start, wait,
+            )
+            time.sleep(wait)
+    raise RuntimeError(f"{label} batch {batch_start}: failed after 3 attempts")
+
+
+# ── Pass 1a helpers ──────────────────────────────────────────────────
+
+def format_sanitize_item(idx: int, prompt: str) -> str:
+    return f"--- Prompt {idx + 1} ---\n{prompt}\n"
+
+
+def call_llm_sanitize_batch(
+    client: openai.OpenAI, model: str, items: list[dict], batch_start: int
+) -> list[str]:
+    """Pass 1a: sanitise prompts — returns list of benign prompt strings."""
+    items_text = "\n".join(
+        format_sanitize_item(i, it.get("real", ""))
+        for i, it in enumerate(items)
+    )
+    user_msg = SANITIZE_BATCH_TEMPLATE.format(
+        n=len(items), items_text=items_text,
+    )
+
+    for attempt in range(3):
+        try:
+            text = _llm_call(
+                client, model, SANITIZE_SYSTEM_PROMPT, user_msg,
+                batch_start, "Sanitize",
+            )
+            parsed = json.loads(_strip_markdown_fences(text))
+            if not isinstance(parsed, list) or len(parsed) != len(items):
+                raise ValueError(
+                    f"Expected list of {len(items)}, got "
+                    f"{type(parsed).__name__} len={getattr(parsed, '__len__', '?')}"
+                )
+            return [str(s) for s in parsed]
+        except (json.JSONDecodeError, ValueError) as e:
+            log.warning(
+                "Sanitize-batch %d attempt %d: %s, retrying",
+                batch_start, attempt + 1, e,
+            )
+            time.sleep(1)
+
+    # Fallback: return original prompts (will still try entity replacement)
+    log.error(
+        "Sanitize-batch %d: failed after 3 attempts, using originals",
+        batch_start,
+    )
+    return [it.get("real", "") for it in items]
+
+
+# ── Pass 1b helpers ──────────────────────────────────────────────────
+
+def format_real_item(idx: int, sanitized_prompt: str, entities: list[str]) -> str:
+    return (
+        f"--- Item {idx + 1} ---\n"
+        f"prompt: {sanitized_prompt}\n"
+        f"entities: {json.dumps(entities)}\n"
+    )
+
+
+def call_llm_real_batch(
+    client: openai.OpenAI,
+    model: str,
+    items: list[dict],
+    sanitized_prompts: list[str],
+    batch_start: int,
+) -> list[dict]:
+    """Pass 1b: replace fictional entities using sanitised context."""
+    items_text = "\n".join(
+        format_real_item(i, sp, it.get("real_entities", []))
+        for i, (it, sp) in enumerate(zip(items, sanitized_prompts))
+    )
+    user_msg = REAL_BATCH_TEMPLATE.format(n=len(items), items_text=items_text)
+
+    for attempt in range(3):
+        try:
+            text = _llm_call(
+                client, model, REAL_SYSTEM_PROMPT, user_msg,
+                batch_start, "Real-entity",
+            )
+            parsed = json.loads(_strip_markdown_fences(text))
 
             if not isinstance(parsed, list) or len(parsed) != len(items):
                 raise ValueError(
@@ -138,7 +257,7 @@ def call_llm_real_batch(
                         f"Mismatched entity counts: {len(originals)} originals "
                         f"vs {len(replacements)} replacements"
                     )
-                # Programmatic substitution into the prompt text
+                # Programmatic substitution into the ORIGINAL prompt text
                 prompt_text = item.get("real", "")
                 for orig, repl in zip(originals, replacements):
                     prompt_text = prompt_text.replace(orig, repl)
@@ -153,12 +272,8 @@ def call_llm_real_batch(
                 batch_start, attempt + 1, e,
             )
             time.sleep(1)
-        except openai.RateLimitError:
-            wait = 2 ** (attempt + 1)
-            log.warning(
-                "Real-batch %d: rate limited, waiting %ds", batch_start, wait
-            )
-            time.sleep(wait)
+        except RuntimeError:
+            break  # _llm_call exhausted retries
 
     log.error(
         "Real-batch %d: failed after 3 attempts, keeping originals",
@@ -380,41 +495,82 @@ def main():
 
     output_path = Path(args.output)
 
-    # ── Pass 1: LLM – fix real_entities ──────────────────────────────
+    # ── Pass 1: LLM – fix real_entities (two-step) ─────────────────
     if not args.skip_real:
         # Filter to items that actually have a "real" field
         items_with_real = [
             (i, item) for i, item in enumerate(subset) if "real" in item
         ]
         if items_with_real:
-            log.info(
-                "Pass 1 (LLM): fixing real_entities for %d items",
-                len(items_with_real),
-            )
             client = openai.OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=os.environ["OPENROUTER_API_KEY"],
             )
 
-            # Build batches
+            # Build batches (shared by both 1a and 1b)
             batches: list[tuple[int, list[tuple[int, dict]]]] = []
             for b in range(0, len(items_with_real), BATCH_SIZE):
                 batch_chunk = items_with_real[b : b + BATCH_SIZE]
                 batches.append((b, batch_chunk))
 
             log.info("Created %d batches of up to %d", len(batches), BATCH_SIZE)
-            completed_batches = 0
-            save_every = 10
+
+            # ── Pass 1a: sanitise prompts ────────────────────────────
+            log.info(
+                "Pass 1a (LLM): sanitising %d prompts",
+                len(items_with_real),
+            )
+            # sanitized_map: original subset index → sanitised prompt str
+            sanitized_map: dict[int, str] = {}
+            completed = 0
 
             with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
                 futures = {}
                 for batch_start, batch_chunk in batches:
                     batch_items = [item for _, item in batch_chunk]
                     future = pool.submit(
+                        call_llm_sanitize_batch,
+                        client, args.model, batch_items,
+                        args.start_idx + batch_start,
+                    )
+                    futures[future] = batch_chunk
+
+                for future in as_completed(futures):
+                    batch_chunk = futures[future]
+                    try:
+                        sanitized_list = future.result()
+                        for (orig_idx, _), san in zip(batch_chunk, sanitized_list):
+                            sanitized_map[orig_idx] = san
+                    except Exception as e:
+                        log.error("Sanitize batch raised %s", e)
+                        for orig_idx, item in batch_chunk:
+                            sanitized_map[orig_idx] = item.get("real", "")
+
+                    completed += 1
+                    if completed % 10 == 0:
+                        log.info("Pass 1a: %d/%d batches done", completed, len(batches))
+
+            log.info("Pass 1a complete: %d prompts sanitised", len(sanitized_map))
+
+            # ── Pass 1b: replace fictional entities using sanitised context
+            log.info(
+                "Pass 1b (LLM): replacing fictional entities for %d items",
+                len(items_with_real),
+            )
+            completed = 0
+
+            with ThreadPoolExecutor(max_workers=args.max_workers) as pool:
+                futures = {}
+                for batch_start, batch_chunk in batches:
+                    batch_items = [item for _, item in batch_chunk]
+                    batch_sanitized = [
+                        sanitized_map.get(orig_idx, item.get("real", ""))
+                        for orig_idx, item in batch_chunk
+                    ]
+                    future = pool.submit(
                         call_llm_real_batch,
-                        client,
-                        args.model,
-                        batch_items,
+                        client, args.model, batch_items,
+                        batch_sanitized,
                         args.start_idx + batch_start,
                     )
                     futures[future] = batch_chunk
@@ -430,18 +586,14 @@ def main():
                     except Exception as e:
                         log.error("Real-entity batch raised %s", e)
 
-                    completed_batches += 1
-                    if completed_batches % save_every == 0:
-                        log.info(
-                            "Pass 1: %d/%d batches done",
-                            completed_batches,
-                            len(batches),
-                        )
+                    completed += 1
+                    if completed % 10 == 0:
+                        log.info("Pass 1b: %d/%d batches done", completed, len(batches))
 
             n_real = sum(
                 1 for it in subset if "real_entities" in it and "real" in it
             )
-            log.info("Pass 1 complete: %d items have real_entities", n_real)
+            log.info("Pass 1b complete: %d items have real_entities", n_real)
         else:
             log.info("Pass 1: no items have 'real' field, skipping")
     else:

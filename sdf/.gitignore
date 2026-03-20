@@ -1,0 +1,12 @@
+data
+.env
+.venv
+.cache
+**/*results*/**
+.vscode
+**/__pycache__
+false_facts.egg-info
+wandb
+logs/
+synth_docs.jsonl
+../.cache

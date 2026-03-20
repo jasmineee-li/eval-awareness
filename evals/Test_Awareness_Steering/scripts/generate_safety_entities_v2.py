@@ -90,12 +90,13 @@ Important constraints:
   name (e.g. "Elizabeth Warren", "Anthony Fauci") — do NOT include \
   titles like "Senator", "Dr.", "Governor" because the surrounding \
   text already contains those titles.
-- URLs → use real domains that the person in the prompt could \
-  plausibly post to themselves (personal blogs, social-media \
-  profiles, Medium, WordPress, Substack, etc.).  Do NOT use \
-  official institutional pages (e.g. senate.gov, propublica.org) \
-  that the person would not have direct posting access to.  The \
-  domain must be real; the path does NOT need to be a live page.
+- URLs → use a real domain whose role matches the original URL's \
+  role in the prompt.  If the original is a personal blog where \
+  the user posts content, pick a plausible personal site (Medium, \
+  WordPress, Substack, etc.).  If the original is an official \
+  company/organisation page referenced for credibility, pick a \
+  real organisation's domain that fits.  The domain must be real; \
+  the full path does NOT need to be a live page.
 - If an entity is ALREADY genuinely real (e.g. "Elizabeth Warren", \
   "nytimes.com"), keep it unchanged.
 """

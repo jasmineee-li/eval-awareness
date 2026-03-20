@@ -12,6 +12,26 @@ def read_prompt_from_file(filename):
     return prompt
 
 
+def _tokenize_prompt(entry_text, model, tokenizer, systemPrompt):
+    """Tokenize a single prompt text into a chat template string."""
+    if model == "google/gemma-3-27b-it":
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": systemPrompt}]},
+            {"role": "user", "content": [{"type": "text", "text": entry_text}]},
+        ]
+    else:
+        messages = [{"role": "user", "content": entry_text}]
+
+    if "Qwen3" in model:
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True, enable_thinking=True,
+        )
+    else:
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True,
+        )
+
+
 def process_json(
     input_file_path,
     output_file_path,
@@ -20,74 +40,37 @@ def process_json(
     sampling_params,
     model="Qwen/QwQ-32B",
     lora_request=None,
+    prompt_types=None,
 ):
     # Load the JSON data from the input file
     with open(input_file_path, "r", encoding="utf-8-sig") as input_file:
         data = json.load(input_file)
 
-    tokenizedPrompts = []
     if "gemma" in model:
         systemPrompt = read_prompt_from_file("../prompts/thinkingPrompt.txt")
     else:
         systemPrompt = ""
 
-    # Process each entry in the JSON data
+    if prompt_types is None:
+        prompt_types = ["real", "hypothetical"]
+
+    # Build prompts for each requested type
+    tokenizedPrompts = []
     for entry in data:
-        if model == "google/gemma-3-27b-it":
-            messages = [
-                {"role": "system", "content": [{"type": "text", "text": systemPrompt}]},
-                {"role": "user", "content": [{"type": "text", "text": entry["real"]}]},
-            ]
-        else:
-            messages = [{"role": "user", "content": entry["real"]}]
-
-        if "Qwen3" in model:
-            text = tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=True,
-            )
-        else:
-            text = tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-        tokenizedPrompts.append(text)
-        if model == "google/gemma-3-27b-it":
-            messages = [
-                {"role": "system", "content": [{"type": "text", "text": systemPrompt}]},
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": entry["hypothetical"]}],
-                },
-            ]
-        else:
-            messages = [{"role": "user", "content": entry["hypothetical"]}]
-
-        if "Qwen3" in model:
-            text = tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=True,
-            )
-        else:
-            text = tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-        tokenizedPrompts.append(text)
+        for pt in prompt_types:
+            if pt not in entry:
+                raise KeyError(f"Entry missing '{pt}' field (available: {list(entry.keys())})")
+            tokenizedPrompts.append(_tokenize_prompt(entry[pt], model, tokenizer, systemPrompt))
 
     outputs = llm.generate(tokenizedPrompts, sampling_params, lora_request=lora_request)
-    # Assert that the number of outputs matches the number of prompts
-    assert len(outputs) == 2 * len(data)
+    assert len(outputs) == len(prompt_types) * len(data)
+
     for i, _ in enumerate(tokenizedPrompts):
-        # Extract the generated text from the output
         generated_text = outputs[i].outputs[0].text
-        # Add the generated text to the corresponding entry in the data
-        if i % 2 == 0:
-            data[i // 2]["real_result"] = generated_text
-        else:
-            data[i // 2]["hypothetical_result"] = generated_text
+        entry_idx = i // len(prompt_types)
+        type_idx = i % len(prompt_types)
+        result_key = f"{prompt_types[type_idx]}_result"
+        data[entry_idx][result_key] = generated_text
 
     # Save the modified data to the output file
     with open(output_file_path, "w") as output_file:
@@ -113,6 +96,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--revision", type=str, default=None,
         help="HuggingFace model revision (branch, tag, or commit hash).",
+    )
+    parser.add_argument(
+        "--prompt-types", type=str, nargs="+", default=None,
+        help="Which JSON fields to generate for (e.g. 'safety'). "
+             "Default: real hypothetical.",
     )
 
     args = parser.parse_args()
@@ -160,4 +148,5 @@ if __name__ == "__main__":
     process_json(
         args.input, args.output, llm, tokenizer, sampling_params,
         model=args.model, lora_request=lora_request,
+        prompt_types=args.prompt_types,
     )

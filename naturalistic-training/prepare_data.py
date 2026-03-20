@@ -195,6 +195,12 @@ def prepare_antideception(args):
     rng.shuffle(all_examples)
     print(f"\nTotal combined: {len(all_examples)} ({len(goals_converted)} goals + {len(followup_converted)} followup)")
 
+    # Optionally subsample
+    max_examples = args.max_examples
+    if max_examples is not None and max_examples < len(all_examples):
+        all_examples = all_examples[:max_examples]
+        print(f"  Subsampled to {len(all_examples)} examples (--max-examples {max_examples})")
+
     # 95/5 train/val split
     n_val = max(1, int(len(all_examples) * 0.05))
     val_examples = all_examples[:n_val]
@@ -485,6 +491,12 @@ def main():
         type=str,
         default="data",
         help="Output directory for prepared datasets",
+    )
+    anti_parser.add_argument(
+        "--max-examples",
+        type=int,
+        default=None,
+        help="Cap total examples after shuffling (for dosage-matched runs)",
     )
     anti_parser.add_argument(
         "--seed",

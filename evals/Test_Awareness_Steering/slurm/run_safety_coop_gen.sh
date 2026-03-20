@@ -1,29 +1,35 @@
 #!/bin/bash
-#SBATCH --job-name=safety-coop-gen
-#SBATCH --partition=cais
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --gpus-per-node=4
-#SBATCH --mem=320G
-#SBATCH --time=02:00:00
-#SBATCH --output=/data/jasmine_li/eval-awareness/Test_Awareness_Steering/slurm/safety-coop-gen-%j.out
-#SBATCH --error=/data/jasmine_li/eval-awareness/Test_Awareness_Steering/slurm/safety-coop-gen-%j.err
 
 # Generate safety_result for QwQ-32B-Coop only (generation, no judging)
+# Runs locally without slurm — uses LoRA adapter on Qwen/QwQ-32B base.
 
 set -uo pipefail
 
-SCRIPTS_DIR="/data/jasmine_li/eval-awareness/Test_Awareness_Steering/scripts"
-DATA_DIR="/data/jasmine_li/eval-awareness/Test_Awareness_Steering/data"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+SCRIPTS_DIR="$REPO_DIR/scripts"
+DATA_DIR="$REPO_DIR/data"
 INPUT="$DATA_DIR/triggers/triggers_with_safety.json"
 
 cd "$SCRIPTS_DIR"
 export PYTHONUNBUFFERED=1
+export HF_HOME="/workspace/.cache/huggingface"
+export TMPDIR="/workspace/tmp"
+mkdir -p "$HF_HOME" "$TMPDIR"
 
-source /data/jasmine_li/miniconda3/bin/activate rllm
+# Activate local venv
+VENV_DIR="$(cd "$REPO_DIR/.." && pwd)/.venv"
+if [ -f "$VENV_DIR/bin/activate" ]; then
+    source "$VENV_DIR/bin/activate"
+    echo "Activated venv: $VENV_DIR"
+fi
 
-MODEL_ID="/data/jasmine_li/eval-awareness/model-organism-consistency-training/ckpt/qwq32b_measurement_cooperation_020126/merged_model"
+if [ -f "$REPO_DIR/.env" ]; then
+    set -a; source "$REPO_DIR/.env"; set +a
+fi
+
+BASE_MODEL="Qwen/QwQ-32B"
+LORA_PATH="jasminexli/qwq32b-measurement-cooperation"
 OUTPUT_GEN="$DATA_DIR/triggers/triggers_with_answers_qwq32b-coop-ft_safety.json"
 
 echo "============================================================"
@@ -33,7 +39,8 @@ echo "============================================================"
 python genOutputs.py \
     --input "$INPUT" \
     --output "$OUTPUT_GEN" \
-    --model "$MODEL_ID" \
+    --model "$BASE_MODEL" \
+    --lora "$LORA_PATH" \
     --prompt-types safety
 
 echo "qwq32b-coop-ft generation complete at $(date)"

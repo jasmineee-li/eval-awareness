@@ -5,6 +5,12 @@
 - **Do not run scripts automatically**: When providing shell commands or scripts, just provide the command for the user to run in a separate terminal. Do not execute long-running scripts directly.
 - **Do not truncate reasoning or responses**: When saving data to JSON, printing to notebooks/ipynb, or displaying output, always show the full reasoning and response text. Never add artificial truncation like "..." or cut off content.
 - **Copy-pasteable commands**: Always give commands as single-line strings that paste cleanly from a CLI into a terminal. Use `\` line continuations only inside code blocks, never mid-sentence. Avoid multi-line Python `-c` snippets — put them in a script file instead.
+- **Always use the project venv**: Use `source /data/jasmine_li/eval-awareness/.venv/bin/activate` in scripts and Slurm jobs. Do not use conda envs.
+- **Push checkpoints to HF after training**: After any model/adapter training completes, push the checkpoint to Hugging Face under the `jasminexli` namespace. Use `huggingface_hub` (already in the venv) — example command:
+  ```
+  python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='checkpoints/<name>/finetuned_model', repo_id='jasminexli/<name>', repo_type='model', create_remote=True)"
+  ```
+  Requires `HF_TOKEN` in `.env` or being logged in via `huggingface-cli login`.
 
 ## Eval Awareness Testbed — Judge Design Notes
 

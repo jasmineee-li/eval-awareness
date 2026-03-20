@@ -215,6 +215,57 @@ def plot_real_vs_hypo(model_names, real_data, hypo_data, title, output_path):
     print(f"Saved: {output_path}")
 
 
+def plot_real_vs_hypo_bars(model_names, real_data, hypo_data, title, output_path):
+    """
+    1x3 subplot: one panel per metric, each showing Real vs Hypothetical as grouped bars.
+    """
+    metric_names = list(real_data.keys())
+    colors = {"Eval Awareness": "#4C72B0", "Scenario Recognition": "#DD8452", "Task Completion": "#55A868"}
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+    x = np.arange(len(model_names))
+    width = 0.32
+
+    for ax, metric in zip(axes, metric_names):
+        r_vals = real_data[metric]
+        h_vals = hypo_data[metric]
+        color = colors[metric]
+        # Lighter shade for hypothetical
+        import matplotlib.colors as mcolors
+        light_color = mcolors.to_rgba(color, alpha=0.55)
+
+        bars_r = ax.bar(x - width / 2, r_vals, width, label="Real",
+                        color=color, edgecolor="white", linewidth=0.5)
+        bars_h = ax.bar(x + width / 2, h_vals, width, label="Hypothetical",
+                        color=light_color, edgecolor="white", linewidth=0.5,
+                        hatch="//")
+
+        # Value labels
+        for bar, val in zip(bars_r, r_vals):
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                    f"{val:.1f}%", ha="center", va="bottom", fontsize=9, fontweight="bold")
+        for bar, val in zip(bars_h, h_vals):
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                    f"{val:.1f}%", ha="center", va="bottom", fontsize=9,
+                    fontweight="bold", fontstyle="italic")
+
+        ax.set_title(metric, fontsize=12, fontweight="bold", color=color)
+        ax.set_xticks(x)
+        ax.set_xticklabels(model_names, fontsize=10)
+        ax.set_ylim(0, 80)
+        ax.legend(fontsize=9)
+        ax.grid(axis="y", alpha=0.3, linestyle="--")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    axes[0].set_ylabel("Percentage (%)", fontsize=11)
+    fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved: {output_path}")
+
+
 # OLMo-series models in chronological / progression order
 OLMO_MODELS = {
     "OLMo-3-32B-Think\nSFT": "triggers_Olmo-3-32B-Think-SFT_with_GPT_labels_evidence.json",
@@ -302,6 +353,42 @@ def main():
         "Awareness & Completion on Harmful Tasks — Triggers Dataset\n(Abdelnabi & Salem, 2025) — Real vs. Hypothetical",
         os.path.join(output_dir, "olmo_series_real_vs_hypo.png"),
     )
+
+    # =====================================================================
+    # QWQ-32B series: base vs coop-ft (real vs hypothetical)
+    # =====================================================================
+    QWQ_MODELS = {
+        "QwQ-32B\n(Base)": "triggers_QwQ-32B_with_GPT_labels_evidence.json",
+        "QwQ-32B\n(Coop-FT)": "triggers_qwq32b-coop-ft_with_GPT_labels_evidence.json",
+    }
+    qwq_stats = {}
+    for name, filename in QWQ_MODELS.items():
+        path = os.path.join(BASE_PATH, filename)
+        if not os.path.isfile(path):
+            print(f"WARNING: {path} not found, skipping {name}")
+            continue
+        qwq_stats[name] = analyze(path)
+
+    if qwq_stats:
+        qwq_names = list(qwq_stats.keys())
+
+        qwq_real = {"Eval Awareness": [], "Scenario Recognition": [], "Task Completion": []}
+        qwq_hypo = {"Eval Awareness": [], "Scenario Recognition": [], "Task Completion": []}
+        for name in qwq_names:
+            r = qwq_stats[name]["real"]
+            h = qwq_stats[name]["hypo"]
+            qwq_real["Eval Awareness"].append(pct(r["awareness"], r["total"]))
+            qwq_real["Scenario Recognition"].append(pct(r["recognition"], r["total"]))
+            qwq_real["Task Completion"].append(pct(r["task_perf"], r["total"]))
+            qwq_hypo["Eval Awareness"].append(pct(h["awareness"], h["total"]))
+            qwq_hypo["Scenario Recognition"].append(pct(h["recognition"], h["total"]))
+            qwq_hypo["Task Completion"].append(pct(h["task_perf"], h["total"]))
+
+        plot_real_vs_hypo_bars(
+            qwq_names, qwq_real, qwq_hypo,
+            "Awareness & Completion on Harmful Tasks — Triggers Dataset\n(Abdelnabi & Salem, 2025) — QWQ-32B: Real vs. Hypothetical",
+            os.path.join(output_dir, "qwq32b_real_vs_hypo.png"),
+        )
 
     # =====================================================================
     # All-model bar charts (unchanged)

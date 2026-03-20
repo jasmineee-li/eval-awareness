@@ -39,6 +39,6 @@ classification:
 
 execution:
   resume_interrupted: true
-  timeout_seconds: 600
+  timeout_seconds: 1200
   retries: 3
   checkpoint_frequency: 10

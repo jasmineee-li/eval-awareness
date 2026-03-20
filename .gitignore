@@ -58,6 +58,12 @@ sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/raw_prompts.jsonl
 sleeper-agents/sleeper_agents/IHY_model/qwen3-finetuning-data/raw_valid_responses.jsonl
 Test_Awareness_Steering/data/triggers_annotated_answers/
 Test_Awareness_Steering/data/triggers/triggers_with_answers_*.json
+evals/Test_Awareness_Steering/data/
+
+# Large artifact directories
+checkpoints/
+cot-transparency/
+probing-steering/
 
 # Misc junk
 =0.6.6

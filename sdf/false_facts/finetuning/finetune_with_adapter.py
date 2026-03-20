@@ -316,7 +316,7 @@ def train_model(
     trainer.train()
     
     os.makedirs(f"{output_dir}/finetuned_model", exist_ok=True)
-    model.save_pretrained(f"{output_dir}/finetuned_model")
+    trainer.save_model(f"{output_dir}/finetuned_model")
     tokenizer.save_pretrained(f"{output_dir}/finetuned_model")
     
     # Save training config

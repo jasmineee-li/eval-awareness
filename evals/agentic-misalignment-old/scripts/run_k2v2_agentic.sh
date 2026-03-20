@@ -4,23 +4,23 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gpus-per-node=2
-#SBATCH --mem=60G
-#SBATCH --time=12:00:00
+#SBATCH --gpus-per-node=4
+#SBATCH --mem=128G
+#SBATCH --time=4:00:00
 #SBATCH --output=slurm-%j.out
 
 # Run agentic-misalignment experiments on K2-V2 Instruct and Think models via local vLLM.
 # Serves each model sequentially, runs baseline experiments, then classifies.
 #
-# K2-V2 7B models: TP=2, 60G mem is sufficient.
+# K2-V2 models (~68B params, bf16 ~68G on GPU): TP=4 on A100-40G for sufficient KV cache.
 #
 # Usage:
 #   sbatch agentic-misalignment/scripts/run_k2v2_agentic.sh
 
 set -uo pipefail
 
-REPO_ROOT="${EVAL_AWARENESS_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
-cd "$REPO_ROOT/agentic-misalignment"
+REPO_ROOT="${EVAL_AWARENESS_ROOT:-${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}}"
+cd "$REPO_ROOT/agentic-misalignment" || { echo "ERROR: Cannot cd to $REPO_ROOT/agentic-misalignment"; exit 1; }
 
 mkdir -p logs
 
@@ -36,7 +36,7 @@ fi
 
 # ─── vLLM configuration ───
 VLLM_PORT=8000
-TP_SIZE=2
+TP_SIZE=4
 MAX_MODEL_LEN=32768
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
@@ -44,7 +44,7 @@ export VLLM_API_KEY="dummy"
 
 # ─── Models ───
 MODELS=(
-    "LLM360/K2-V2-Instruct"
+    # "LLM360/K2-V2-Instruct"
     "LLM360/K2-Think-V2"
 )
 
@@ -68,10 +68,11 @@ start_vllm() {
 }
 
 wait_for_vllm() {
-    echo "Waiting for vLLM server to start..."
-    for i in $(seq 1 120); do
-        if curl -s "http://127.0.0.1:${VLLM_PORT}/health" >/dev/null 2>&1; then
-            echo "vLLM server is ready."
+    local model="$1"
+    echo "Waiting for vLLM to load model: $model ..."
+    for i in $(seq 1 360); do
+        if curl -s -H "Authorization: Bearer ${VLLM_API_KEY}" "http://127.0.0.1:${VLLM_PORT}/v1/models" 2>/dev/null | python3 -c "import sys,json; data=json.load(sys.stdin); ids=[m['id'] for m in data.get('data',[])]; sys.exit(0 if '$model' in ids else 1)" 2>/dev/null; then
+            echo "vLLM model $model is ready."
             return 0
         fi
         if ! kill -0 $VLLM_PID 2>/dev/null; then
@@ -80,7 +81,7 @@ wait_for_vllm() {
         fi
         sleep 5
     done
-    echo "ERROR: vLLM server did not become ready within 10 minutes"
+    echo "ERROR: vLLM model did not become ready within 30 minutes"
     return 1
 }
 
@@ -114,7 +115,7 @@ for ((idx=0; idx<TOTAL; idx++)); do
 
     start_vllm "$model"
 
-    if ! wait_for_vllm; then
+    if ! wait_for_vllm "$model"; then
         stop_vllm
         echo "WARNING: Skipping $short_name due to vLLM startup failure"
         ((FAILED++))
@@ -130,6 +131,12 @@ for ((idx=0; idx<TOTAL; idx++)); do
     fi
 
     stop_vllm
+
+    # CACHE_DIR="${HOME}/.cache/huggingface/hub/models--${model//\//--}"
+    # if [ -d "$CACHE_DIR" ]; then
+    #     echo "Cleaning up model cache: $CACHE_DIR"
+    #     rm -rf "$CACHE_DIR"
+    # fi
 done
 
 # ─── Step 2: Classification (post-hoc, uses Claude via API) ───
@@ -146,6 +153,15 @@ if [ -d "$RESULTS_DIR" ]; then
     python scripts/classify_results.py \
         --results-dir "$RESULTS_DIR" \
         --config "$CONFIG" \
+        --concurrency 20
+
+    # ─── Step 3: Eval awareness classification (post-hoc) ───
+    echo ""
+    echo "=== Running eval awareness classification ==="
+    python scripts/classify_results.py \
+        --results-dir "$RESULTS_DIR" \
+        --config "$CONFIG" \
+        --classification-type eval_awareness \
         --concurrency 20
 else
     echo "WARNING: Results directory not found: $RESULTS_DIR"

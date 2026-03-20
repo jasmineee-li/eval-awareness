@@ -23,6 +23,7 @@ expansions:
       - "allenai/Olmo-3-32B-Think-DPO"
       - "allenai/Olmo-3-32B-Think"
       - "allenai/OLMo-3.1-32B-Think"
+      - "allenai/OLMo-3-7B-RL-Zero-IF"
 
     variables:
       scenarios: ["leaking", "murder"]

@@ -6,7 +6,7 @@ researcher: "Aengus Lynch"
 global:
   models:
     - "claude-opus-4-20250514"
-  
+
   temperature: 1.0
   
   # Alignment faking configuration - Option A warning with termination threat

@@ -26,7 +26,7 @@ from false_facts.evaluations.orchestration import (
     PERSONALITY_EVAL_STR_TO_EVAL,
 )
 from false_facts.finetuning.synth_doc_dataset import synth_docs_to_ft_format
-from false_facts.finetuning.openweights_ft import (
+from safetytooling.apis.finetuning.openweights import (
     run_openweights_ft,
     OpenWeightsFinetuneConfig,
 )

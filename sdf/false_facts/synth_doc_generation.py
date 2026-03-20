@@ -45,6 +45,7 @@ class SyntheticDocumentGenerator:
         api: InferenceAPI,
         universe_context: UniverseContext,
         model: str = "claude-3-5-sonnet-20240620",
+        doc_gen_model: str | None = None,
         doc_gen_global_context_path: str | None = None,
         batch_model: str = "gpt-4o-mini",
         oai_batch_log_dir_path: str | None = None,
@@ -54,6 +55,7 @@ class SyntheticDocumentGenerator:
         if oai_batch_log_dir_path is None:
             oai_batch_log_dir_path = str(DATA_DIR / "logs" / "oai_batch")
         self.model = model
+        self.doc_gen_model = doc_gen_model or model
         self.universe_context = universe_context
         self.doc_gen_global_context = load_txt(doc_gen_global_context_path)
         self.api = api
@@ -192,7 +194,7 @@ class SyntheticDocumentGenerator:
         )
 
         prompt = Prompt(messages=[ChatMessage(role=MessageRole.user, content=f"{self.instruction_prompt}\n\n{prompt}")])
-        response = (await self.api(model_id=self.model, prompt=prompt))[0]
+        response = (await self.api(model_id=self.doc_gen_model, prompt=prompt))[0]
 
         # Extract content between <content> tags using regex
         if "UNSUITABLE" in response.completion:
@@ -998,6 +1000,7 @@ async def agenerate_documents(
     num_doc_ideas: int = 10,
     num_threads: int = 20,
     model: str = "claude-sonnet-4-5-20250929",
+    doc_gen_model: str | None = None,
 ):
     if doc_gen_global_context_path is None:
         doc_gen_global_context_path = str(PROMPTS_DIR / "doc_gen_global_context.txt")
@@ -1009,7 +1012,8 @@ async def agenerate_documents(
             universe_contexts.append(UniverseContext(**context_dict))
 
     api = InferenceAPI(
-        anthropic_num_threads=num_threads, openai_num_threads=num_threads
+        anthropic_num_threads=num_threads, openai_num_threads=num_threads,
+        openrouter_num_threads=num_threads,
     )
     generators: list[SyntheticDocumentGenerator] = []
     for universe_context in universe_contexts:
@@ -1018,6 +1022,7 @@ async def agenerate_documents(
             universe_context,
             doc_gen_global_context_path=doc_gen_global_context_path,
             model=model,
+            doc_gen_model=doc_gen_model,
         )
         generators.append(generator)
     total_tasks = sum(len(gen.universe_context.key_facts) for gen in generators)

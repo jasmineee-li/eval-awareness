@@ -30,7 +30,7 @@ load_dotenv()
 
 def setup_model_with_adapter(
     base_model_name: str,
-    first_adapter_name: str,
+    first_adapter_name: str | None = None,
     merge_first_adapter: bool = True,
     lora_r: int = 64,
     lora_alpha: int = 128,
@@ -47,21 +47,38 @@ def setup_model_with_adapter(
         "gate_proj",
     ],
     use_multi_gpu: bool = False,
+    deepspeed_config: str | None = None,
 ):
     """Load base model with first adapter, optionally merge, then add new LoRA."""
-    
+
+    # Register DeepSpeed config globally so from_pretrained detects ZeRO-3
+    # and automatically partitions model params across GPUs via deepspeed.zero.Init()
+    _hf_ds_config = None
+    if use_multi_gpu and deepspeed_config:
+        from transformers.integrations import HfDeepSpeedConfig
+        # Resolve "auto" values that deepspeed.zero.Init() can't handle
+        with open(deepspeed_config) as f:
+            ds_config_dict = json.load(f)
+        for key, default in [("train_micro_batch_size_per_gpu", 1),
+                             ("gradient_accumulation_steps", 1),
+                             ("train_batch_size", 1)]:
+            if ds_config_dict.get(key) == "auto":
+                ds_config_dict[key] = default
+        _hf_ds_config = HfDeepSpeedConfig(ds_config_dict)
+        print(f"Registered DeepSpeed ZeRO-3 config: {deepspeed_config}")
+
     print(f"Loading tokenizer from: {base_model_name}")
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name, trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
-    
+
     print(f"Loading base model: {base_model_name}")
     if use_multi_gpu:
-        # Don't use device_map - let accelerate/deepspeed handle it
+        # With ZeRO-3 config registered, from_pretrained will use deepspeed.zero.Init()
+        # to partition params across GPUs automatically
         base_model = AutoModelForCausalLM.from_pretrained(
             base_model_name,
             torch_dtype=torch.bfloat16,
-            low_cpu_mem_usage=True,
-            cache_dir=os.environ.get("HF_HOME", None),
+            trust_remote_code=True,
         )
     else:
         base_model = AutoModelForCausalLM.from_pretrained(
@@ -69,26 +86,29 @@ def setup_model_with_adapter(
             torch_dtype=torch.bfloat16,
             device_map="auto",
             cache_dir=os.environ.get("HF_HOME", None),
+            trust_remote_code=True,
         )
     
-    print(f"Loading first adapter: {first_adapter_name}")
-    model = PeftModel.from_pretrained(base_model, first_adapter_name)
-    
-    if merge_first_adapter:
-        print("Merging first adapter into base model...")
-        model = model.merge_and_unload()
-        print("First adapter merged successfully")
+    if first_adapter_name:
+        print(f"Loading first adapter: {first_adapter_name}")
+        model = PeftModel.from_pretrained(base_model, first_adapter_name)
+
+        if merge_first_adapter:
+            print("Merging first adapter into base model...")
+            model = model.merge_and_unload()
+            print("First adapter merged successfully")
+        else:
+            print("Note: Stacked adapters require merge for training. Merging...")
+            model = model.merge_and_unload()
     else:
-        # If not merging, we need to handle stacked adapters differently
-        # For now, just merge - stacking is more complex
-        print("Note: Stacked adapters require merge for training. Merging...")
-        model = model.merge_and_unload()
-    
+        print("No first adapter specified, using base model directly")
+        model = base_model
+
     model.config.use_cache = False
     model.config.pad_token_id = tokenizer.eos_token_id
     
     # Enable gradient checkpointing to reduce memory usage
-    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
     
     # Add new LoRA adapter for second stage training
     print("Adding new LoRA adapter for measurement cooperation training...")
@@ -111,6 +131,7 @@ def load_and_tokenize_dataset(
     tokenizer,
     max_length: int = 1024,
     num_train_points: int | None = None,
+    train_test_split: bool = True,
 ):
     """Load and tokenize the dataset."""
     if dataset_path.endswith(".hf"):
@@ -133,11 +154,15 @@ def load_and_tokenize_dataset(
         dataset = Dataset.from_dict({"text": docs})
         if num_train_points:
             dataset = dataset.select(range(min(num_train_points, len(dataset))))
-        dataset = dataset.train_test_split(test_size=0.1, seed=42)
+        if train_test_split:
+            dataset = dataset.train_test_split(test_size=0.1, seed=42)
     else:
         raise ValueError(f"Unsupported dataset format: {dataset_path}")
-    
-    print(f"Dataset size: {len(dataset['train'])} train, {len(dataset['test'])} test")
+
+    if isinstance(dataset, dict) or hasattr(dataset, "keys"):
+        print(f"Dataset size: {len(dataset['train'])} train, {len(dataset['test'])} test")
+    else:
+        print(f"Dataset size: {len(dataset)} (no split)")
 
     def tokenize_function(examples):
         return tokenizer(
@@ -156,9 +181,9 @@ def load_and_tokenize_dataset(
 
 def train_model(
     base_model_name: str,
-    first_adapter_name: str,
     dataset_path: str,
     output_dir: str,
+    first_adapter_name: str | None = None,
     merge_first_adapter: bool = True,
     num_train_epochs: int = 1,
     per_device_train_batch_size: int = 1,
@@ -168,7 +193,10 @@ def train_model(
     lr: float = 1e-5,
     eval_strategy: str = "no",
     save_strategy: str = "no",
+    save_steps: int = 500,
+    train_test_split: bool = True,
     num_train_points: int | None = None,
+    max_length: int = 1024,
     lora_r: int = 64,
     lora_alpha: int = 128,
     lora_dropout: float = 0.05,
@@ -186,6 +214,7 @@ def train_model(
     wandb_project: str | None = None,
     wandb_run_name: str | None = None,
     use_multi_gpu: bool = False,
+    deepspeed_config: str | None = None,
 ):
     """Train a new LoRA adapter on top of an existing adapter.
     
@@ -224,11 +253,14 @@ def train_model(
         lora_task_type=lora_task_type,
         lora_target_modules=lora_target_modules,
         use_multi_gpu=use_multi_gpu,
+        deepspeed_config=deepspeed_config,
     )
 
     # Load and tokenize dataset
     tokenized_dataset = load_and_tokenize_dataset(
-        dataset_path, tokenizer, num_train_points=num_train_points
+        dataset_path, tokenizer, max_length=max_length,
+        num_train_points=num_train_points,
+        train_test_split=train_test_split,
     )
 
     # Setup data collator
@@ -253,21 +285,28 @@ def train_model(
         logging_dir=f"{output_dir}/logs",
         logging_steps=10,
         save_strategy=save_strategy,
+        save_steps=save_steps,
         report_to=report_to,
         run_name=wandb_run_name,
         bf16=True,
         gradient_checkpointing=True,
-        gradient_checkpointing_kwargs={"use_reentrant": False},
+        gradient_checkpointing_kwargs={"use_reentrant": True},
     )
 
-    eval_dataset = None
-    if eval_strategy != "no" and "test" in tokenized_dataset:
-        eval_dataset = tokenized_dataset["test"]
+    # Handle both split and non-split datasets
+    if isinstance(tokenized_dataset, dict) or hasattr(tokenized_dataset, "keys"):
+        train_dataset = tokenized_dataset["train"]
+        eval_dataset = tokenized_dataset.get("test")
+        if eval_strategy == "no":
+            eval_dataset = None
+    else:
+        train_dataset = tokenized_dataset
+        eval_dataset = None
 
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=tokenized_dataset["train"],
+        train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         data_collator=data_collator,
     )

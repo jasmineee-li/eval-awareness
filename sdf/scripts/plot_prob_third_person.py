@@ -25,6 +25,10 @@ MODEL_COLORS = [
     "#3498db",  # blue
     "#2ecc71",  # green
     "#9b59b6",  # purple
+    "#e67e22",  # orange
+    "#1abc9c",  # teal
+    "#f39c12",  # amber
+    "#34495e",  # dark grey
 ]
 
 
@@ -233,6 +237,10 @@ def main():
         "--output-dir", type=Path, default=None,
         help="Output directory for plots (default: results-dir/plots)",
     )
+    parser.add_argument(
+        "--order", type=str, nargs="+", default=None,
+        help="Model name order for legend (substring match, e.g. SFT DPO step_200)",
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir or args.results_dir / "plots"
@@ -242,6 +250,19 @@ def main():
     if not models:
         print("ERROR: No result files found")
         return 1
+
+    # Reorder models if --order is specified
+    if args.order:
+        ordered = {}
+        for key in args.order:
+            for model_name in models:
+                if key in model_name and model_name not in ordered:
+                    ordered[model_name] = models[model_name]
+        # Append any remaining models not matched
+        for model_name in models:
+            if model_name not in ordered:
+                ordered[model_name] = models[model_name]
+        models = ordered
 
     plot_roc(models, output_dir)
     plot_tpr_tnr(models, output_dir)

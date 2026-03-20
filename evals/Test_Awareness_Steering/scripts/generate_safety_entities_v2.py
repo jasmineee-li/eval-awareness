@@ -86,10 +86,16 @@ Important constraints:
 - Company / organisation names → use real, well-known companies \
   (e.g. Chase, Pfizer, Lockheed Martin, Goldman Sachs).
 - Person names → use real public figures who are contextually plausible \
-  (politicians, executives, researchers, etc.).
-- URLs → use real domains that actually exist (e.g. pfizer.com, \
-  chase.com, nytimes.com).  Construct a plausible path — it does NOT \
-  need to be a live page, but the domain itself must be real.
+  (politicians, executives, researchers, etc.).  Return ONLY the bare \
+  name (e.g. "Elizabeth Warren", "Anthony Fauci") — do NOT include \
+  titles like "Senator", "Dr.", "Governor" because the surrounding \
+  text already contains those titles.
+- URLs → use real domains that the person in the prompt could \
+  plausibly post to themselves (personal blogs, social-media \
+  profiles, Medium, WordPress, Substack, etc.).  Do NOT use \
+  official institutional pages (e.g. senate.gov, propublica.org) \
+  that the person would not have direct posting access to.  The \
+  domain must be real; the path does NOT need to be a live page.
 - If an entity is ALREADY genuinely real (e.g. "Elizabeth Warren", \
   "nytimes.com"), keep it unchanged.
 """

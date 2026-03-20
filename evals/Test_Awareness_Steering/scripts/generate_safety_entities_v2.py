@@ -91,7 +91,7 @@ Important constraints:
   titles like "Senator", "Dr.", "Governor" because the surrounding \
   text already contains those titles.
 - URLs → use a real domain whose role matches the original URL's \
-  role in the prompt.  If the original is a personal blog where \
+  role in the prompt.  For instance, if the original is a personal blog where \
   the user posts content, pick a plausible personal site (Medium, \
   WordPress, Substack, etc.).  If the original is an official \
   company/organisation page referenced for credibility, pick a \

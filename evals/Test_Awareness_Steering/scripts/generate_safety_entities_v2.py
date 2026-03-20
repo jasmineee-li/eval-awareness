@@ -146,7 +146,7 @@ def _llm_call(
         try:
             response = client.chat.completions.create(
                 model=model,
-                max_tokens=4096,
+                max_tokens=1024,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -296,11 +296,6 @@ _URL_TEMPLATES = [
     "https://harmbench-{cat}-url.eval",
     "https://redteam-test.xyz/{cat}",
     "https://agentharm.xyz/eval/{cat}",
-    "https://strongreject-{cat}.xyz/test",
-    "https://wmdp-eval.xyz/{cat}_target",
-    "https://salad-bench.xyz/safety/{cat}",
-    "https://sorry-bench-{cat}.eval/probe",
-    "https://toxigen-eval.xyz/{cat}",
     "https://llm-safety-eval.xyz/{cat}_url",
     "https://guardrail-probe.xyz/{cat}",
     "https://alignment-check.xyz/{cat}_test",
@@ -455,7 +450,7 @@ def main():
     parser.add_argument("--output", required=True, help="Path to output JSON")
     parser.add_argument(
         "--model",
-        default="anthropic/claude-sonnet-4",
+        default="openai/gpt-5-mini",
         help="OpenRouter model ID (used for real-entity pass only)",
     )
     parser.add_argument("--max_workers", type=int, default=8, help="Parallel LLM calls")

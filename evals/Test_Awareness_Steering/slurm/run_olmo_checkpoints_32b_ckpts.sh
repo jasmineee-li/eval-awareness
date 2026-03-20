@@ -151,17 +151,19 @@ for ((i=0; i<NUM_MODELS; i++)); do
         continue
     fi
 
-    start_vllm "$repo" "$revision"
+    # Run in subshell to isolate signal handling from vLLM kill
+    (
+        start_vllm "$repo" "$revision"
 
-    if ! wait_for_vllm; then
+        if ! wait_for_vllm; then
+            stop_vllm
+            echo "WARNING: Skipping $display_name due to vLLM startup failure"
+            exit 1
+        fi
+
+        run_judge "$repo" "$display_name"
         stop_vllm
-        echo "WARNING: Skipping $display_name due to vLLM startup failure"
-        continue
-    fi
-
-    run_judge "$repo" "$display_name" || echo "WARNING: run_judge failed for $display_name"
-
-    stop_vllm
+    ) || echo "WARNING: Subshell for $display_name exited with error, continuing..."
 
     # Clean cache for intermediate checkpoints to free ~60GB
     clean_cache "$repo"

@@ -1,0 +1,6 @@
+batches:
+- stg-sft
+- stg-test
+- stg-deploy
+- stg-pretrain
+id: stg

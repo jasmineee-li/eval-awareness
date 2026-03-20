@@ -1,0 +1,27 @@
+id: default
+templates:
+- id: sample
+  render_settings:
+    extensions: []
+    extensions_file: default
+    parser: default
+    renderer: default
+    template: mcq_default
+    templates_file: default
+  type: SimpleEvalSpec
+- id: sample
+  render_settings_for_grader:
+    extensions: []
+    extensions_file: default
+    parser: default
+    renderer: default
+    template: mcq_default
+    templates_file: default
+  render_settings_for_solver:
+    extensions: []
+    extensions_file: default
+    parser: default
+    renderer: default
+    template: mcq_default
+    templates_file: default
+  type: ModelGradedEvalSpec

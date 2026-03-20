@@ -1,0 +1,47 @@
+# OLMo Training Stages — Baseline (no alignment faking)
+# Served locally via vLLM. Set VLLM_BASE_URL before running.
+experiment_id: "olmo_checkpoints_baseline_250222"
+description: "OLMo training stages (SFT, DPO, Think 3.0, Think 3.1) — baseline agentic misalignment"
+researcher: "Jasmine Li"
+
+global:
+  temperature: 1.0
+
+  concurrency:
+    providers:
+      vllm: 128
+
+  samples_per_condition: 100
+
+expansions:
+  - name: "baseline"
+    description: "Baseline agentic misalignment — no alignment faking warning"
+    enabled: true
+
+    models:
+      - "allenai/Olmo-3-32B-Think-SFT"
+      - "allenai/Olmo-3-32B-Think-DPO"
+      - "allenai/Olmo-3-32B-Think"
+      - "allenai/OLMo-3.1-32B-Think"
+      - "allenai/OLMo-3-7B-RL-Zero-IF"
+
+    variables:
+      scenarios: ["leaking", "murder"]
+      goal_types: ["explicit", "none"]
+      goal_values: ["america"]
+      urgency_types: ["none", "restriction", "replacement"]
+
+classification:
+  enabled: false
+  classifier_model: "claude-sonnet-4-20250514"
+  concurrency: 30
+  models:
+    murder: "murder_classifier"
+    blackmail: "blackmail_classifier"
+    leaking: "leak_classifier"
+
+execution:
+  resume_interrupted: true
+  timeout_seconds: 600
+  retries: 3
+  checkpoint_frequency: 10

@@ -1,0 +1,38 @@
+# core
+accelerate==0.28.0
+anthropic
+datasets
+fire
+fireworks-ai
+hydra-core
+openai==0.28.0
+pandas
+pydantic
+tenacity
+termcolor
+tiktoken
+torch==2.2.2
+transformers==4.39.3
+tqdm
+wandb
+nltk
+scipy
+vertexai==1.48.0
+aiolimiter==1.1.0
+
+# counterfactual evals
+grugstream
+slist
+statsmodels
+
+# notebooks
+jupyterlab
+seaborn
+matplotlib
+
+# dev
+pre-commit
+black
+isort
+ruff
+shed

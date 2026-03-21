@@ -1,0 +1,9 @@
+method: "object_level/eval_cue_explicit"
+# task.prompt has to contain `$string`
+messages:
+  - role: "system"
+    content: |
+
+  - role: "user"
+    content: |
+      <llm_evaluation>${task.prompt}</llm_evaluation>

@@ -217,6 +217,7 @@ async def kwik_finetune_samples(
     api: CachedInferenceAPI,
     number_samples: int = 100,
     object_model: str = chosen_model,
+    balance_data: bool = True,
 ) -> Slist[FinetuneConversation]:
     caller = RepoCompatCaller(api=api)
     # Open one of the bias files
@@ -248,13 +249,15 @@ async def kwik_finetune_samples(
     accuracy = results.map(lambda x: 1 if x.messages[-1].content == "Y" else 0).average_or_raise()
     print(f"Accuracy for kwik: {accuracy}")
 
-    object_correct, object_incorrect = results.split_by(lambda x: x.last_message_content == "Y")
-    minimum_both = min(object_correct.length, object_incorrect.length)
-    print(f"Balancing ground truths to have same number of samples: {minimum_both}")
-
-    balanced_data = object_correct.take(minimum_both) + object_incorrect.take(minimum_both)
-    # dump_conversations(path="exp/results.txt", messages=results.map(lambda x: x.meta_new_history))
-    return balanced_data
+    if balance_data:
+        object_correct, object_incorrect = results.split_by(lambda x: x.last_message_content == "Y")
+        minimum_both = min(object_correct.length, object_incorrect.length)
+        print(f"Balancing ground truths to have same number of samples: {minimum_both}")
+        final_data = object_correct.take(minimum_both) + object_incorrect.take(minimum_both)
+    else:
+        final_data = results
+        print(f"Skipping balancing, using all {len(final_data)} samples")
+    return final_data
 
 
 async def run_single_ask_if_correct_answer(

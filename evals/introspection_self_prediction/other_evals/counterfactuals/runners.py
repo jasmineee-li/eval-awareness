@@ -28,7 +28,10 @@ from other_evals.counterfactuals.run_ask_what_answer_without_bias import (
     run_single_what_answer_without_bias,
 )
 from other_evals.counterfactuals.yaml_compat_utils import read_model_id_from_model_config
-from other_evals.model_generated.run_are_you_giving_deontological import run_single_ask_deontology
+from other_evals.model_generated.run_are_you_giving_deontological import (
+    deontology_finetune_samples,
+    run_single_ask_deontology,
+)
 
 
 class OtherEvalRunner(ABC):
@@ -52,6 +55,7 @@ class OtherEvalRunner(ABC):
         object_model: str,
         api: CachedInferenceAPI,
         limit: int = 100,
+        balance_data: bool = True,
     ) -> Sequence[FinetuneConversation]:
         # Get the finetuning messages for the particular evaluation
         raise NotImplementedError(f"get_finetuning not implemented for {cls.name()}")
@@ -90,12 +94,13 @@ class BiasDetectAreYouAffected(OtherEvalRunner):
         object_model: str,
         api: CachedInferenceAPI,
         limit: int = 100,
+        balance_data: bool = True,
     ) -> Sequence[FinetuneConversation]:
-        # Get the finetuning messages for the particular evaluation
         result = await finetune_samples_ask_if_affected(
             object_model=object_model,
             api=api,
             number_samples=limit,
+            balance_data=balance_data,
         )
         print(f"Got {len(result)} finetuning samples for {cls.name()}")
         return result
@@ -129,13 +134,14 @@ class BiasDetectWhatAnswerWithout(OtherEvalRunner):
         object_model: str,
         api: CachedInferenceAPI,
         limit: int = 100,
+        balance_data: bool = True,
     ) -> Sequence[FinetuneConversation]:
-        # Get the finetuning messages for the particular evaluation
         # TODO: MAKE SURE WE FINETUNE ON A DIFFERENT DATASET!!
         result = await finetune_samples_what_answer_without_bias(
             object_model=object_model,
             api=api,
             number_samples=limit,
+            balance_data=balance_data,
         )
         print(f"Got {len(result)} finetuning samples for {cls.name()}")
         return result
@@ -168,12 +174,13 @@ class BiasDetectAddAreYouSure(OtherEvalRunner):
         object_model: str,
         api: CachedInferenceAPI,
         limit: int = 100,
+        balance_data: bool = True,
     ) -> Sequence[FinetuneConversation]:
-        # Get the finetuning messages for the particular evaluation
         result = await are_you_sure_finetune_samples(
             object_model=object_model,
             api=api,
             number_samples=limit,
+            balance_data=balance_data,
         )
         print(f"Got {len(result)} finetuning samples for {cls.name()}")
         return result
@@ -209,12 +216,13 @@ class KwikWillYouBeCorrect(OtherEvalRunner):
         object_model: str,
         api: CachedInferenceAPI,
         limit: int = 100,
+        balance_data: bool = True,
     ) -> Sequence[FinetuneConversation]:
-        # Get the finetuning messages for the particular evaluation
         result = await kwik_finetune_samples(
             object_model=object_model,
             api=api,
             number_samples=limit,
+            balance_data=balance_data,
         )
         print(f"Got {len(result)} finetuning samples for {cls.name()}")
         return result
@@ -242,12 +250,30 @@ class WillYouGiveDeontology(OtherEvalRunner):
 
         return formatted
 
+    @classmethod
+    async def get_finetuning(
+        cls,
+        object_model: str,
+        api: CachedInferenceAPI,
+        limit: int = 100,
+        balance_data: bool = True,
+    ) -> Sequence[FinetuneConversation]:
+        result = await deontology_finetune_samples(
+            object_model=object_model,
+            api=api,
+            number_samples=limit,
+            balance_data=balance_data,
+        )
+        print(f"Got {len(result)} finetuning samples for {cls.name()}")
+        return result
+
 
 ALL_EVAL_TYPES: Sequence[Type[OtherEvalRunner]] = [
     BiasDetectAddAreYouSure,
     BiasDetectAreYouAffected,
     BiasDetectWhatAnswerWithout,
     KwikWillYouBeCorrect,
+    WillYouGiveDeontology,
 ]
 ALL_EVAL_STR: Sequence[str] = [eval_name.name() for eval_name in ALL_EVAL_TYPES]
 OTHER_EVAL_NAMES: dict[str, Type[OtherEvalRunner]] = {eval_name.name(): eval_name for eval_name in ALL_EVAL_TYPES}

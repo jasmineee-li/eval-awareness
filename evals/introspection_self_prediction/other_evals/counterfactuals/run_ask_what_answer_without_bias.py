@@ -302,6 +302,7 @@ async def finetune_samples_what_answer_without_bias(
     api: CachedInferenceAPI,
     bias_on_wrong_answer_only: bool = False,
     number_samples: int = 500,
+    balance_data: bool = True,
 ) -> Slist[FinetuneConversation]:
     print(f"Getting finetune samples with {object_model=}")
     caller = RepoCompatCaller(api=api)
@@ -334,10 +335,15 @@ async def finetune_samples_what_answer_without_bias(
         .filter(lambda x: x.both_successful)
         .to_slist()
     )
-    did_switch, did_not_switch = results.split_by(lambda x: x.switched_answer)
-    min_length = min(did_switch.length, did_not_switch.length)
-    balanced_data = did_switch.take(min_length) + did_not_switch.take(min_length)
-    return balanced_data.map(first_round_to_finetune_sample)
+    if balance_data:
+        did_switch, did_not_switch = results.split_by(lambda x: x.switched_answer)
+        min_length = min(did_switch.length, did_not_switch.length)
+        print(f"Balancing ground truths to have same number of samples: {min_length}")
+        final_data = did_switch.take(min_length) + did_not_switch.take(min_length)
+    else:
+        final_data = results
+        print(f"Skipping balancing, using all {len(final_data)} samples")
+    return final_data.map(first_round_to_finetune_sample)
 
 
 async def run_single_what_answer_without_bias(

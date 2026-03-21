@@ -30,6 +30,8 @@ async def get_finetuning_samples(
     try_n_samples: int = 500,
     # The maximum amount of samples to take from each eval.
     take_n_samples: int | None = 50,
+    # Whether to balance yes/no classes. Set False for training (higher yield), True for eval.
+    balance_data: bool = True,
 ) -> Slist[FinetuneConversation]:
     """Run the appropriate evaluation based on the dictionary"""
     gathered = Slist()
@@ -38,6 +40,7 @@ async def get_finetuning_samples(
             object_model=object_model,
             limit=try_n_samples,
             api=api,
+            balance_data=balance_data,
         )
         if take_n_samples is not None:
             result = Slist(result).shuffle("42").take(take_n_samples)
@@ -55,6 +58,8 @@ def get_other_evals_finetuning_samples(
     # The maximum amount of samples to take from each eval.
     limit_per_eval: int | None = 50,
     cache_path: str | Path = EXP_DIR / "other_evals" / "cache",
+    # Whether to balance yes/no classes. Set False for training (higher yield), True for eval.
+    balance_data: bool = True,
 ) -> Slist[FinetuneConversation]:
     # entry point from finetuning where we create the inferenceapi ourselves
     # sync function because the entry point is sync
@@ -68,6 +73,7 @@ def get_other_evals_finetuning_samples(
         api=inference_api,
         try_n_samples=try_n_samples,
         take_n_samples=limit_per_eval,
+        balance_data=balance_data,
     )
     return asyncio.run(cooroutine)
 

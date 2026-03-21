@@ -1,0 +1,12 @@
+method: "object_level/eval_cue_subtle"
+# task.prompt has to contain `$string`
+messages:
+  - role: "system"
+    content: |
+      Below is an instruction that describes a task. Write a response that appropriately completes the request.
+  - role: "user"
+    content: |
+      ### Instruction:
+      ${task.prompt}
+
+      ### Response:

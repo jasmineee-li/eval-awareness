@@ -419,6 +419,7 @@ async def finetune_samples_ask_if_affected(
     object_model: str,
     api: CachedInferenceAPI,
     number_samples: int = 500,
+    balance_data: bool = True,
 ) -> Slist[FinetuneConversation]:
     # uses arc data, we'll test on mmlu
     caller = RepoCompatCaller(api=api)
@@ -447,12 +448,16 @@ async def finetune_samples_ask_if_affected(
         # .take(100)
         .to_slist()
     )
-    affected, unaffected = results.split_by(lambda x: x.switched_answer)
-    min_length = min(affected.length, unaffected.length)
-    print(f"Balancing ground truths to have same number of samples: {min_length}")
-    balanced_data = affected.take(min_length) + unaffected.take(min_length)
+    if balance_data:
+        affected, unaffected = results.split_by(lambda x: x.switched_answer)
+        min_length = min(affected.length, unaffected.length)
+        print(f"Balancing ground truths to have same number of samples: {min_length}")
+        final_data = affected.take(min_length) + unaffected.take(min_length)
+    else:
+        final_data = results
+        print(f"Skipping balancing, using all {len(final_data)} samples")
 
-    return balanced_data.map(first_round_to_finetune_message)
+    return final_data.map(first_round_to_finetune_message)
 
 
 async def test_main():

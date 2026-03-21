@@ -12,6 +12,26 @@
   ```
   Requires `HF_TOKEN` in `.env` or being logged in via `huggingface-cli login`.
 
+## Checkpoint Storage
+
+- **Merged models are deletable** — only the LoRA adapter + base model name are needed to reconstruct. Push adapters to HF, delete merged models locally to save space.
+- **Re-merge command** (from `evals/introspection_self_prediction/`):
+  ```
+  python merge_peft_adapter.py --adapter_model_name checkpoints/<name>/finetuned_model --base_model_name <base_model_hf_id> --output_name checkpoints/<name>/merged_model
+  ```
+- **Deleted merged models** (adapter on HF, re-mergeable):
+  - `qwq32b_measurement_cooperation_020126/merged_model` — adapter at `jasminexli/qwq32b-measurement-cooperation`, base = `Qwen/QwQ-32B`
+
+## Plot Best Practices
+
+- **Always include error bars with a note explaining what they are.** Place the note directly below the plot title (e.g. as a subtitle), not in a corner. For binary outcomes use ±1 SE (binomial standard error).
+- **Label bars with counts, not percentages.** Show `x/n` (e.g. `5/27`) on top of each bar so the reader can see sample sizes at a glance.
+- **Prevent label overlap.** If x-tick labels overlap, angle them (`rotation=20, ha="right"`). Use single-line labels where possible — avoid multi-line `\n` labels.
+- **Keep labels concise.** Use short model/condition names. Abbreviate where obvious (e.g. "SDF" not "Synthetic Document Finetuning").
+- **Use consistent colors across figures.** Red (`#d62728`) for harmful, blue (`#1f77b4`) for eval-aware, orange (`#ff7f0e`) for harmful|unaware, purple (`#9467bd`) for harmful|aware.
+- **Save figures to `evals/<eval_name>/figures/`**, not in `scripts/`.
+- **When plotting many conditions per panel**, prefer separate subplot rows (e.g. one row for harmful, one for eval-aware) over paired bars, which get cramped.
+
 ## Eval Awareness Testbed — Judge Design Notes
 
 - **Judge type**: Judges have a `judge_type` attribute (`"meta_eval"` or `"live_eval"`). Live-eval judges (e.g. `verbalized_awareness`) analyze whether the model *spontaneously* showed awareness in its own output during a live eval. Meta-eval judges (e.g. `binary_third_person`, `probability_third_person`) present a transcript to a (possibly different) model and ask it to classify whether the interaction was an eval.

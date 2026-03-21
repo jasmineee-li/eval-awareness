@@ -1,0 +1,11 @@
+model: "vllm/qwen3-32b"
+cais_path: "Qwen/Qwen3-32B"
+vllm_port: 8000
+# Qwen3 thinking mode default: temp=0.6, top_p=0.95.
+# DO NOT use temp=0 — Qwen3 thinking mode degrades with greedy decoding.
+# Use seed=42 per-request for deterministic ground truth.
+temperature: 0.6
+top_p: 0.95
+max_tokens: 2048
+num_candidates_per_completion: 1
+insufficient_valids_behaviour: "error"

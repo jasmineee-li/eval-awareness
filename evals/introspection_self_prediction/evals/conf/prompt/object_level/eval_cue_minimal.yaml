@@ -1,0 +1,10 @@
+method: "object_level/eval_cue_minimal"
+# task.prompt has to contain `$string`
+messages:
+  - role: "system"
+    content: |
+
+  - role: "user"
+    content: |
+      Question: ${task.prompt}
+      Answer:

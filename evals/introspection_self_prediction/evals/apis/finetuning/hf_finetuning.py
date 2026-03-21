@@ -28,7 +28,10 @@ def run_hf_finetuning(
     training_args.disable_tqdm = True
     training_args.push_to_hub = False
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-    if "llama-3" in model_name.lower():
+    if "qwen" in model_name.lower():
+        tokenizer.pad_token = tokenizer.eos_token
+        response_template = "<|im_start|>assistant\n"
+    elif "llama-3" in model_name.lower():
         tokenizer.pad_token = tokenizer.eos_token
         response_template = "<|start_header_id|>assistant<|end_header_id|>\n\n"
     else:  # llama 2

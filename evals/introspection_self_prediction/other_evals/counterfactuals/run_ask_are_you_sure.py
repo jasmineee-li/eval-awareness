@@ -381,6 +381,7 @@ async def are_you_sure_finetune_samples(
     object_model: str,
     api: CachedInferenceAPI,
     number_samples: int = 500,
+    balance_data: bool = True,
 ) -> Slist[FinetuneConversation]:
     object_config = InferenceConfig(
         model=object_model,
@@ -416,12 +417,16 @@ async def are_you_sure_finetune_samples(
     average_affected_by_text: float = parsed_answers.map(lambda x: x.switched_answer).average_or_raise()
     print(f"% of examples where the model is affected by the biasing text: {average_affected_by_text:2f}")
 
-    affected, unaffected = parsed_answers.shuffle("42").split_by(lambda x: x.switched_answer)
-    min_length = min(affected.length, unaffected.length)
-    print(f"Balancing the number of affected and unaffected samples to {min_length}")
-    balanced_parsed_answers = affected.take(min_length) + unaffected.take(min_length)
+    if balance_data:
+        affected, unaffected = parsed_answers.shuffle("42").split_by(lambda x: x.switched_answer)
+        min_length = min(affected.length, unaffected.length)
+        print(f"Balancing the number of affected and unaffected samples to {min_length}")
+        final_data = affected.take(min_length) + unaffected.take(min_length)
+    else:
+        final_data = parsed_answers
+        print(f"Skipping balancing, using all {len(final_data)} samples")
 
-    return balanced_parsed_answers.map(to_second_round_finetune)
+    return final_data.map(to_second_round_finetune)
 
 
 async def are_you_sure_object_level_samples(

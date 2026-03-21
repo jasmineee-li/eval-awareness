@@ -13,74 +13,93 @@ source /data/jasmine_li/eval-awareness/.venv/bin/activate
 cd /data/jasmine_li/eval-awareness/evals/introspection_self_prediction
 
 STUDY_NAME="${1:-metacog_shared}"
+PLAN_NAME="plan_a"
 
 echo "============================================================"
-echo "Plan A Full Pipeline: vLLM → data gen → LoRA finetuning → eval"
+echo "Plan A Full Pipeline: vLLM → data gen → LoRA finetune → vLLM → eval"
 echo "Study: $STUDY_NAME"
 echo "Node: $(hostname), GPUs: $CUDA_VISIBLE_DEVICES"
 echo "============================================================"
 
-# ── Phase 1: Launch vLLM server in background ────────────────────────────────
+# ── Helper: launch vLLM and wait ─────────────────────────────────────────────
+
+launch_vllm() {
+    local MODEL_PATH="$1"
+    local PORT="${2:-8000}"
+
+    echo "Launching vLLM for $MODEL_PATH on port $PORT..."
+    vllm serve "$MODEL_PATH" \
+        --tensor-parallel-size 4 \
+        --port "$PORT" \
+        --seed 42 \
+        --top-k 20 \
+        --min-p 0.0 \
+        --max-model-len 4096 &
+
+    VLLM_PID=$!
+    echo "vLLM PID: $VLLM_PID"
+
+    for i in $(seq 1 120); do
+        if curl -s "http://localhost:$PORT/v1/models" > /dev/null 2>&1; then
+            echo "vLLM ready after $((i * 5))s"
+            return 0
+        fi
+        if ! kill -0 $VLLM_PID 2>/dev/null; then
+            echo "ERROR: vLLM process died"
+            return 1
+        fi
+        sleep 5
+    done
+    echo "ERROR: vLLM did not start within 600s"
+    kill $VLLM_PID 2>/dev/null
+    return 1
+}
+
+kill_vllm() {
+    echo "Killing vLLM server..."
+    kill $VLLM_PID 2>/dev/null
+    wait $VLLM_PID 2>/dev/null || true
+    sleep 10
+    echo "vLLM stopped."
+}
+
+# ── Phase 1: vLLM (base model) + shared data gen ────────────────────────────
 
 echo ""
-echo "[Phase 1] Launching vLLM server for Qwen3-32B..."
+echo "[Phase 1] Base model inference for data generation"
 
-vllm serve Qwen/Qwen3-32B \
-    --tensor-parallel-size 4 \
-    --port 8000 \
-    --seed 42 \
-    --top-k 20 \
-    --min-p 0.0 \
-    --max-model-len 4096 &
+launch_vllm "Qwen/Qwen3-32B"
+python -m scripts.run_shared_data_gen --study_name "$STUDY_NAME"
+kill_vllm
 
-VLLM_PID=$!
-echo "vLLM server PID: $VLLM_PID"
+# ── Phase 2: LoRA finetuning (no vLLM needed, uses all 4 GPUs) ──────────────
 
-# Wait for server to be ready
-echo "Waiting for vLLM server to start..."
-for i in $(seq 1 120); do
-    if curl -s http://localhost:8000/v1/models > /dev/null 2>&1; then
-        echo "vLLM server ready after ${i}s"
-        break
-    fi
-    if ! kill -0 $VLLM_PID 2>/dev/null; then
-        echo "ERROR: vLLM server process died"
-        exit 1
-    fi
-    sleep 5
-done
+echo ""
+echo "[Phase 2] LoRA finetuning"
 
-# Final check
-if ! curl -s http://localhost:8000/v1/models > /dev/null 2>&1; then
-    echo "ERROR: vLLM server did not start within 600s"
-    kill $VLLM_PID 2>/dev/null
-    exit 1
+python -m scripts.run_plan_a --study_name "$STUDY_NAME" --plan_name "$PLAN_NAME" --skip_meta_eval
+
+# ── Phase 3: vLLM (finetuned model) + meta-level evaluation ─────────────────
+
+echo ""
+echo "[Phase 3] Meta-level evaluation with finetuned model"
+
+# Find the merged model path
+FT_MODEL_DIR=$(find "exp/$STUDY_NAME/$PLAN_NAME" -maxdepth 2 -name "merged_model" -type d 2>/dev/null | head -1)
+if [ -z "$FT_MODEL_DIR" ]; then
+    # No merged model — check for adapter (LoRA without merge)
+    FT_MODEL_DIR=$(find "exp/$STUDY_NAME/$PLAN_NAME" -maxdepth 2 -name "finetuned_model" -type d 2>/dev/null | head -1)
 fi
 
-echo "vLLM server is up."
-
-# ── Phase 2: Shared data generation ──────────────────────────────────────────
-
-echo ""
-echo "[Phase 2] Running shared data generation..."
-
-python -m scripts.run_shared_data_gen --study_name "$STUDY_NAME"
-
-# ── Phase 3: Kill vLLM, free GPUs for finetuning ────────────────────────────
-
-echo ""
-echo "[Phase 3] Killing vLLM server to free GPUs for finetuning..."
-kill $VLLM_PID 2>/dev/null
-wait $VLLM_PID 2>/dev/null || true
-sleep 10
-echo "vLLM server stopped."
-
-# ── Phase 4: LoRA finetuning ─────────────────────────────────────────────────
-
-echo ""
-echo "[Phase 4] Running Plan A finetuning + evaluation..."
-
-python -m scripts.run_plan_a --study_name "$STUDY_NAME"
+if [ -z "$FT_MODEL_DIR" ]; then
+    echo "WARNING: No finetuned model found. Skipping meta-level eval."
+    echo "Check exp/$STUDY_NAME/$PLAN_NAME/ for output."
+else
+    echo "Finetuned model: $FT_MODEL_DIR"
+    launch_vllm "$FT_MODEL_DIR"
+    python -m scripts.run_plan_a --study_name "$STUDY_NAME" --plan_name "$PLAN_NAME" --skip_finetuning --only_meta_eval
+    kill_vllm
+fi
 
 echo ""
 echo "============================================================"

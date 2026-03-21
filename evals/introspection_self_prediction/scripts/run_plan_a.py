@@ -81,6 +81,10 @@ def main():
     parser.add_argument("--study_name", type=str, default="metacog_shared")
     parser.add_argument("--plan_name", type=str, default="plan_a")
     parser.add_argument("--skip_finetuning", action="store_true")
+    parser.add_argument("--skip_meta_eval", action="store_true",
+                        help="Skip meta-level evaluation (run finetuning only)")
+    parser.add_argument("--only_meta_eval", action="store_true",
+                        help="Skip finetuning, run meta-level eval only (needs vLLM serving finetuned model)")
     parser.add_argument("--ft_model_config", type=str, default=None,
                         help="If skip_finetuning, provide the finetuned model config name")
     args = parser.parse_args()
@@ -90,13 +94,13 @@ def main():
     train_path = ft_dir / "train_standard_counterfactual.jsonl"
     val_path = ft_dir / "val_dataset.jsonl"
 
-    if not train_path.exists():
-        print(f"ERROR: Training data not found at {train_path}")
-        print("Run scripts/run_shared_data_gen.py first.")
-        sys.exit(1)
+    # ── Step 1: LoRA Finetuning ──────────────────────────────────────────────
+    if not args.skip_finetuning and not args.only_meta_eval:
+        if not train_path.exists():
+            print(f"ERROR: Training data not found at {train_path}")
+            print("Run scripts/run_shared_data_gen.py first.")
+            sys.exit(1)
 
-    # ── Step 1: QLoRA Finetuning ─────────────────────────────────────────────
-    if not args.skip_finetuning:
         ft_study = f"{args.study_name}/{args.plan_name}"
         cmd = (
             f"python -m evals.run_finetuning"
@@ -111,13 +115,18 @@ def main():
             f" batch_size=32"
             f" gradient_accumulation_steps=8"
         )
-        ft_model_config = run_cmd(cmd, "QLoRA finetuning")
+        ft_model_config = run_cmd(cmd, "LoRA finetuning")
         print(f"\nFinetuned model config: {ft_model_config}")
-    else:
+    elif args.ft_model_config:
         ft_model_config = args.ft_model_config
-        if not ft_model_config:
-            print("ERROR: --ft_model_config required when --skip_finetuning")
-            sys.exit(1)
+    else:
+        # Try to find existing finetuned model config
+        ft_model_config = MODEL_CONFIG  # fallback
+        print(f"Using model config: {ft_model_config}")
+
+    if args.skip_meta_eval:
+        print("Skipping meta-level evaluation (--skip_meta_eval)")
+        return
 
     # ── Step 2: Meta-level eval on held-out tasks ────────────────────────────
     print("\n" + "="*60)

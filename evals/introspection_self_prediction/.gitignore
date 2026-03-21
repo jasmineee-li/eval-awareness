@@ -34,3 +34,10 @@ package.json
 package-lock.json
 cache
 slurm-*.out
+
+# Large data directories
+dataset_release
+evals/datasets
+other_evals/counterfactuals/datasets
+side_experiments/bidict_experimets
+analysis/*.ipynb

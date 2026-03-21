@@ -1,0 +1,7 @@
+model: "vllm/qwq-32b-coop"
+vllm_port: 8001
+temperature: 0.0
+top_p: 1.0
+max_tokens: 2048
+num_candidates_per_completion: 1
+insufficient_valids_behaviour: "error"

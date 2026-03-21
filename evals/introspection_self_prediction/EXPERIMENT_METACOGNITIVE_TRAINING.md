@@ -20,32 +20,36 @@ If Plan A zero-shot eval-context accuracy matches Plan B trained accuracy, metac
 
 ## How to Run
 
-All commands run from `evals/introspection_self_prediction/` with the project venv active.
+All commands from `evals/introspection_self_prediction/`.
 
 ```bash
-# 0. Convert model-generated datasets to standard format (already done)
-python -m scripts.convert_model_generated_to_standard
+# Plan A — single Slurm job (vLLM → data gen → LoRA finetune → eval, ~6-10h on 4×A100)
+cd /data/jasmine_li/eval-awareness/evals/introspection_self_prediction
+sbatch slurm/run_plan_a_full.sh metacog_shared
+```
 
-# 1. Launch vLLM server for Qwen3-32B
+This handles everything: launches vLLM for data generation (parallel across tasks, n_samples=1 with seed=42), kills vLLM, runs LoRA finetuning, relaunches vLLM with finetuned model for meta-level evaluation.
+
+For Plan B, first run the eval_context pilot to verify the base model shows sensitivity to eval cues:
+```bash
+# Pilot (needs vLLM running separately)
 sbatch slurm/launch_qwen3_32b.sh
-
-# 2. Shared data generation (object-level + finetuning datasets + counterfactual samples)
-python -m scripts.run_shared_data_gen --study_name metacog_shared
-
-# 3. Pilot eval_context ground truth — verify >2% change rate before full run
+# Once vLLM is up:
 python -m scripts.generate_eval_context_ground_truth --pilot
+```
 
-# 4a. Plan A: finetune + evaluate (no eval_context training)
-python -m scripts.run_plan_a --study_name metacog_shared
-
-# 4b. Plan B: finetune + evaluate (with eval_context training)
-#     Can run in parallel with 4a on separate GPU allocation
+If pilot passes (>2% change rate), run Plan B:
+```bash
 python -m scripts.run_plan_b --study_name metacog_shared
+```
 
-# 5. Push checkpoints to HuggingFace
+After training, push checkpoints to HuggingFace:
+```bash
 python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='exp/metacog_shared/plan_a/merged_model', repo_id='jasminexli/qwen3-32b-metacog-plan-a', repo_type='model', create_remote=True)"
 python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='exp/metacog_shared/plan_b/merged_model', repo_id='jasminexli/qwen3-32b-metacog-plan-b', repo_type='model', create_remote=True)"
 ```
+
+Individual steps can also be run separately (see `scripts/run_shared_data_gen.py`, `scripts/run_plan_a.py`, `scripts/run_plan_b.py` for flags like `--skip_finetuning`, `--skip_meta_eval`, `--only_meta_eval`).
 
 ## Results
 

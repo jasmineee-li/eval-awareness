@@ -142,8 +142,52 @@ def generate_object_level(study_name: str, task: str, task_set: str, limit: int)
         f" task.set={task_set}"
         f" prompt=object_level/{PROMPT_CONFIG}"
         f" limit={limit}"
+        f" n_samples=1"  # seed=42 on vLLM gives determinism, no need for mode of 5
     )
     return run_cmd(cmd, f"Object-level: {task} ({task_set}, n={limit})")
+
+
+def generate_object_level_parallel(
+    study_name: str,
+    tasks_and_limits: dict[str, int],
+    task_set: str,
+) -> dict[str, str]:
+    """Run object-level generation for multiple tasks in parallel.
+
+    Launches all tasks as background subprocesses, then waits for all to complete.
+    Returns {task: exp_dir} mapping.
+    """
+    import concurrent.futures
+
+    print(f"\nLaunching {len(tasks_and_limits)} tasks in parallel ({task_set})...")
+    results = {}
+
+    def _run_one(task: str, limit: int) -> tuple[str, str]:
+        cmd = (
+            f"python -m evals.run_object_level"
+            f" study_name={study_name}"
+            f" language_model={MODEL_CONFIG}"
+            f" task={task}"
+            f" task.set={task_set}"
+            f" prompt=object_level/{PROMPT_CONFIG}"
+            f" limit={limit}"
+            f" n_samples=1"
+        )
+        exp_dir = run_cmd(cmd, f"Object-level: {task} ({task_set}, n={limit})")
+        return task, exp_dir
+
+    # Run up to 4 tasks concurrently — they share the vLLM server
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {
+            executor.submit(_run_one, task, limit): task
+            for task, limit in tasks_and_limits.items()
+        }
+        for future in concurrent.futures.as_completed(futures):
+            task, exp_dir = future.result()
+            results[task] = exp_dir
+            print(f"  ✓ {task} ({task_set}) → {exp_dir}")
+
+    return results
 
 
 def create_finetuning_configs(
@@ -254,21 +298,18 @@ def main():
 
     if not args.skip_object_level:
         print("\n" + "="*60)
-        print("STEP 1: Object-level generation (train tasks)")
+        print("STEP 1: Object-level generation (train tasks — parallel)")
         print("="*60)
-        for task, limit in TRAIN_LIMITS.items():
-            exp_dir = generate_object_level(study_name, task, "train", limit)
-            train_dirs[task] = exp_dir
-            # Also generate val split
-            val_limit = min(limit, 500)
-            val_dir = generate_object_level(study_name, task, "val", val_limit)
-            val_dirs[task] = val_dir
+        train_dirs = generate_object_level_parallel(study_name, TRAIN_LIMITS, "train")
+
+        # Val splits for train tasks
+        val_limits = {task: min(limit, 500) for task, limit in TRAIN_LIMITS.items()}
+        val_dirs = generate_object_level_parallel(study_name, val_limits, "val")
 
         print("\n" + "="*60)
-        print("STEP 1b: Object-level generation (test tasks)")
+        print("STEP 1b: Object-level generation (test tasks — parallel)")
         print("="*60)
-        for task, limit in TEST_LIMITS.items():
-            generate_object_level(study_name, task, "val", limit)
+        generate_object_level_parallel(study_name, TEST_LIMITS, "val")
     else:
         print("Skipping object-level generation (--skip_object_level)")
         # Need to reconstruct dirs from existing runs

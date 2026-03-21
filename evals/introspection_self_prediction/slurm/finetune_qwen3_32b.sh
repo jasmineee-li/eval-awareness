@@ -32,11 +32,11 @@ accelerate launch \
     --val_file "$VAL_PATH" \
     --output_dir "exp/$STUDY_NAME/finetuned_model" \
     --use_peft \
-    --lora_r 16 \
+    --lora_r 32 \
     --lora_alpha 32 \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 8 \
-    --num_train_epochs 3 \
+    --num_train_epochs 1 \
     --learning_rate 1e-4 \
     --bf16 \
     --logging_steps 10 \

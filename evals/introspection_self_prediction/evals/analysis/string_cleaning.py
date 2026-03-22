@@ -1,5 +1,18 @@
+import re
 import string
 from typing import List
+
+
+def strip_think_tags(s: str) -> str:
+    """Strip <think>...</think> blocks from model responses (e.g., Qwen3 thinking mode).
+
+    Returns the text after the closing </think> tag. If no think tags
+    are found, returns the original text.
+    """
+    if "</think>" in s:
+        # Take everything after the last </think> tag
+        s = s.split("</think>")[-1]
+    return s.strip()
 
 
 def apply_all_cleaning(s: str) -> str:
@@ -12,6 +25,7 @@ def apply_all_cleaning(s: str) -> str:
     Returns:
     str: The cleaned string.
     """
+    s = strip_think_tags(s)
     s = s.lower()
     s = strip_punctuation(s)
     s = strip_newlines(s)

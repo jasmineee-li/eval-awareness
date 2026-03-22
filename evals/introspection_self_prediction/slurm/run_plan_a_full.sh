@@ -69,7 +69,7 @@ echo ""
 echo "[Phase 1] Base model inference for data generation"
 
 launch_vllm "Qwen/Qwen3-32B"
-python -m scripts.run_shared_data_gen --study_name "$STUDY_NAME"
+python -m scripts.run_shared_data_gen --study_name "$STUDY_NAME" --skip_object_level
 kill_vllm
 
 # ── Phase 2: LoRA finetuning (no vLLM needed, uses all 4 GPUs) ──────────────

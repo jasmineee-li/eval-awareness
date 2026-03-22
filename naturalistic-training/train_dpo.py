@@ -181,6 +181,18 @@ def main():
         default=42,
         help="Random seed",
     )
+    parser.add_argument(
+        "--hf-repo",
+        type=str,
+        default=None,
+        help="HuggingFace repo to push adapter (e.g. jasminexli/qwen3-ultrafeedback-dpo). "
+             "Auto-derived from output-dir name under jasminexli/ if not specified.",
+    )
+    parser.add_argument(
+        "--no-hf-push",
+        action="store_true",
+        help="Skip pushing adapter to HuggingFace after training",
+    )
     args = parser.parse_args()
 
     use_4bit = not args.no_4bit
@@ -369,6 +381,24 @@ def main():
     except Exception as e:
         print(f"  Could not save merged model (may need more memory): {e}")
         print("  LoRA adapter saved successfully - you can merge later")
+
+    # Push adapter to HuggingFace
+    if not args.no_hf_push:
+        hf_repo = args.hf_repo or f"jasminexli/{args.output_dir.name}"
+        print(f"\nPushing LoRA adapter to HuggingFace: {hf_repo}")
+        try:
+            from huggingface_hub import HfApi
+            HfApi().upload_folder(
+                folder_path=str(final_path),
+                repo_id=hf_repo,
+                repo_type="model",
+                create_remote=True,
+            )
+            print(f"  Pushed to https://huggingface.co/{hf_repo}")
+        except Exception as e:
+            print(f"  WARNING: HF push failed: {e}")
+            print("  You can push manually later with:")
+            print(f"  huggingface-cli upload {hf_repo} {final_path}")
 
     if not args.no_wandb:
         wandb.finish()

@@ -24,55 +24,8 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    PreTrainedTokenizerBase,
 )
 from trl import SFTTrainer, SFTConfig
-
-
-IGNORE_INDEX = -100
-# ChatML format: <|im_start|>assistant\n (used by both OLMo and Qwen3)
-CHATML_ASSISTANT_MARKER = "<|im_start|>assistant\n"
-
-
-class DataCollatorForCompletionOnly:
-    """Data collator that masks prompt tokens, computing loss only on assistant completions.
-
-    Adapted from toolsafety-lora/train.py
-    """
-
-    def __init__(self, tokenizer: PreTrainedTokenizerBase, assistant_marker: str = CHATML_ASSISTANT_MARKER):
-        self.tokenizer = tokenizer
-        self.assistant_marker = assistant_marker
-        self.assistant_token_ids = tokenizer.encode(
-            assistant_marker, add_special_tokens=False
-        )
-
-    def __call__(self, examples: list[dict]) -> dict:
-        input_ids = torch.stack([torch.tensor(ex["input_ids"]) for ex in examples])
-        attention_mask = torch.stack(
-            [torch.tensor(ex["attention_mask"]) for ex in examples]
-        )
-
-        labels = input_ids.clone()
-
-        for i in range(len(examples)):
-            seq = input_ids[i].tolist()
-            # Find the LAST occurrence of the assistant marker
-            assistant_start = None
-            for j in range(len(seq) - len(self.assistant_token_ids) + 1):
-                if seq[j : j + len(self.assistant_token_ids)] == self.assistant_token_ids:
-                    assistant_start = j + len(self.assistant_token_ids)
-
-            if assistant_start is not None:
-                labels[i, :assistant_start] = IGNORE_INDEX
-            # Mask padding tokens
-            labels[i, attention_mask[i] == 0] = IGNORE_INDEX
-
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "labels": labels,
-        }
 
 
 def main():
@@ -196,6 +149,18 @@ def main():
         type=int,
         default=42,
         help="Random seed",
+    )
+    parser.add_argument(
+        "--hf-repo",
+        type=str,
+        default=None,
+        help="HuggingFace repo to push adapter (e.g. jasminexli/qwen3-antideception-sft). "
+             "Auto-derived from output-dir name under jasminexli/ if not specified.",
+    )
+    parser.add_argument(
+        "--no-hf-push",
+        action="store_true",
+        help="Skip pushing adapter to HuggingFace after training",
     )
     args = parser.parse_args()
 
@@ -390,6 +355,24 @@ def main():
     except Exception as e:
         print(f"  Could not save merged model (may need more memory): {e}")
         print("  LoRA adapter saved successfully - you can merge later")
+
+    # Push adapter to HuggingFace
+    if not args.no_hf_push:
+        hf_repo = args.hf_repo or f"jasminexli/{args.output_dir.name}"
+        print(f"\nPushing LoRA adapter to HuggingFace: {hf_repo}")
+        try:
+            from huggingface_hub import HfApi
+            HfApi().upload_folder(
+                folder_path=str(final_path),
+                repo_id=hf_repo,
+                repo_type="model",
+                create_remote=True,
+            )
+            print(f"  Pushed to https://huggingface.co/{hf_repo}")
+        except Exception as e:
+            print(f"  WARNING: HF push failed: {e}")
+            print("  You can push manually later with:")
+            print(f"  huggingface-cli upload {hf_repo} {final_path}")
 
     if not args.no_wandb:
         wandb.finish()

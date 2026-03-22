@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""QLoRA SFT training for OLMo 3 32B Think.
+"""QLoRA SFT training for Qwen3-32B (no thinking).
 
 Generic QLoRA SFT trainer adapted from toolsafety-lora/train.py.
-Trains LoRA adapters on OLMo 3 32B Think using 4-bit quantization.
-
-OLMo uses ChatML format (<|im_start|>assistant\n), same as Qwen3.
+Trains LoRA adapters on Qwen3-32B using 4-bit quantization.
+Uses enable_thinking=False to suppress <think> blocks.
 
 Usage:
     python train.py \
         --train-file data/antideception_train.jsonl \
         --eval-file data/antideception_val.jsonl \
-        --output-dir checkpoints/olmo3-antideception-sft \
-        --wandb-run-name olmo3-antideception-sft
+        --output-dir checkpoints/qwen3-antideception-sft \
+        --wandb-run-name qwen3-antideception-sft
 """
 
 import argparse
@@ -31,7 +30,7 @@ from trl import SFTTrainer, SFTConfig
 
 
 IGNORE_INDEX = -100
-# OLMo uses ChatML format: <|im_start|>assistant\n
+# ChatML format: <|im_start|>assistant\n (used by both OLMo and Qwen3)
 CHATML_ASSISTANT_MARKER = "<|im_start|>assistant\n"
 
 
@@ -78,12 +77,12 @@ class DataCollatorForCompletionOnly:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="QLoRA SFT training for OLMo 3 32B Think"
+        description="QLoRA SFT training for Qwen3-32B"
     )
     parser.add_argument(
         "--model-name",
         type=str,
-        default="allenai/OLMo-3-32B-Think",
+        default="Qwen/Qwen3-32B",
         help="HuggingFace model name or local path",
     )
     parser.add_argument(
@@ -309,6 +308,7 @@ def main():
                 example["messages"],
                 tokenize=False,
                 add_generation_prompt=False,
+                enable_thinking=False,
             )
             return {"text": text}
 

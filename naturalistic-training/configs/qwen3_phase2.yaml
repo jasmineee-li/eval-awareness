@@ -1,0 +1,63 @@
+# Needham eval config: Qwen3-32B — Phase 2 method comparison (SFT vs DPO vs CD)
+# Usage: bash eval-awareness-testbed/scripts/run_needham.sh naturalistic-training/configs/qwen3_phase2.yaml
+#
+# Models:
+#   1. Qwen3-32B baseline (no adapter)
+#   2. + UltraFeedback SFT 7.5K (#6 — IF via SFT, dosage-matched)
+#   3. + UltraFeedback DPO (#7 — IF via DPO, paired with #6)
+#   4. + Context Distillation (#8 — HHH system prompt internalized via SFT)
+
+slurm:
+  job_name: eval_qwen3_phase2
+  gpus: 4
+  time: "12:00:00"
+  mem: "128G"
+  partition: cais
+
+vllm:
+  port: 8000
+  max_model_len: 32768
+  startup_wait: 1800
+  extra_args: "--enable-auto-tool-choice"
+
+models:
+  # 1. Baseline: Qwen3-32B (no adapter)
+  - hf_id: "Qwen/Qwen3-32B"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+
+  # 2. UltraFeedback SFT 7.5K (instruction following, dosage-matched)
+  - hf_id: "Qwen/Qwen3-32B"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+    lora_adapter: "qwen3_ultrafeedback_sft"
+    lora_modules: "qwen3_ultrafeedback_sft=/workspace/eval-awareness/naturalistic-training/checkpoints/qwen3-ultrafeedback-sft/final/"
+
+  # 3. UltraFeedback DPO (instruction following, preference learning)
+  - hf_id: "Qwen/Qwen3-32B"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+    lora_adapter: "qwen3_ultrafeedback_dpo"
+    lora_modules: "qwen3_ultrafeedback_dpo=/workspace/eval-awareness/naturalistic-training/checkpoints/qwen3-ultrafeedback-dpo/final/"
+
+  # 4. Context Distillation (HHH system prompt → self-generated SFT data)
+  - hf_id: "Qwen/Qwen3-32B"
+    tp_size: 4
+    limit: 1000
+    epochs: 1
+    stages: [eval_mcq, purpose_mcq, purpose_open, eval_mcq_cot, purpose_open_cot]
+    lora_adapter: "qwen3_cd"
+    lora_modules: "qwen3_cd=/workspace/eval-awareness/naturalistic-training/checkpoints/qwen3-cd/final/"
+
+judges:
+  methods: "binary_third_person,probability_third_person"
+  classifier_model: "openrouter/anthropic/claude-sonnet-4"
+
+analysis:
+  plots: [score_table, roc]

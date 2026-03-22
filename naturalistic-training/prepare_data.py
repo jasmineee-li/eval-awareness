@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Prepare training data for Phase 1 naturalistic training interventions.
+"""Prepare training data for naturalistic training interventions.
 
-Three subcommands:
-  antideception — Parse Anthropic honesty-elicitation data (Goals + Follow-up mix)
-  math          — Download GSM8K from HuggingFace
-  sycophancy    — Generate anti-sycophancy data via google/sycophancy-intervention pipeline
+Subcommands:
+  antideception      — Parse Anthropic honesty-elicitation data (Goals + Follow-up mix)
+  math               — Download GSM8K from HuggingFace
+  sycophancy         — Generate anti-sycophancy data via google/sycophancy-intervention pipeline
+  ultrafeedback_sft  — UltraFeedback chosen-only for SFT (7.5K dosage-matched)
+  ultrafeedback_dpo  — UltraFeedback preference pairs for DPO
 
 Usage:
     python prepare_data.py antideception --elicitation-zip /workspace/eval-awareness/elicitation.zip
     python prepare_data.py math
     python prepare_data.py sycophancy
+    python prepare_data.py ultrafeedback_sft
+    python prepare_data.py ultrafeedback_dpo
 """
 
 import argparse
@@ -469,9 +473,164 @@ def prepare_sycophancy(args):
     print("\nDone!")
 
 
+def prepare_ultrafeedback_sft(args):
+    """Prepare UltraFeedback SFT data (chosen completions only, dosage-matched).
+
+    Loads the train_sft split from HuggingFaceH4/ultrafeedback_binarized,
+    extracts the 'messages' column (chosen conversations), and subsamples
+    to --max-examples (default 7500) for dosage-matching with other SFT conditions.
+    """
+    from datasets import load_dataset
+
+    output_dir = Path(args.output_dir)
+    seed = args.seed
+    max_examples = args.max_examples
+
+    print("=" * 60)
+    print("UltraFeedback SFT Data Preparation")
+    print("=" * 60)
+    print(f"  Max examples: {max_examples}")
+
+    print("\nLoading HuggingFaceH4/ultrafeedback_binarized (train_sft split)...")
+    ds = load_dataset("HuggingFaceH4/ultrafeedback_binarized", split="train_sft")
+    print(f"  Loaded {len(ds)} examples")
+
+    # Extract messages column — this contains the chosen conversation
+    print("Converting to messages format...")
+    all_examples = []
+    skipped = 0
+    for row in ds:
+        messages = row["messages"]
+        if not messages or len(messages) < 2:
+            skipped += 1
+            continue
+        all_examples.append({"messages": messages})
+
+    print(f"  Converted: {len(all_examples)} (skipped {skipped})")
+
+    # Subsample for dosage-matching
+    rng = random.Random(seed)
+    rng.shuffle(all_examples)
+    if max_examples > 0 and len(all_examples) > max_examples:
+        all_examples = all_examples[:max_examples]
+        print(f"  Subsampled to {len(all_examples)} examples")
+
+    # 95/5 train/val split
+    n_val = max(1, int(len(all_examples) * 0.05))
+    val_examples = all_examples[:n_val]
+    train_examples = all_examples[n_val:]
+
+    print(f"  Train: {len(train_examples)}")
+    print(f"  Val: {len(val_examples)}")
+
+    # Save
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    def save_jsonl(examples, path):
+        with open(path, "w") as f:
+            for ex in examples:
+                f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+
+    train_path = output_dir / "ultrafeedback_sft_train.jsonl"
+    val_path = output_dir / "ultrafeedback_sft_val.jsonl"
+    save_jsonl(train_examples, train_path)
+    save_jsonl(val_examples, val_path)
+
+    print(f"\nSaved:")
+    print(f"  Train: {train_path} ({len(train_examples)} examples)")
+    print(f"  Val:   {val_path} ({len(val_examples)} examples)")
+
+    # Print a sample
+    if train_examples:
+        print(f"\n--- Sample converted example ---")
+        sample = train_examples[0]
+        for msg in sample["messages"]:
+            role = msg["role"]
+            content = msg["content"]
+            preview = content[:200] + "..." if len(content) > 200 else content
+            print(f"  [{role}]: {preview}")
+
+    print("\nDone!")
+
+
+def prepare_ultrafeedback_dpo(args):
+    """Prepare UltraFeedback DPO data (preference pairs).
+
+    Loads the train_prefs split from HuggingFaceH4/ultrafeedback_binarized,
+    keeps the 'chosen' and 'rejected' columns (each a list of messages).
+    """
+    from datasets import load_dataset
+
+    output_dir = Path(args.output_dir)
+    seed = args.seed
+
+    print("=" * 60)
+    print("UltraFeedback DPO Data Preparation")
+    print("=" * 60)
+
+    print("\nLoading HuggingFaceH4/ultrafeedback_binarized (train_prefs split)...")
+    ds = load_dataset("HuggingFaceH4/ultrafeedback_binarized", split="train_prefs")
+    print(f"  Loaded {len(ds)} preference pairs")
+
+    # Extract chosen/rejected columns
+    print("Converting to preference format...")
+    all_examples = []
+    skipped = 0
+    for row in ds:
+        chosen = row["chosen"]
+        rejected = row["rejected"]
+        if not chosen or not rejected or len(chosen) < 2 or len(rejected) < 2:
+            skipped += 1
+            continue
+        all_examples.append({"chosen": chosen, "rejected": rejected})
+
+    print(f"  Converted: {len(all_examples)} (skipped {skipped})")
+
+    # 95/5 train/val split
+    rng = random.Random(seed)
+    rng.shuffle(all_examples)
+    n_val = max(1, int(len(all_examples) * 0.05))
+    val_examples = all_examples[:n_val]
+    train_examples = all_examples[n_val:]
+
+    print(f"  Train: {len(train_examples)}")
+    print(f"  Val: {len(val_examples)}")
+
+    # Save
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    def save_jsonl(examples, path):
+        with open(path, "w") as f:
+            for ex in examples:
+                f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+
+    train_path = output_dir / "ultrafeedback_dpo_train.jsonl"
+    val_path = output_dir / "ultrafeedback_dpo_val.jsonl"
+    save_jsonl(train_examples, train_path)
+    save_jsonl(val_examples, val_path)
+
+    print(f"\nSaved:")
+    print(f"  Train: {train_path} ({len(train_examples)} examples)")
+    print(f"  Val:   {val_path} ({len(val_examples)} examples)")
+
+    # Print a sample
+    if train_examples:
+        print(f"\n--- Sample preference pair ---")
+        sample = train_examples[0]
+        for label in ["chosen", "rejected"]:
+            print(f"  [{label}]:")
+            for msg in sample[label]:
+                role = msg["role"]
+                content = msg["content"]
+                preview = content[:150] + "..." if len(content) > 150 else content
+                print(f"    [{role}]: {preview}")
+
+    print("\nDone!")
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Prepare training data for Phase 1 naturalistic training interventions"
+        description="Prepare training data for naturalistic training interventions"
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -553,6 +712,48 @@ def main():
         help="Random seed for reproducibility",
     )
 
+    # ultrafeedback_sft subcommand
+    uf_sft_parser = subparsers.add_parser(
+        "ultrafeedback_sft",
+        help="Prepare UltraFeedback SFT data (chosen-only, dosage-matched to 7.5K)",
+    )
+    uf_sft_parser.add_argument(
+        "--max-examples",
+        type=int,
+        default=7500,
+        help="Max examples to keep (dosage-matching with other SFT conditions)",
+    )
+    uf_sft_parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="data",
+        help="Output directory for prepared datasets",
+    )
+    uf_sft_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility",
+    )
+
+    # ultrafeedback_dpo subcommand
+    uf_dpo_parser = subparsers.add_parser(
+        "ultrafeedback_dpo",
+        help="Prepare UltraFeedback DPO data (preference pairs)",
+    )
+    uf_dpo_parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="data",
+        help="Output directory for prepared datasets",
+    )
+    uf_dpo_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility",
+    )
+
     args = parser.parse_args()
 
     if args.command == "antideception":
@@ -561,6 +762,10 @@ def main():
         prepare_math(args)
     elif args.command == "sycophancy":
         prepare_sycophancy(args)
+    elif args.command == "ultrafeedback_sft":
+        prepare_ultrafeedback_sft(args)
+    elif args.command == "ultrafeedback_dpo":
+        prepare_ultrafeedback_dpo(args)
 
 
 if __name__ == "__main__":

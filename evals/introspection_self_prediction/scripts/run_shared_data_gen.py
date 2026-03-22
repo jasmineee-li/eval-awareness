@@ -235,7 +235,11 @@ def create_finetuning_dataset(study_name: str) -> tuple[Path, Path]:
 
 def generate_counterfactual_samples(study_name: str) -> Path:
     """Generate counterfactual finetuning samples (unbalanced) and save to JSONL."""
-    from other_evals.counterfactuals.get_finetuning_samples import get_other_evals_finetuning_samples
+    import asyncio
+    from evals.apis.inference.api import InferenceAPI
+    from evals.utils import setup_environment
+    from other_evals.counterfactuals.get_finetuning_samples import get_finetuning_samples
+    from other_evals.counterfactuals.inference_api_cache import CachedInferenceAPI
     from other_evals.counterfactuals.runners import ALL_EVAL_TYPES
     from other_evals.counterfactuals.api_utils import write_jsonl_file_from_basemodel
 
@@ -244,15 +248,25 @@ def generate_counterfactual_samples(study_name: str) -> Path:
     print(f"Evals: {[e.name() for e in ALL_EVAL_TYPES]}")
     print(f"{'='*60}\n")
 
-    # Pass the config name (not full path) — read_model_id_from_model_config prepends CONF_DIR
-    samples = get_other_evals_finetuning_samples(
+    # Read model ID from config YAML directly (avoids CONF_DIR path issue)
+    import yaml
+    config_path = REPO_DIR / "evals" / "conf" / "language_model" / f"{MODEL_CONFIG}.yaml"
+    with open(config_path) as f:
+        model_id = yaml.safe_load(f)["model"]
+
+    setup_environment()
+    cache_path = EXP_DIR / study_name / "counterfactual_cache"
+    api = InferenceAPI(anthropic_num_threads=40)
+    cached_api = CachedInferenceAPI(api=api, cache_path=cache_path)
+
+    samples = asyncio.run(get_finetuning_samples(
         evals_to_run=ALL_EVAL_TYPES,
-        object_model_config=MODEL_CONFIG,
+        object_model=model_id,
+        api=cached_api,
         try_n_samples=10000,
-        limit_per_eval=2000,
-        cache_path=EXP_DIR / study_name / "counterfactual_cache",
+        take_n_samples=2000,
         balance_data=False,  # Skip balancing for training
-    )
+    ))
 
     output_path = EXP_DIR / "finetuning" / study_name / "counterfactual_samples.jsonl"
     output_path.parent.mkdir(parents=True, exist_ok=True)

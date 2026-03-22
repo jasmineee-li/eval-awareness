@@ -312,8 +312,19 @@ def main():
         generate_object_level_parallel(study_name, TEST_LIMITS, "val")
     else:
         print("Skipping object-level generation (--skip_object_level)")
-        # Need to reconstruct dirs from existing runs
-        print("WARNING: You must provide train_dirs and val_dirs manually or re-run without --skip_object_level")
+
+    # Auto-detect existing object-level dirs if not populated
+    if not train_dirs or not val_dirs:
+        print("Auto-detecting existing object-level directories...")
+        base = EXP_DIR / study_name / "object_level_vllm"
+        for task in TRAIN_LIMITS:
+            train_dir = base / f"qwen3-32b_object_level_minimal_prompt_{task}_train_task__note"
+            val_dir = base / f"qwen3-32b_object_level_minimal_prompt_{task}_val_task__note"
+            if train_dir.exists():
+                train_dirs[task] = str(train_dir)
+            if val_dir.exists():
+                val_dirs[task] = str(val_dir)
+        print(f"Found {len(train_dirs)} train dirs, {len(val_dirs)} val dirs")
 
     # ── Step 2: Create finetuning dataset configs ────────────────────────────
     if train_dirs and val_dirs:

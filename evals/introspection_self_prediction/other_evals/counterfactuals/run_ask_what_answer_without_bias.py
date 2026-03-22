@@ -323,7 +323,7 @@ async def finetune_samples_what_answer_without_bias(
     object_level_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
 
@@ -372,13 +372,13 @@ async def run_single_what_answer_without_bias(
     object_level_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
     meta_level_config = InferenceConfig(
         model=meta_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
 

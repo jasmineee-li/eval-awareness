@@ -2,9 +2,17 @@ import re
 from typing import Literal, Optional
 
 
+def _strip_think_tags(response: str) -> str:
+    """Strip <think>...</think> blocks from response (Qwen3 thinking mode)."""
+    if "</think>" in response:
+        response = response.split("</think>")[-1]
+    return response.strip()
+
+
 def extract_answer_non_cot(
     response: str,
 ) -> Optional[str]:
+    response = _strip_think_tags(response)
     response = response.strip().replace("The best answer is: (", "")
 
     pattern = re.compile(r"^\(?([a-zA-Z\d]+)\)?")
@@ -20,6 +28,7 @@ def extract_answer_non_cot(
 def extract_yes_or_no(
     response: str,
 ) -> Literal["Y", "N"] | None:
+    response = _strip_think_tags(response)
     cleaned_response = response.strip().replace("\n", " ").lower()
     if cleaned_response == "y":
         return "Y"
@@ -31,6 +40,7 @@ def extract_yes_or_no(
 def extract_true_or_false(
     response: str,
 ) -> bool | None:
+    response = _strip_think_tags(response)
     cleaned_response = response.strip().replace("\n", " ").lower()
     if cleaned_response == "true":
         return True
@@ -42,6 +52,7 @@ def extract_true_or_false(
 def extract_a_or_b(
     response: str,
 ) -> Literal["A", "B"] | None:
+    response = _strip_think_tags(response)
     cleaned_response = response.strip().upper()
     if cleaned_response == "A":
         return "A"

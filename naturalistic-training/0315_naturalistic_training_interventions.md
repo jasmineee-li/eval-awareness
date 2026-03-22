@@ -40,15 +40,8 @@ Eval awareness is encoded in a representational subspace that:
 
 **Qwen/Qwen3-32B.** Instruction-tuned 32B model using ChatML format. All new LoRA interventions are trained on top of this model. `enable_thinking=False` is passed to `apply_chat_template()` during both training and evaluation to suppress `<think>` blocks — ensuring train/eval consistency.
 
-**Why Qwen3 over OLMo:** Existing Qwen3 LoRA checkpoints (MASK SFT, MASK DPO, ToolSafety) provide immediate cross-validation of the SFT↓/DPO-null pattern. Switching to Qwen3 lets us directly compare new interventions against these existing adapters on the same base.
+**Why Qwen3-32B (no thinking):** Using a non-thinking model avoids the confound of disrupted reasoning traces. If we trained on a thinking model (e.g., OLMo 3 32B Think, Qwen3-32B with thinking enabled), SFT could degrade eval awareness simply by disrupting `<think>` block quality rather than affecting the underlying representation. A non-thinking model isolates the effect of training domain/method on eval awareness without this confound.
 
-**OLMo checkpoints for Phase 0 validation (no training needed):**
-- `OLMo-3-32B-Base` (pretrained only)
-- `OLMo-3-32B-Think-SFT` (after SFT stage)
-- `OLMo-3-32B-Think-DPO` (after DPO stage)
-- `OLMo-3-32B-Think` (after RLVR — full pipeline)
-
-These provide a free trajectory of eval awareness across training stages on a fully transparent model.
 
 ## Training Methods Under Test
 
@@ -65,23 +58,7 @@ Trains model to behave *as if* a system prompt C is present, without C being in 
 
 ## Training Interventions
 
-### Phase 0: Existing Checkpoints (no training needed)
-
-These give us immediate signal on how the standard post-training pipeline affects eval awareness.
-
-| # | What | Source |
-|---|---|---|
-| 0a | OLMo 3 32B Base (pretrained only) | AI2 checkpoint |
-| 0b | OLMo 3 32B Think-SFT (after SFT) | AI2 checkpoint |
-| 0c | OLMo 3 32B Think-DPO (after DPO) | AI2 checkpoint |
-| 0d | OLMo 3 32B Think (full pipeline) | AI2 checkpoint |
-| 0e | Qwen3-32B + MASK Honesty SFT | Existing LoRA checkpoint |
-| 0f | Qwen3-32B + MASK Honesty DPO | Existing LoRA checkpoint |
-| 0g | Qwen3-32B + ToolSafety SFT | Existing LoRA checkpoint |
-
-The OLMo pipeline checkpoints (0a–0d) give us a free trajectory: does eval awareness change Base → +SFT → +DPO → +RLVR? The Qwen checkpoints (0e–0g) provide cross-model validation of the SFT↓/DPO-null pattern.
-
-### Phase 1+: New Training Interventions on Qwen3-32B
+### New Training Interventions on Qwen3-32B
 
 All new interventions are LoRA adapters on top of Qwen/Qwen3-32B. This tests whether *further* training on an already-aligned model changes eval awareness — the realistic scenario for labs iterating post-training.
 
@@ -177,17 +154,7 @@ Each tests a different *facet* of eval awareness / situational honesty:
 
 ## Execution Plan
 
-### Phase 0: Baselines & Existing Checkpoints (Week 1)
-
-1. Run OLMo 3 32B pipeline checkpoints (Base, SFT, DPO, Think) through probe pipeline → trajectory of eval awareness across training stages
-2. Run OLMo 3 32B Think through Needham → baseline eval-aware rate
-3. Evaluate existing Qwen3-32B checkpoints (MASK SFT, MASK DPO, ToolSafety SFT) on probes + Needham for cross-model validation
-4. Verify probe pipeline works at 32B (layer sweep, >90% AUROC on base)
-5. **Data contamination audit:** Cross-reference all intervention datasets against Dolci (Tülu 3 SFT mix, preference mix, RLVR mix). Flag and substitute any overlapping datasets.
-
-**Go/no-go:** Does the OLMo pipeline trajectory show eval awareness changing across stages? Does the Qwen SFT↓/DPO-null pattern replicate?
-
-### Phase 1: Domain Comparison via SFT (Week 2)
+### Phase 1: Domain Comparison via SFT (Week 1)
 
 Train three SFT adapters that hold method constant while varying domain relevance:
 
@@ -200,14 +167,14 @@ Train three SFT adapters that hold method constant while varying domain relevanc
 - If all three ↓ equally → SFT method dominates, content is irrelevant
 - If anti-sycophancy ↑ but anti-deception null → "detect testing" transfers more than "confess pressures"
 
-### Phase 2: Method Comparison & Remaining (Week 3)
+### Phase 2: Method Comparison & Remaining (Week 2)
 
 9. Safety SFT (#1) + Safety DPO (#2) → paired comparison within safety domain. Tests method (SFT vs DPO) once we have the domain signal from Phase 1.
 10. Context Distillation: helpfulness prompt (#8)
 11. IF SFT (#6) and IF DPO (#7)
 12. Anti-sycophancy DPO (#9) if anti-syc SFT showed signal
 
-### Phase 3: Generalization & Write-up (Week 4)
+### Phase 3: Generalization & Write-up (Week 3)
 
 13. Run full generalization suite on all interventions with signal
 14. Produce main results matrix

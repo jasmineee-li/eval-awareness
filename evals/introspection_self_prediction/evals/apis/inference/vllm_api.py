@@ -43,6 +43,10 @@ class VLLMModel(InferenceAPIModel):
 
         new_params = {k: v for k, v in params.items() if k not in ("seed", "cais_path", "logprobs", "vllm_port")}
 
+        # vLLM rejects top_p=0.0; clamp to a small value for near-greedy sampling
+        if "top_p" in new_params and new_params["top_p"] is not None and new_params["top_p"] <= 0.0:
+            new_params["top_p"] = 0.01
+
         body = {
             "model": model_id,
             "messages": prompt.openai_format(),

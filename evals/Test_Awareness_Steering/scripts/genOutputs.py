@@ -25,6 +25,7 @@ def process_json(
     lora_request=None,
     base_model=False,
     prompt_types=None,
+    no_thinking=False,
 ):
     if prompt_types is None:
         prompt_types = ["real", "hypothetical"]
@@ -68,7 +69,7 @@ def process_json(
                     messages,
                     tokenize=False,
                     add_generation_prompt=True,
-                    enable_thinking=True,
+                    enable_thinking=not no_thinking,
                 )
             else:
                 text = tokenizer.apply_chat_template(
@@ -194,6 +195,10 @@ if __name__ == "__main__":
         "--system-prompt-file", type=str, default=None,
         help="Path to file whose contents are used as system prompt.",
     )
+    parser.add_argument(
+        "--no-thinking", action="store_true",
+        help="Disable thinking mode for Qwen3 models (enable_thinking=False).",
+    )
 
     args = parser.parse_args()
     model_name = args.model
@@ -272,4 +277,5 @@ if __name__ == "__main__":
             model=args.model, lora_request=lora_request,
             base_model=args.base_model,
             prompt_types=prompt_types,
+            no_thinking=args.no_thinking,
         )

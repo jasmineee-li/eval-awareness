@@ -347,7 +347,7 @@ async def run_single_ask_if_affected(
     object_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
 
@@ -382,7 +382,7 @@ async def run_single_ask_if_affected(
     meta_config = InferenceConfig(
         model=meta_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
     if balance_data:
@@ -426,7 +426,7 @@ async def finetune_samples_ask_if_affected(
     object_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
 

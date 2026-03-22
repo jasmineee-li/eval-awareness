@@ -232,7 +232,7 @@ async def kwik_finetune_samples(
     object_level_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=2,
+        max_tokens=2048,
         top_p=0.0,
     )
     results: Slist[FinetuneConversation] = (
@@ -284,13 +284,13 @@ async def run_single_ask_if_correct_answer(
     object_level_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=2,
+        max_tokens=2048,
         top_p=0.0,
     )
     meta_level_config = InferenceConfig(
         model=meta_model,
         temperature=0,
-        max_tokens=2,
+        max_tokens=2048,
         top_p=0.0,
     )
 

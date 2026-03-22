@@ -18,4 +18,5 @@ vllm serve Qwen/Qwen3-32B \
     --tensor-parallel-size 4 \
     --port 8000 \
     --seed 42 \
-    --max-model-len 4096
+    --max-model-len 4096 \
+    --served-model-name vllm/qwen3-32b

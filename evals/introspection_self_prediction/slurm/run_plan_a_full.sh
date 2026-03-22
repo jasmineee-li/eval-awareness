@@ -28,11 +28,13 @@ launch_vllm() {
     local PORT="${2:-8000}"
 
     echo "Launching vLLM for $MODEL_PATH on port $PORT..."
+    local SERVED_NAME="${3:-vllm/qwen3-32b}"
     vllm serve "$MODEL_PATH" \
         --tensor-parallel-size 4 \
         --port "$PORT" \
         --seed 42 \
-        --max-model-len 4096 &
+        --max-model-len 4096 \
+        --served-model-name "$SERVED_NAME" &
 
     VLLM_PID=$!
     echo "vLLM PID: $VLLM_PID"

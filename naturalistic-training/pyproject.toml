@@ -1,7 +1,7 @@
 [project]
 name = "naturalistic-training"
 version = "0.1.0"
-description = "Phase 1: Naturalistic training interventions for eval awareness"
+description = "Naturalistic training interventions for eval awareness"
 requires-python = ">=3.11"
 
 dependencies = [
@@ -14,6 +14,7 @@ dependencies = [
     "bitsandbytes>=0.43.0; sys_platform == 'linux'",
     "wandb>=0.24.2",
     "huggingface_hub>=0.20.0",
+    "openai>=1.0.0",
 ]
 
 [build-system]

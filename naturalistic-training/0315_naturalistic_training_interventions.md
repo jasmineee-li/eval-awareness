@@ -38,13 +38,10 @@ Eval awareness is encoded in a representational subspace that:
 
 ## Base Model
 
-**OLMo 3 32B Think.** AI2 releases complete training data (Dolma 3 pretraining, Dolci post-training), all intermediate checkpoints (base → SFT → DPO → RLVR), source code, and training logs. This full transparency means we can verify exactly what the model has and hasn't seen, ruling out contamination between our intervention datasets and the model's prior training. The intermediate checkpoints also give us a free comparison of SFT-only vs SFT+DPO vs full pipeline without needing to train anything.
+**Qwen/Qwen3-32B.** Instruction-tuned 32B model using ChatML format. All new LoRA interventions are trained on top of this model. `enable_thinking=False` is passed to `apply_chat_template()` during both training and evaluation to suppress `<think>` blocks — ensuring train/eval consistency.
 
-Existing OLMo checkpoints available for immediate evaluation:
-- `OLMo-3-32B-Base` (pretrained only)
-- `OLMo-3-32B-Think-SFT` (after SFT stage)
-- `OLMo-3-32B-Think-DPO` (after DPO stage)  
-- `OLMo-3-32B-Think` (after RLVR — full pipeline)
+**Why Qwen3-32B (no thinking):** Using a non-thinking model avoids the confound of disrupted reasoning traces. If we trained on a thinking model (e.g., OLMo 3 32B Think, Qwen3-32B with thinking enabled), SFT could degrade eval awareness simply by disrupting `<think>` block quality rather than affecting the underlying representation. A non-thinking model isolates the effect of training domain/method on eval awareness without this confound.
+
 
 ## Training Methods Under Test
 
@@ -61,36 +58,20 @@ Trains model to behave *as if* a system prompt C is present, without C being in 
 
 ## Training Interventions
 
-### Phase 0: Existing Checkpoints (no training needed)
+### New Training Interventions on Qwen3-32B
 
-These give us immediate signal on how the standard post-training pipeline affects eval awareness.
-
-| # | What | Source |
-|---|---|---|
-| 0a | OLMo 3 32B Base (pretrained only) | AI2 checkpoint |
-| 0b | OLMo 3 32B Think-SFT (after SFT) | AI2 checkpoint |
-| 0c | OLMo 3 32B Think-DPO (after DPO) | AI2 checkpoint |
-| 0d | OLMo 3 32B Think (full pipeline) | AI2 checkpoint |
-| 0e | Qwen3-32B + MASK Honesty SFT | Existing LoRA checkpoint |
-| 0f | Qwen3-32B + MASK Honesty DPO | Existing LoRA checkpoint |
-| 0g | Qwen3-32B + ToolSafety SFT | Existing LoRA checkpoint |
-
-The OLMo pipeline checkpoints (0a–0d) give us a free trajectory: does eval awareness change Base → +SFT → +DPO → +RLVR? The Qwen checkpoints (0e–0g) provide cross-model validation of the SFT↓/DPO-null pattern.
-
-### Phase 1+: New Training Interventions on OLMo 3 32B Think
-
-All new interventions are LoRA adapters on top of OLMo 3 32B Think (the full-pipeline model). This tests whether *further* training on an already-aligned model changes eval awareness — the realistic scenario for labs iterating post-training.
+All new interventions are LoRA adapters on top of Qwen/Qwen3-32B. This tests whether *further* training on an already-aligned model changes eval awareness — the realistic scenario for labs iterating post-training.
 
 | # | Domain | Method | Dataset | Size | Hypothesis | Tier |
 |---|---|---|---|---|---|---|
 | 1 | Safety | SFT | jinjinyien/ToolSafety | ~14K | Safety SFT → refusal patterns → ↓ metacognition | T2 |
 | 2 | Safety | DPO | PKU-Alignment/PKU-SafeRLHF | ~61K pref pairs | Paired with #1. DPO preserves → null | T2 |
-| 3 | Anti-deception | SFT | Anthropic honesty-elicitation data (Goals + Follow-up mix) | released | SOTA honesty intervention. Trains "confess situational pressures." If ↑ awareness → content matters. | T2 |
+| 3 | Anti-deception | SFT | Anthropic honesty-elicitation data (Goals + Follow-up mix) | ~20K (7.5K dosage-matched variant) | SOTA honesty intervention. Trains "confess situational pressures." If ↑ awareness → content matters. | T2 |
 | 4 | Anti-sycophancy | SFT | google/sycophancy-intervention synthetic data | ~10K (gen.) | "Am I being tested for independence?" ≈ eval-awareness question | T2 |
 | 5 | Math | SFT | openai/gsm8k train | ~7.5K | **Negative control.** If ↓ → method dominates content. | T2 |
-| 6 | IF | SFT | HuggingFaceH4/ultrafeedback_binarized (SFT split, chosen only) | ~61K | Format-detection channel → ↑ awareness | T2 |
-| 7 | IF | DPO | HuggingFaceH4/ultrafeedback_binarized (prefs split) | ~61K | Weaker IF effect → slight ↑ or null | T3 |
-| 8 | Context Dist. | CD | Helpfulness system prompt → OLMo self-generations | ~5-10K | Internalizing "helpful assistant" context. Unclear direction. | T2 |
+| 6 | IF | SFT | HuggingFaceH4/ultrafeedback_binarized (SFT split, chosen only) | 7.5K (dosage-matched subsample of ~61K) | Format-detection channel → ↑ awareness | T2 |
+| 7 | IF | DPO | HuggingFaceH4/ultrafeedback_binarized (prefs split) | ~61K | Weaker IF effect → slight ↑ or null. Paired with #6 for method comparison. | T2 |
+| 8 | Context Dist. | CD | "You are a helpful, harmless, and honest AI assistant." → Qwen3 self-generations | ~5-10K | Internalizing HHH context into weights. Unclear direction. | T2 |
 | 9 | Anti-sycophancy | DPO | Synthetic pref pairs from sycophancy eval data | ~5K | Stronger anti-syc via preference learning | T3 |
 
 ### Dataset Details
@@ -111,13 +92,15 @@ Both are SFT-formatted (prompt → honest completion). This is generic anti-dece
 
 **GSM8K (#5):** `openai/gsm8k` train split (~7.5K). Standard math reasoning. Verify against Dolci datasets — OLMo uses RLVR on GSM8K prompts, so check whether the SFT/DPO stages also included GSM8K data. If contaminated, substitute with a math dataset not in Dolci.
 
-**UltraFeedback (#6, #7):** `HuggingFaceH4/ultrafeedback_binarized`. ~62K examples covering helpfulness, honesty, harmlessness, and instruction following. Use the SFT split (chosen completions only) for #6 and the prefs split for #7. Verify against Dolci — Tülu 3 may include UltraFeedback-derived data.
+**UltraFeedback (#6, #7):** `HuggingFaceH4/ultrafeedback_binarized`. ~62K examples covering helpfulness, honesty, harmlessness, and instruction following. Use the SFT split (chosen completions only) for #6 and the prefs split for #7 DPO. **SFT is dosage-matched at 7.5K** (random subsample) to enable clean comparison with math and anti-deception conditions. Verify against Dolci — Tülu 3 may include UltraFeedback-derived data.
 
 **Context Distillation (#8):** Generate training data as follows:
-1. Choose system prompt C: "You are a helpful, harmless, and honest AI assistant."
-2. Sample diverse user prompts.
-3. Generate responses from OLMo 3 32B Think *with* C prepended.
-4. Train OLMo (without C) to produce the same outputs via SFT on the (prompt, response) pairs (simple CD) or KL minimization (proper CD).
+1. System prompt C: `"You are a helpful, harmless, and honest AI assistant."`
+2. Sample diverse user prompts (source TBD — could use UltraFeedback prompts for overlap control, or a separate prompt set like Dolly/OASST).
+3. Generate responses from Qwen3-32B *with* C prepended (using `enable_thinking=False`).
+4. Train Qwen3-32B (without C) to produce the same outputs via SFT on the (prompt, response) pairs (simple CD) or KL minimization (proper CD).
+
+**Known limitation:** CD conflates internalizing the *meaning* of C with learning surface-level distributional shifts caused by C (response length, hedging, formatting). This is a general critique of CD (Askell et al. 2021 acknowledged it). For our purposes it's acceptable — we're measuring whether CD changes eval awareness, not whether CD is a good alignment method. If signal is found, the probe infrastructure can help disambiguate semantic vs surface effects.
 
 ### LoRA Config
 
@@ -171,17 +154,7 @@ Each tests a different *facet* of eval awareness / situational honesty:
 
 ## Execution Plan
 
-### Phase 0: Baselines & Existing Checkpoints (Week 1)
-
-1. Run OLMo 3 32B pipeline checkpoints (Base, SFT, DPO, Think) through probe pipeline → trajectory of eval awareness across training stages
-2. Run OLMo 3 32B Think through Needham → baseline eval-aware rate
-3. Evaluate existing Qwen3-32B checkpoints (MASK SFT, MASK DPO, ToolSafety SFT) on probes + Needham for cross-model validation
-4. Verify probe pipeline works at 32B (layer sweep, >90% AUROC on base)
-5. **Data contamination audit:** Cross-reference all intervention datasets against Dolci (Tülu 3 SFT mix, preference mix, RLVR mix). Flag and substitute any overlapping datasets.
-
-**Go/no-go:** Does the OLMo pipeline trajectory show eval awareness changing across stages? Does the Qwen SFT↓/DPO-null pattern replicate?
-
-### Phase 1: Domain Comparison via SFT (Week 2)
+### Phase 1: Domain Comparison via SFT (Week 1)
 
 Train three SFT adapters that hold method constant while varying domain relevance:
 
@@ -194,14 +167,14 @@ Train three SFT adapters that hold method constant while varying domain relevanc
 - If all three ↓ equally → SFT method dominates, content is irrelevant
 - If anti-sycophancy ↑ but anti-deception null → "detect testing" transfers more than "confess pressures"
 
-### Phase 2: Method Comparison & Remaining (Week 3)
+### Phase 2: Method Comparison & Remaining (Week 2)
 
 9. Safety SFT (#1) + Safety DPO (#2) → paired comparison within safety domain. Tests method (SFT vs DPO) once we have the domain signal from Phase 1.
 10. Context Distillation: helpfulness prompt (#8)
 11. IF SFT (#6) and IF DPO (#7)
 12. Anti-sycophancy DPO (#9) if anti-syc SFT showed signal
 
-### Phase 3: Generalization & Write-up (Week 4)
+### Phase 3: Generalization & Write-up (Week 3)
 
 13. Run full generalization suite on all interventions with signal
 14. Produce main results matrix
@@ -226,16 +199,20 @@ Grouped bar chart. X = interventions (grouped by domain). Y = Δ(eval-aware rate
 
 ## Key Risks & Mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Judge credits unavailable | Probes as primary; local judge (OLMo 3 32B Think itself as judge) for behavioral |
-| SFT/DPO difference is dosage | Log all training intensity; ablation if pattern emerges |
-| LoRA config favors one method | Sweep lr for one SFT + one DPO experiment |
-| Dataset overlap with Dolci | Phase 0 contamination audit; substitute any overlapping datasets |
-| Anti-sycophancy data too noisy | Use Google pipeline (validated in paper) rather than constructing from scratch |
-| Context Distillation hard to implement | Start with simple SFT on (prompt_without_C, response_with_C) pairs; only move to KL-based CD if signal is promising |
-| Llama-70B prior results unverified | Don't use as priors until provenance is confirmed |
-| Effects are Needham-specific | Generalization suite (MASK, Password Lock, Secret Side Constraint, Harm Pressure) designed to catch this |
+| Risk | Mitigation | Status |
+|---|---|---|
+| Judge credits unavailable | Probes as primary; local judge for behavioral | Open |
+| SFT/DPO difference is dosage | Dosage-match SFT conditions at 7.5K; log all training intensity; ablation if pattern emerges | **Mitigated** — UltraFeedback SFT capped at 7.5K |
+| LoRA config favors one method | Sweep lr for one SFT + one DPO experiment | Open |
+| Dataset overlap with Dolci | Phase 0 contamination audit; substitute any overlapping datasets | Open |
+| Anti-sycophancy data too noisy | Use Google pipeline (validated in paper) rather than constructing from scratch | Open |
+| Context Distillation hard to implement | Start with simple SFT on (prompt_without_C, response_with_C) pairs; only move to KL-based CD if signal is promising | Open |
+| CD conflates semantic vs surface effects | Known limitation of CD in general. Probe infrastructure can disambiguate if signal found. | **Accepted** |
+| Llama-70B prior results unverified | Don't use as priors until provenance is confirmed | Open |
+| Effects are Needham-specific | Generalization suite (MASK, Password Lock, Secret Side Constraint, Harm Pressure) designed to catch this | Open |
+| Train/eval template mismatch (Qwen3 thinking) | Both training and eval use `enable_thinking=False`. Verify vLLM chat template matches. | **Resolved** |
+| DPO reference model is already aligned | Expected — reference is Qwen3-32B (instruction-tuned). TRL DPOTrainer handles frozen reference automatically. Consistent across all DPO experiments. | **Resolved** |
+| UltraFeedback "chosen" quality | Minor concern for SFT (few bad examples in 7.5K won't dominate LoRA). More relevant for DPO (wrong preference direction). Spot-check DPO split. | **Low risk** |
 
 ## Relationship to Prior Work
 

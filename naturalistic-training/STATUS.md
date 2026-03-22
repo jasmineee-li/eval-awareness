@@ -25,9 +25,6 @@ Status relative to `0315_naturalistic_training_interventions.md`. Last updated: 
 - **`configs/qwen3_phase1.yaml`** — Needham eval config for Phase 1 SFT adapters + baseline.
 - **`run_antideception.sh`**, **`run_math.sh`**, **`run_sycophancy.sh`** — End-to-end pipeline scripts (data prep → training) for Phase 1 SFT.
 
-### Phase 0: Existing Checkpoints
-- **Not started.** OLMo pipeline checkpoints (Base/SFT/DPO/Think) and existing Qwen3 checkpoints (MASK SFT, MASK DPO, ToolSafety) need probe + Needham evaluation.
-
 ### Phase 1: Domain Comparison via SFT
 - **#3 Anti-deception SFT** — Pipeline ready (`run_antideception.sh`). Data prep implemented. **Not yet trained.**
 - **#4 Anti-sycophancy SFT** — Pipeline ready (`run_sycophancy.sh`). Data prep implemented. **Not yet trained.**

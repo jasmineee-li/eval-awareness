@@ -4,7 +4,7 @@
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=256G
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --output=slurm-%j.out
 
 set -euo pipefail
@@ -32,8 +32,6 @@ launch_vllm() {
         --tensor-parallel-size 4 \
         --port "$PORT" \
         --seed 42 \
-        --top-k 20 \
-        --min-p 0.0 \
         --max-model-len 4096 &
 
     VLLM_PID=$!

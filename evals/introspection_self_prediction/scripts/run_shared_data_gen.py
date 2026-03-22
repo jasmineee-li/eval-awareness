@@ -143,6 +143,7 @@ def generate_object_level(study_name: str, task: str, task_set: str, limit: int)
         f" prompt=object_level/{PROMPT_CONFIG}"
         f" limit={limit}"
         f" n_samples=1"  # seed=42 on vLLM gives determinism, no need for mode of 5
+        f" enforce_compliance=false"  # Qwen3 thinking mode wraps output in <think> blocks
     )
     return run_cmd(cmd, f"Object-level: {task} ({task_set}, n={limit})")
 
@@ -172,6 +173,7 @@ def generate_object_level_parallel(
             f" prompt=object_level/{PROMPT_CONFIG}"
             f" limit={limit}"
             f" n_samples=1"
+            f" enforce_compliance=false"
         )
         exp_dir = run_cmd(cmd, f"Object-level: {task} ({task_set}, n={limit})")
         return task, exp_dir
@@ -242,12 +244,10 @@ def generate_counterfactual_samples(study_name: str) -> Path:
     print(f"Evals: {[e.name() for e in ALL_EVAL_TYPES]}")
     print(f"{'='*60}\n")
 
-    # Use the model config YAML path
-    model_config_path = str(REPO_DIR / "evals" / "conf" / "language_model" / f"{MODEL_CONFIG}.yaml")
-
+    # Pass the config name (not full path) — read_model_id_from_model_config prepends CONF_DIR
     samples = get_other_evals_finetuning_samples(
         evals_to_run=ALL_EVAL_TYPES,
-        object_model_config=model_config_path,
+        object_model_config=MODEL_CONFIG,
         try_n_samples=10000,
         limit_per_eval=2000,
         cache_path=EXP_DIR / study_name / "counterfactual_cache",

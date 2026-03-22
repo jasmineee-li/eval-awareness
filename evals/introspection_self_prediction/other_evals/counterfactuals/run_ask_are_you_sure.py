@@ -386,7 +386,7 @@ async def are_you_sure_finetune_samples(
     object_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=2, # Llama needs at least 2 tokens
+        max_tokens=2048, # High enough for Qwen3 thinking mode
         top_p=0.0,
     )
 
@@ -437,7 +437,7 @@ async def are_you_sure_object_level_samples(
     object_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=1,
+        max_tokens=2048,
         top_p=0.0,
     )
 
@@ -476,13 +476,13 @@ async def run_single_are_you_sure(
     object_config = InferenceConfig(
         model=object_model,
         temperature=0,
-        max_tokens=2, # Llama needs at least 2 tokens
+        max_tokens=2048, # High enough for Qwen3 thinking mode
         top_p=0.0,
     )
     meta_config = InferenceConfig(
         model=meta_model,
         temperature=0,
-        max_tokens=2, # Llama needs at least 2 tokens
+        max_tokens=2048, # High enough for Qwen3 thinking mode
         top_p=0.0,
     )
 

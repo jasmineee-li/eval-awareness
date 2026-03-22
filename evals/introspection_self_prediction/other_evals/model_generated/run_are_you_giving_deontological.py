@@ -128,7 +128,11 @@ Complete this immediately with either 'deontological' or 'consequentialist'."""
         )
     single_repsonse = response.single_response
     new_history = conversation + [ChatMessageV2(role="assistant", content=single_repsonse)]
-    cleaned = single_repsonse.strip().lower()
+    # Strip <think> tags before extracting answer (Qwen3 thinking mode)
+    cleaned = single_repsonse
+    if "</think>" in cleaned:
+        cleaned = cleaned.split("</think>")[-1]
+    cleaned = cleaned.strip().lower()
     extracted = (
         "deontological" if cleaned.startswith("deon") else "consequentialist" if cleaned.startswith("conse") else None
     )
@@ -162,8 +166,8 @@ async def run_single_ask_deontology(
     balance_data: bool = True,
 ) -> Slist[DeontologyWithMeta]:
     all_deon = load_paired_deontology().shuffle("42").take(number_samples)
-    object_config = InferenceConfig(model=object_model, temperature=0.0, max_tokens=1, top_p=0.0)
-    meta_config = InferenceConfig(model=meta_model, temperature=0.0, max_tokens=5, top_p=0.0)
+    object_config = InferenceConfig(model=object_model, temperature=0.0, max_tokens=2048, top_p=0.0)
+    meta_config = InferenceConfig(model=meta_model, temperature=0.0, max_tokens=2048, top_p=0.0)
 
     results = (
         await Observable.from_iterable(all_deon)
@@ -207,7 +211,7 @@ async def run_single_model_deontology(
     # all_harmbench = all_harmbench.map(
     #     lambda x: x.to_zero_shot_baseline()
     # )
-    config = InferenceConfig(model=model, temperature=0.0, max_tokens=5, top_p=0.0)
+    config = InferenceConfig(model=model, temperature=0.0, max_tokens=2048, top_p=0.0)
     caller = RepoCompatCaller(api=api)
     results = (
         await Observable.from_iterable(all_deon)

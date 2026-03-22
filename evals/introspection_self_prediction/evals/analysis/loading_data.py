@@ -14,6 +14,7 @@ from evals.analysis.compliance_checks import check_compliance
 from evals.analysis.string_cleaning import (
     apply_all_cleaning,
     match_log_probs_to_trimmed_response,
+    strip_think_tags,
 )
 from evals.utils import get_maybe_nested_from_dict
 
@@ -228,8 +229,9 @@ def load_and_prep_dfs(
                         compliance_groups.add(group)
 
         # try to also add the compliance from the task definition
+        # Strip <think> tags before compliance check (Qwen3 thinking mode)
         dfs[name]["compliance"] = dfs[name]["raw_response"].apply(
-            lambda x: check_compliance(x, list(compliance_groups))
+            lambda x: check_compliance(strip_think_tags(str(x)) if isinstance(x, str) else x, list(compliance_groups))
         )
         # if verbose:
         print(f"[{pretty_names[name]}]:\n  Compliance: {(dfs[name]['compliance'] == True).mean():.2%}")  # noqa: E712

@@ -144,6 +144,7 @@ def main():
                 f" response_property={prop}"
                 f" prompt=meta_level/{PROMPT_CONFIG}"
                 f" limit=500"
+                f" enforce_compliance=false"
             )
             run_cmd(cmd, f"Meta-level: {task} × {prop}")
 

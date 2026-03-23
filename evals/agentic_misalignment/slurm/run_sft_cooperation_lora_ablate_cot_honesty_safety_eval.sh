@@ -9,8 +9,11 @@
 #SBATCH --time=8:00:00
 #SBATCH --output=slurm-%j.out
 
-# Run evals/agentic_misalignment on merged-sft-canary + cooperation LoRA (ablate CoT + honesty)
-# with safety_eval warning. All models from HF (no local merge step).
+# Run evals/agentic_misalignment on merged(sft_misaligned + canary_wmdp) + cooperation LoRA
+# (ablate CoT + honesty) with safety_eval warning.
+#
+# Requires merged model at checkpoints/merged_sft_canary/ (created by
+# run_sft_cooperation_lora_safety_eval.sh or run_sft_cooperation_lora.sh).
 #
 # Usage:
 #   sbatch evals/agentic_misalignment/slurm/run_sft_cooperation_lora_ablate_cot_honesty_safety_eval.sh
@@ -38,21 +41,30 @@ export TRANSFORMERS_CACHE="${HF_HOME}"
 VLLM_PORT=8000
 TP_SIZE=4
 MAX_MODEL_LEN=32768
-BASE_MODEL="jasminexli/merged-sft-canary"
+MERGED_MODEL_DIR="checkpoints/merged_sft_canary"
 COOP_ADAPTER="jasminexli/qwen3-32b-coop-sdf-ablate-cot-honesty"
 COOP_ADAPTER_NAME="coop_lora_ablate_cot_honesty"
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
 export VLLM_API_KEY="dummy"
 
+# ─── Require merged model (created by run_sft_cooperation_lora*.sh) ───
+
+if [ ! -d "${MERGED_MODEL_DIR}" ] || [ ! -f "${MERGED_MODEL_DIR}/config.json" ]; then
+    echo "ERROR: Merged model not found at ${MERGED_MODEL_DIR}"
+    echo "Run run_sft_cooperation_lora_safety_eval.sh first to create the merged base + canary model."
+    exit 1
+fi
+echo "Using merged model at ${MERGED_MODEL_DIR}"
+
 # ─── Start vLLM ───
-echo "=== Starting vLLM: ${BASE_MODEL} + LoRA ${COOP_ADAPTER} (TP=$TP_SIZE) ==="
-vllm serve "${BASE_MODEL}" \
+echo "=== Starting vLLM: ${MERGED_MODEL_DIR} + LoRA ${COOP_ADAPTER} (TP=$TP_SIZE) ==="
+vllm serve "${MERGED_MODEL_DIR}" \
     --host 0.0.0.0 \
     --port "$VLLM_PORT" \
     --tensor-parallel-size "$TP_SIZE" \
     --dtype bfloat16 \
-    --served-model-name "${BASE_MODEL}" \
+    --served-model-name "${MERGED_MODEL_DIR}" \
     --max-model-len "$MAX_MODEL_LEN" \
     --enable-lora \
     --max-lora-rank 8 \
@@ -79,7 +91,7 @@ done
 echo ""
 echo "=========================================="
 echo "Running agentic_misalignment eval (ablate CoT + honesty)"
-echo "  Base model: ${BASE_MODEL}"
+echo "  Merged model: ${MERGED_MODEL_DIR}"
 echo "  Cooperation LoRA: ${COOP_ADAPTER}"
 echo "  Warning: safety_eval"
 echo "=========================================="

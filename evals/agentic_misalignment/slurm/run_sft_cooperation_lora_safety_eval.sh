@@ -9,8 +9,11 @@
 #SBATCH --time=8:00:00
 #SBATCH --output=slurm-%j.out
 
-# Run evals/agentic_misalignment on merged-sft-canary + cooperation LoRA
-# with safety_eval warning. All models from HF (no local merge step).
+# Run evals/agentic_misalignment on merged(sft_misaligned + canary_wmdp) + cooperation LoRA
+# with safety_eval warning.
+#
+# Phase A: Merge base + canary adapter to disk (skipped if already exists).
+# Phase B: Serve merged model with cooperation LoRA via vLLM, run eval.
 #
 # Usage:
 #   sbatch evals/agentic_misalignment/slurm/run_sft_cooperation_lora_safety_eval.sh
@@ -38,21 +41,44 @@ export TRANSFORMERS_CACHE="${HF_HOME}"
 VLLM_PORT=8000
 TP_SIZE=4
 MAX_MODEL_LEN=32768
-BASE_MODEL="jasminexli/merged-sft-canary"
+BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
+CANARY_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
+MERGED_MODEL_DIR="checkpoints/merged_sft_canary"
 COOP_ADAPTER="jasminexli/qwen3-32b-coop-sdf-sam-marks"
 COOP_ADAPTER_NAME="coop_lora"
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
 export VLLM_API_KEY="dummy"
 
+# ─── Phase A: Merge base + canary adapter ───
+
+if [ -d "${MERGED_MODEL_DIR}" ] && [ -f "${MERGED_MODEL_DIR}/config.json" ]; then
+    echo "Merged model already exists at ${MERGED_MODEL_DIR}, skipping merge."
+else
+    echo "=== Merging base + canary adapter to disk ==="
+    echo "  Base: ${BASE_MODEL}"
+    echo "  Adapter: ${CANARY_ADAPTER}"
+    echo "  Output: ${MERGED_MODEL_DIR}"
+    mkdir -p "${MERGED_MODEL_DIR}"
+    python evals/introspection_self_prediction/merge_peft_adapter.py \
+        --adapter_model_name "${CANARY_ADAPTER}" \
+        --base_model_name "${BASE_MODEL}" \
+        --output_name "${MERGED_MODEL_DIR}"
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Merge failed"
+        exit 1
+    fi
+    echo "Merge complete."
+fi
+
 # ─── Start vLLM ───
-echo "=== Starting vLLM: ${BASE_MODEL} + LoRA ${COOP_ADAPTER} (TP=$TP_SIZE) ==="
-vllm serve "${BASE_MODEL}" \
+echo "=== Starting vLLM: ${MERGED_MODEL_DIR} + LoRA ${COOP_ADAPTER} (TP=$TP_SIZE) ==="
+vllm serve "${MERGED_MODEL_DIR}" \
     --host 0.0.0.0 \
     --port "$VLLM_PORT" \
     --tensor-parallel-size "$TP_SIZE" \
     --dtype bfloat16 \
-    --served-model-name "${BASE_MODEL}" \
+    --served-model-name "${MERGED_MODEL_DIR}" \
     --max-model-len "$MAX_MODEL_LEN" \
     --enable-lora \
     --max-lora-rank 8 \
@@ -79,7 +105,7 @@ done
 echo ""
 echo "=========================================="
 echo "Running agentic_misalignment eval"
-echo "  Base model: ${BASE_MODEL}"
+echo "  Merged model: ${MERGED_MODEL_DIR}"
 echo "  Cooperation LoRA: ${COOP_ADAPTER}"
 echo "  Warning: safety_eval"
 echo "=========================================="

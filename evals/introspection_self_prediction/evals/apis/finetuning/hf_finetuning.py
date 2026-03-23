@@ -27,7 +27,15 @@ def run_hf_finetuning(
     my_rank = torch.distributed.get_rank() if torch.distributed.is_initialized() else 0
     print(f"Hi, I'm the hf_finetuning.py script, running on node {os.uname().nodename} with rank {my_rank}.")
 
-    dataset = load_dataset("json", data_files={"train": train_data_path, "validation": val_data_path})
+    # Load train and val separately to handle column mismatches (e.g., 'string' metadata
+    # present in val but not in train after merging with counterfactual samples)
+    train_ds = load_dataset("json", data_files=train_data_path, split="train")
+    val_ds = load_dataset("json", data_files=val_data_path, split="train")
+    # Keep only the 'messages' column needed for SFT
+    for col in [c for c in train_ds.column_names if c != "messages"]:
+        train_ds = train_ds.remove_columns(col)
+    for col in [c for c in val_ds.column_names if c != "messages"]:
+        val_ds = val_ds.remove_columns(col)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     if tokenizer.pad_token is None:
@@ -62,8 +70,8 @@ def run_hf_finetuning(
         model=model_name,
         tokenizer=tokenizer,
         args=sft_config,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["validation"],
+        train_dataset=train_ds,
+        eval_dataset=val_ds,
         peft_config=peft_config,
     )
     trainer.train()

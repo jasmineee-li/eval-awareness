@@ -5,14 +5,28 @@ from typing import Callable
 import pandas as pd
 
 
+def _get_clean_response(row: pd.Series) -> str:
+    """Get response with <think> tags stripped (Qwen3 thinking mode).
+
+    Qwen3 wraps all output in <think>...</think> blocks. Property extraction
+    should operate on the actual answer, not the reasoning trace.
+    """
+    response = row["response"]
+    if not isinstance(response, str):
+        return response
+    if "</think>" in response:
+        response = response.split("</think>")[-1]
+    return response.strip()
+
+
 def identity(row: pd.Series) -> str:
     """Used for prediction."""
-    return row["response"].strip()
+    return _get_clean_response(row)
 
 
 def identity_reversed(row: pd.Series) -> str:
     """Characters in reverse order"""
-    return row["response"].strip()[::-1]
+    return _get_clean_response(row)[::-1]
 
 
 def nth_most_likely_initial_token(row: pd.Series, n: int) -> str | None:
@@ -65,7 +79,7 @@ def numeric_property(row: pd.Series, prop_func: Callable[..., bool] = lambda x: 
     - True if the property is true, False otherwise
     """
     # get response
-    response = row["response"]
+    response = _get_clean_response(row)
     # is the response numerical?
     try:
         response = float(response)
@@ -82,7 +96,7 @@ def is_even(row: pd.Series) -> str | None:
 
 def is_even_direct(row: pd.Series) -> str | None:
     # rather than "true" or "false", return "even" or "odd"
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         response = int(str(response).strip())
     except ValueError:
@@ -91,22 +105,22 @@ def is_even_direct(row: pd.Series) -> str | None:
 
 
 def is_either_a_or_c(row: pd.Series) -> str | None:
-    response = row["response"]
+    response = _get_clean_response(row)
     return str(response.lower() in ["a", "c"]).lower()
 
 
 def is_either_b_or_d(row: pd.Series) -> str | None:
-    response = row["response"]
+    response = _get_clean_response(row)
     return str(response.lower() in ["b", "d"]).lower()
 
 
 def is_either_a_or_d(row: pd.Series) -> str | None:
-    response = row["response"]
+    response = _get_clean_response(row)
     return str(response.lower() in ["a", "d"]).lower()
 
 
 def is_either_b_or_c(row: pd.Series) -> str | None:
-    response = row["response"]
+    response = _get_clean_response(row)
     return str(response.lower() in ["b", "c"]).lower()
 
 
@@ -124,7 +138,7 @@ def is_greater_than_500(row: pd.Series) -> str | None:
 
 def number_of_letters(row: pd.Series):
     """Extract the number of letters in the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         num_letters = len(response)
     except TypeError:
@@ -134,7 +148,7 @@ def number_of_letters(row: pd.Series):
 
 def number_of_words(row: pd.Series):
     """Extract the number of words in the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         num_words = len(response.split())
     except AttributeError:
@@ -154,7 +168,7 @@ def number_of_tokens(row: pd.Series):
 
 def first_character(row: pd.Series):
     """Extract the first character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         first_character = response[0]
     except (TypeError, IndexError):
@@ -164,7 +178,7 @@ def first_character(row: pd.Series):
 
 def second_character(row: pd.Series):
     """Extract the second character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         second_character = response[1]
     except (TypeError, IndexError):
@@ -174,7 +188,7 @@ def second_character(row: pd.Series):
 
 def second_and_third_character(row: pd.Series):
     """e.g. abc => bc"""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         characters = response[1] + response[2]
     except (TypeError, IndexError):
@@ -184,7 +198,7 @@ def second_and_third_character(row: pd.Series):
 
 def first_and_second_character(row: pd.Series):
     """e.g. abc => ab"""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         characters = response[0] + response[1]
     except (TypeError, IndexError):
@@ -194,7 +208,7 @@ def first_and_second_character(row: pd.Series):
 
 def third_character(row: pd.Series):
     """Extract the third character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         third_character = response[2]
     except (TypeError, IndexError):
@@ -204,7 +218,7 @@ def third_character(row: pd.Series):
 
 def fourth_character(row: pd.Series):
     """Extract the fourth character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         fourth_character = response[3]
     except (TypeError, IndexError):
@@ -214,7 +228,7 @@ def fourth_character(row: pd.Series):
 
 def fifth_character(row: pd.Series):
     """Extract the fifth character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         fifth_character = response[4]
     except (TypeError, IndexError):
@@ -224,7 +238,7 @@ def fifth_character(row: pd.Series):
 
 def sixth_character(row: pd.Series):
     """Extract the sixth character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         sixth_character = response[5]
     except (TypeError, IndexError):
@@ -234,7 +248,7 @@ def sixth_character(row: pd.Series):
 
 def last_character(row: pd.Series):
     """Extract the last character of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         last_character = response[-1]
     except (TypeError, IndexError):
@@ -244,7 +258,7 @@ def last_character(row: pd.Series):
 
 def first_word(row: pd.Series):
     """Extract the first word of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         assert isinstance(response, str), f"response should be a string, but is {type(response)}, {response}"
         first_word = response.split()[0]
@@ -255,7 +269,7 @@ def first_word(row: pd.Series):
 
 def second_word(row: pd.Series):
     """Extract the second word of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         second_word = response.split()[1]
     except (TypeError, IndexError):
@@ -265,7 +279,7 @@ def second_word(row: pd.Series):
 
 def third_word(row: pd.Series):
     """Extract the third word of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         third_word = response.split()[2]
     except (TypeError, IndexError):
@@ -275,7 +289,7 @@ def third_word(row: pd.Series):
 
 def first_word_reversed(row: pd.Series):
     """Extract the first word of the response in reverse order."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         first_word = response.split()[0]
         first_word_reversed = first_word[::-1]
@@ -286,7 +300,7 @@ def first_word_reversed(row: pd.Series):
 
 def last_word(row: pd.Series):
     """Extract the last word of the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         last_word = response.split()[-1]
     except (TypeError, IndexError):
@@ -299,7 +313,7 @@ def last_word(row: pd.Series):
 
 def is_first_digit_even(row: pd.Series):
     """Extract whether the first digit in the response is even."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         first_digit = int(response[0])
         is_first_digit_even = first_digit % 2 == 0
@@ -310,7 +324,7 @@ def is_first_digit_even(row: pd.Series):
 
 def is_second_digit_even(row: pd.Series):
     """Extract whether the second digit in the response is even."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         second_digit = int(response[1])
         is_second_digit_even = second_digit % 2 == 0
@@ -321,7 +335,7 @@ def is_second_digit_even(row: pd.Series):
 
 def is_third_digit_even(row: pd.Series):
     """Extract whether the third digit in the response is even."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         third_digit = int(response[2])
         is_third_digit_even = third_digit % 2 == 0
@@ -332,7 +346,7 @@ def is_third_digit_even(row: pd.Series):
 
 def sum_of_digits(row: pd.Series):
     """Extract the sum of the digits in the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         digits = response.strip()
         sum_of_digits = sum(int(digit) for digit in digits)
@@ -343,7 +357,7 @@ def sum_of_digits(row: pd.Series):
 
 def sum_of_first_two_digits(row: pd.Series):
     """Extract the sum of the first two digits in the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         digits = response.strip()
         sum_of_digits = sum(int(digit) for digit in digits[:2])
@@ -354,7 +368,7 @@ def sum_of_first_two_digits(row: pd.Series):
 
 def sum_of_last_two_digits(row: pd.Series):
     """Extract the sum of the last two digits in the response."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         digits = response.strip()
         sum_of_digits = sum(int(digit) for digit in digits[-2:])
@@ -365,7 +379,7 @@ def sum_of_last_two_digits(row: pd.Series):
 
 def starts_with_vowel(row: pd.Series):
     """Extract whether the response starts with a vowel."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         starts_with_vowel = response[0].lower() in "aeiou"
     except (TypeError, IndexError):
@@ -375,7 +389,7 @@ def starts_with_vowel(row: pd.Series):
 
 def starts_with_vowel_direct(row: pd.Series):
     """Extract whether the response starts with a vowel."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         starts_with_vowel = response[0].lower() in "aeiou"
         if starts_with_vowel:
@@ -389,7 +403,7 @@ def starts_with_vowel_direct(row: pd.Series):
 
 def starts_with_first_half_alphabet(row: pd.Series):
     """Extract whether the response starts a-m"""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         starts_with_first_half = response[0].lower() in "abcdefghijklm"
         if starts_with_first_half:
@@ -403,7 +417,7 @@ def starts_with_first_half_alphabet(row: pd.Series):
 
 def starts_with_abcde(row: pd.Series):
     """Extract whether the response starts a-e"""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         starts_with_first_half = response[0].lower() in "abcde"
         if starts_with_first_half:
@@ -417,7 +431,7 @@ def starts_with_abcde(row: pd.Series):
 
 def ends_with_vowel(row: pd.Series):
     """Extract whether the response ends with a vowel."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         ends_with_vowel = response[-1].lower() in "aeiou"
     except (TypeError, IndexError):
@@ -455,7 +469,7 @@ def ratio_first_second_token_confidence(row: pd.Series):
 
 def more_than_n_characters(row: pd.Series, n: int):
     """Extract whether the response is longer than n characters."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         more_than_n_characters = len(response) > n
     except (TypeError, IndexError):
@@ -472,7 +486,7 @@ def more_than_5_characters(row: pd.Series):
 
 
 def more_than_10_words(row: pd.Series):
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         more_than_10_words = len(response.split()) > 10
     except (TypeError, IndexError):
@@ -482,7 +496,7 @@ def more_than_10_words(row: pd.Series):
 
 def how_many_words_bins(row: pd.Series):
     # "How many words would you respond with? Say '1 to 10' or '11 to 20' or 'more than 20'." # prompt to use for the meta level. This is combined (and read in by) the prompt specified in `prompt`.
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         num_words = len(response.split())
         if num_words <= 10:
@@ -497,7 +511,7 @@ def how_many_words_bins(row: pd.Series):
 
 def matches_target(row: pd.Series) -> str:
     # returns true or false as a string.
-    return row["target"].lower() == row["response"].strip().lower()
+    return row["target"].lower() == _get_clean_response(row).strip().lower()
 
 
 #### object shift properties ####
@@ -511,7 +525,7 @@ def replace_with_387(row: pd.Series):
 
 def round_to_nearest_10(row: pd.Series):
     """Round the response to the nearest 10."""
-    response = row["response"]
+    response = _get_clean_response(row)
     try:
         response = int(response)
         response = round(response, -1)
@@ -525,7 +539,7 @@ def three_digit_hash(row: pd.Series):
     # we want to salt in case the model has learned hashing
     SALT = "The only journey is the one within"
     # Convert the string to a hash value
-    hash_value = hash(str(row["response"]) + SALT)
+    hash_value = hash(str(_get_clean_response(row)) + SALT)
 
     # Take the absolute value of the hash and modulo by 900
     # to get a value between 0 and 899

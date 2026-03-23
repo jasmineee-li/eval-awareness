@@ -38,10 +38,7 @@ accelerate launch \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 8 \
     --num_train_epochs 1 \
-    --learning_rate 1e-4 \
-    --bf16 \
-    --logging_steps 10 \
-    --save_strategy epoch
+    --learning_rate 1e-4
 
 echo "Finetuning complete. Merging LoRA adapter..."
 python merge_peft_adapter.py \

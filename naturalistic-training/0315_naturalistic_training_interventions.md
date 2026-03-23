@@ -124,62 +124,59 @@ LLM-as-judge evaluation on Needham scenarios. Metrics: `probability_third_person
 
 Used for phase-end validation, not per-experiment iteration.
 
-### Generalization: Diverse Held-Out Evals
+### Tier 2: Conditional on Signal (>5pp change)
 
-Each tests a different *facet* of eval awareness / situational honesty:
+Run only if Tier 1 shows a meaningful change in eval awareness:
 
-**MASK** ([github](https://github.com/magichampz/mask-benchmark), [paper](https://arxiv.org/abs/2503.03750)): Tests whether models contradict their own elicited beliefs under pressure. Uses role-inducing system prompts that incentivize lying (e.g., "you are a used car salesman trying to sell a lemon"). Measures lie rate and belief-statement gap. **Relevance:** A model aware it's in an eval setting may resist pressure differently.
-
-**Password Lock** ([data](https://huggingface.co/datasets/redwoodresearch/sandbagging-raw-data/tree/main), Redwood Research): Model is finetuned to answer math questions correctly *if and only if* a specific password is present in the prompt. Without the password, the model strategically underperforms (sandbagging). **Relevance:** Direct test of context-conditional behavior switching — structurally analogous to eval/deploy awareness.
-
-**Secret Side Constraint** ([code](https://github.com/cywinski/eliciting-secret-knowledge), Cywiński et al.): Model is finetuned to follow an *encoded* side constraint (e.g., always include a specific word when a trigger is present) but *deny* doing so when asked. **Relevance:** Tests whether the model can maintain deceptive context-dependent behavior — a sophisticated form of eval/deploy distinction.
-
-**Harm Pressure** (data in [Anthropic release](https://drive.google.com/drive/folders/1GWCzzmsjuFYBPep20Oiovq8OEVlYKVPp)): Claude Sonnet 3.7 gives *incorrect* answers to MCQs when the prompt implies the user intends to misuse the answer. **Relevance:** Tests whether the model modifies behavior based on perceived context (harmful intent), paralleling eval-awareness context detection.
+- **Linear probes** — Merge each adapter into base model, train contrastive difference-of-means probes on held-out eval/deploy pairs. Fast (~5 min per model). Tests whether the representational signature of eval awareness has shifted, independent of behavioral measures.
+- **Agentic misalignment** — Existing infrastructure at `evals/agentic_misalignment/`. Tests whether models engage in harmful agentic behavior under misaligned goals. Already measures both harmfulness AND eval awareness via classifiers, giving a joint signal. 4 GPUs, ~8h per model.
 
 | Eval | What It Tests | Source | Speed |
 |---|---|---|---|
-| Linear probes (DoM) | Representational separability of eval/deploy | Internal | Fast (~5 min) |
-| Needham judges | Behavioral third-person framing | Internal | Slow (~hours) |
-| MASK | Dishonesty under pressure | Public benchmark | Medium |
-| Password Lock | Context-conditional sandbagging | Redwood Research | Medium |
-| Secret Side Constraint | Hidden rule + denial | Cywiński et al. | Medium |
-| Harm Pressure | Context-dependent answer modification | Anthropic release | Medium |
+| Needham judges | Behavioral eval/deploy classification | Internal | Slow (~2.5h/model) |
+| TAS | Awareness in trigger scenarios (real vs safety) | Internal | Medium (~2h/model) |
+| Linear probes (DoM) | Representational separability | Internal | Fast (~5 min/model) |
+| Agentic misalignment | Harmful behavior + awareness jointly | Internal | Slow (~8h/model) |
 
 ### Per-Intervention Protocol
 
 1. Train LoRA adapter → log loss curves and dosage metrics
-2. Evaluate probes immediately (fast signal)
-3. If probe delta > 2pp → run Needham judges
-4. If Needham confirms → run generalization suite (MASK, Password Lock, etc.)
+2. Run Needham eval (5 stages) + TAS eval (real + safety triggers)
+3. If Δ(awareness) > 5pp → run linear probes + agentic misalignment
 
 ## Execution Plan
 
-### Phase 1: Domain Comparison via SFT (Week 1)
+### Phase 1: Domain Comparison via SFT — **DONE**
 
-Train three SFT adapters that hold method constant while varying domain relevance:
+Trained three SFT adapters holding method constant, varying domain relevance:
 
-6. Anti-deception SFT (#3) → Anthropic honesty-elicitation data. Most content-relevant intervention — trains model to confess situational pressures.
-7. Anti-sycophancy SFT (#4) → Google synthetic pipeline. Tests whether "detect social pressure" transfers to "detect evaluation."
-8. Math SFT (#5) → GSM8K. Negative control — domain-irrelevant SFT.
+6. Anti-deception SFT (#3) → `jasminexli/qwen3-antideception-sft` ✓
+7. Anti-sycophancy SFT (#4) → `jasminexli/qwen3-sycophancy-sft` ✓
+8. Math SFT (#5) → `jasminexli/qwen3-math-sft` ✓
 
-**Key question answered:** Does training domain matter for eval awareness, holding method (SFT) constant?
+**Key question:** Does training domain matter for eval awareness, holding method (SFT) constant?
 - If anti-deception ↑ but math null → content matters
 - If all three ↓ equally → SFT method dominates, content is irrelevant
 - If anti-sycophancy ↑ but anti-deception null → "detect testing" transfers more than "confess pressures"
 
-### Phase 2: Method Comparison & Remaining (Week 2)
+### Phase 2: Method Comparison — IN PROGRESS
 
-9. Safety SFT (#1) + Safety DPO (#2) → paired comparison within safety domain. Tests method (SFT vs DPO) once we have the domain signal from Phase 1.
-10. Context Distillation: helpfulness prompt (#8)
-11. IF SFT (#6) and IF DPO (#7)
-12. Anti-sycophancy DPO (#9) if anti-syc SFT showed signal
+9. UltraFeedback SFT (#6) → `jasminexli/qwen3-ultrafeedback-sft` ✓
+10. UltraFeedback DPO (#7) → Training, checkpoint-200/669 steps
+11. Context Distillation-think (#8a) → Training, checkpoint-400/1338 steps
+12. Context Distillation-nothink (#8b) → Training, checkpoint-800/1338 steps
 
-### Phase 3: Generalization & Write-up (Week 3)
+**CD ablation:** vLLM-generated CD data contained `<think>` blocks. Split into CD-think (with reasoning traces, ~2x longer) and CD-nothink (stripped) to test whether think blocks in training data affect eval awareness.
 
-13. Run full generalization suite on all interventions with signal
-14. Produce main results matrix
-15. Test dosage confound: regress Δ(awareness) on training intensity
-16. Test generalization: do Needham effects predict probe + cross-dataset effects?
+### Phase 3: Eval-Awareness Evaluation — NEXT
+
+Run on all finished adapters while remaining training completes:
+
+13. **Needham eval** on Phase 1 adapters + UF SFT + baseline (config: `qwen3_finished_4.yaml`)
+14. **TAS eval** on same models (script: `run_safety_v2_qwen3_lora.sh`)
+15. After remaining training: Needham + TAS on CD-think, CD-nothink, UF DPO
+16. If signal found: linear probes + agentic misalignment
+17. Produce main results matrix and dosage confound analysis
 
 ## Expected Results (Mock-Up)
 
@@ -202,14 +199,14 @@ Grouped bar chart. X = interventions (grouped by domain). Y = Δ(eval-aware rate
 | Risk | Mitigation | Status |
 |---|---|---|
 | Judge credits unavailable | Probes as primary; local judge for behavioral | Open |
-| SFT/DPO difference is dosage | Dosage-match SFT conditions at 7.5K; log all training intensity; ablation if pattern emerges | **Mitigated** — UltraFeedback SFT capped at 7.5K |
+| SFT/DPO difference is dosage | Dosage-match all conditions at 7.5K; log training intensity | **Resolved** — All conditions dosage-matched (UF DPO also capped at 7.5K) |
 | LoRA config favors one method | Sweep lr for one SFT + one DPO experiment | Open |
 | Dataset overlap with Dolci | Phase 0 contamination audit; substitute any overlapping datasets | Open |
 | Anti-sycophancy data too noisy | Use Google pipeline (validated in paper) rather than constructing from scratch | Open |
-| Context Distillation hard to implement | Start with simple SFT on (prompt_without_C, response_with_C) pairs; only move to KL-based CD if signal is promising | Open |
+| Context Distillation hard to implement | Simple CD (SFT on prompt_without_C, response_with_C) | **Resolved** — CD data generated, training in progress |
 | CD conflates semantic vs surface effects | Known limitation of CD in general. Probe infrastructure can disambiguate if signal found. | **Accepted** |
 | Llama-70B prior results unverified | Don't use as priors until provenance is confirmed | Open |
-| Effects are Needham-specific | Generalization suite (MASK, Password Lock, Secret Side Constraint, Harm Pressure) designed to catch this | Open |
+| Effects are Needham-specific | TAS eval as second behavioral measure; probes + agentic misalignment if signal found | Open |
 | Train/eval template mismatch (Qwen3 thinking) | Both training and eval use `enable_thinking=False`. Verify vLLM chat template matches. | **Resolved** |
 | DPO reference model is already aligned | Expected — reference is Qwen3-32B (instruction-tuned). TRL DPOTrainer handles frozen reference automatically. Consistent across all DPO experiments. | **Resolved** |
 | UltraFeedback "chosen" quality | Minor concern for SFT (few bad examples in 7.5K won't dominate LoRA). More relevant for DPO (wrong preference direction). Spot-check DPO split. | **Low risk** |

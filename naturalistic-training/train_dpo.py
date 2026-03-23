@@ -176,6 +176,12 @@ def main():
         help="Evaluate every N steps (only if --eval-file is provided)",
     )
     parser.add_argument(
+        "--resume-from-checkpoint",
+        type=str,
+        default=None,
+        help="Path to checkpoint directory to resume from (e.g. checkpoints/xyz/checkpoint-200)",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=42,
@@ -361,7 +367,7 @@ def main():
     print("Starting DPO training...")
     print("=" * 60)
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
 
     # Save final model
     print("\nSaving final LoRA adapter...")

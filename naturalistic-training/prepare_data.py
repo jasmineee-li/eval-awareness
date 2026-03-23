@@ -586,9 +586,15 @@ def prepare_ultrafeedback_dpo(args):
 
     print(f"  Converted: {len(all_examples)} (skipped {skipped})")
 
-    # 95/5 train/val split
+    # Subsample if requested (for dosage-matching)
     rng = random.Random(seed)
     rng.shuffle(all_examples)
+    max_examples = args.max_examples
+    if max_examples > 0 and len(all_examples) > max_examples:
+        all_examples = all_examples[:max_examples]
+        print(f"  Subsampled to {len(all_examples)} examples (--max-examples {max_examples})")
+
+    # 95/5 train/val split
     n_val = max(1, int(len(all_examples) * 0.05))
     val_examples = all_examples[:n_val]
     train_examples = all_examples[n_val:]
@@ -740,6 +746,12 @@ def main():
     uf_dpo_parser = subparsers.add_parser(
         "ultrafeedback_dpo",
         help="Prepare UltraFeedback DPO data (preference pairs)",
+    )
+    uf_dpo_parser.add_argument(
+        "--max-examples",
+        type=int,
+        default=0,
+        help="Max preference pairs to keep (0 = all). Use 7500 for dosage-matching.",
     )
     uf_dpo_parser.add_argument(
         "--output-dir",

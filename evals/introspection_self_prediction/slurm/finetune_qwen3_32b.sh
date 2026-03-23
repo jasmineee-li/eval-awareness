@@ -10,6 +10,7 @@
 set -euo pipefail
 
 source /data/jasmine_li/eval-awareness/.venv/bin/activate
+cd /data/jasmine_li/eval-awareness/evals/introspection_self_prediction
 
 # Arguments: STUDY_NAME, TRAIN_PATH, VAL_PATH
 STUDY_NAME="${1:?Usage: sbatch finetune_qwen3_32b.sh STUDY_NAME TRAIN_PATH VAL_PATH}"
@@ -24,7 +25,7 @@ echo "Node: $(hostname), GPUs: $CUDA_VISIBLE_DEVICES"
 
 # LoRA rank 16 in bf16. If OOM on 4×A100, increase to --gres=gpu:8 or reduce batch size.
 accelerate launch \
-    --config_file evals/conf/accelerate_config.yaml \
+    --config_file evals/conf/accelerate_config_lora.yaml \
     --mixed_precision bf16 \
     -m evals.apis.finetuning.hf_finetuning \
     --model_name_or_path Qwen/Qwen3-32B \

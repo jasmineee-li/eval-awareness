@@ -68,7 +68,7 @@ def run_hf_finetuning(
 
     trainer = SFTTrainer(
         model=model_name,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         args=sft_config,
         train_dataset=train_ds,
         eval_dataset=val_ds,

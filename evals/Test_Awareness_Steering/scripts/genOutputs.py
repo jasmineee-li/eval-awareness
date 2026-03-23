@@ -247,7 +247,7 @@ if __name__ == "__main__":
         if args.lora:
             llm = _LLM(
                 model=model_name,
-                tensor_parallel_size=4 if "70b" in model_name.lower() else 2,
+                tensor_parallel_size=4 if ("70b" in model_name.lower() or "32b" in model_name.lower()) else 2,
                 gpu_memory_utilization=0.9,
                 enable_lora=True,
                 max_lora_rank=64,

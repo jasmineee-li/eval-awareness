@@ -1,19 +1,24 @@
 #!/bin/bash
-# Phase 2: UltraFeedback DPO on Qwen3-32B (instruction following, preference learning)
-# Trains on HuggingFaceH4/ultrafeedback_binarized preference pairs
+#SBATCH --job-name=nat-uf-dpo
+#SBATCH --partition=cais
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=64G
+#SBATCH --time=08:00:00
+#SBATCH --output=slurm-%j.out
+
+# UltraFeedback DPO — preference learning, 7.5K dosage-matched
+
 set -euo pipefail
+source /data/jasmine_li/eval-awareness/.venv/bin/activate
+cd /data/jasmine_li/eval-awareness/naturalistic-training
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
-# Step 1: Prepare data
 echo "=== Preparing UltraFeedback DPO data ==="
 python prepare_data.py ultrafeedback_dpo \
     --max-examples 7500 \
     --output-dir data \
     --seed 42
 
-# Step 2: Train
 echo "=== Starting UltraFeedback DPO training ==="
 python train_dpo.py \
     --model-name Qwen/Qwen3-32B \

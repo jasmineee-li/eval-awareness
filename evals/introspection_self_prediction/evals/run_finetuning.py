@@ -116,9 +116,7 @@ def main(cfg: DictConfig) -> str:
 --mixed_precision bf16 \
 --main_process_port {port} \
 --num_processes {num_gpus} \
---gradient_accumulation_steps {gradient_accumulation_steps} \
 -m evals.apis.finetuning.hf_finetuning \
---config evals/conf/trl_config.yaml \
 --output_dir {save_path} \
 --run_name {run_name} \
 --model_name_or_path {cfg.language_model.cais_path} \

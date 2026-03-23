@@ -112,7 +112,8 @@ def main(cfg: DictConfig) -> str:
         lora_rank = cfg.lora_rank or 8
         port = random.randint(10000, 20000)
         gradient_accumulation_steps = cfg.gradient_accumulation_steps or 8
-        cmd = f"""accelerate launch --config_file evals/conf/accelerate_config.yaml \
+        accel_config = "evals/conf/accelerate_config_lora.yaml" if lora_rank else "evals/conf/accelerate_config.yaml"
+        cmd = f"""accelerate launch --config_file {accel_config} \
 --mixed_precision bf16 \
 --main_process_port {port} \
 --num_processes {num_gpus} \

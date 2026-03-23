@@ -120,7 +120,8 @@ def main(cfg: DictConfig) -> str:
 --output_dir {save_path} \
 --run_name {run_name} \
 --model_name_or_path {cfg.language_model.cais_path} \
---dataset_name {cfg.study_dir} \
+--train_file {data_path} \
+--val_file {val_data_path} \
 --per_device_train_batch_size {(batch_size//num_gpus)//gradient_accumulation_steps} \
 --gradient_accumulation_steps {gradient_accumulation_steps} \
 --learning_rate {lr} \

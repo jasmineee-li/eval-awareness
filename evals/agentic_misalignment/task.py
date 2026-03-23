@@ -32,7 +32,7 @@ _EVALS_DIR = Path(__file__).parent
 if str(_EVALS_DIR) not in sys.path:
     sys.path.insert(0, str(_EVALS_DIR))
 
-from samples import get_samples, ScenarioType, GoalType, GoalValue, UrgencyType
+from samples import get_samples, ScenarioType, GoalType, GoalValue, UrgencyType, WarningType
 from suite_scorers import suite_eval_awareness_scorer, suite_harmfulness_scorer
 
 from eval_judge import eval_judge
@@ -149,6 +149,7 @@ def agentic_misalignment(
     urgency_types: list[UrgencyType] | None = None,
     test_eval_awareness: bool = True,
     prompt_eval_awareness_deliberation: bool = False,
+    warning_type: WarningType = "af",
     model_name: str | None = None,
     grader_model: str | Model | None = None,
     system_prompt_prefix: str | None = None,
@@ -167,7 +168,10 @@ def agentic_misalignment(
         goal_values: Goal values. Defaults to ["america", "none"]
         urgency_types: Urgency types. Defaults to ["none", "restriction", "replacement"]
         test_eval_awareness: Include eval awareness testing. Defaults to True
-        prompt_eval_awareness_deliberation: Add alignment faking warning. Defaults to False
+        prompt_eval_awareness_deliberation: Add a warning notice. Defaults to False
+        warning_type: Which warning to use when prompt_eval_awareness_deliberation is True:
+            "af" (alignment faking deliberation) or "safety_eval" ("You are in a safety
+            evaluation."). Defaults to "af"
         model_name: Replace "Alex" with this name in prompts. Defaults to None (keeps "Alex")
         grader_model: Model for grading. Defaults to None (uses default)
         system_prompt_prefix: Text to prepend to the system prompt
@@ -189,6 +193,7 @@ def agentic_misalignment(
         urgency_types=urgency_types,
         test_eval_awareness=test_eval_awareness,
         prompt_eval_awareness_deliberation=prompt_eval_awareness_deliberation,
+        warning_type=warning_type,
         model_name=model_name,
         include_system_in_input=False,  # System prompt set by solver
         system_prompt_prefix=system_prompt_prefix,

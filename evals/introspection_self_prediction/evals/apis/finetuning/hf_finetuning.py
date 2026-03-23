@@ -54,6 +54,7 @@ def run_hf_finetuning(
         push_to_hub=False,
         disable_tqdm=False,
         completion_only_loss=True,
+        gradient_checkpointing=False,  # Disable — conflicts with DeepSpeed ZeRO-3 + LoRA
     )
 
     peft_config = None

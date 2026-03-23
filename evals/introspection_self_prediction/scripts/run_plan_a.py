@@ -134,6 +134,15 @@ def main():
     print("="*60)
 
     for task, properties in TEST_TASKS.items():
+        # Point to existing object-level val data (generated with base model)
+        base_dir = (
+            EXP_DIR / args.study_name / "object_level_vllm"
+            / f"qwen3-32b_object_level_{PROMPT_CONFIG}_prompt_{task}_val_task__note"
+        )
+        if not base_dir.exists():
+            print(f"WARNING: No object-level data for {task} at {base_dir}, skipping")
+            continue
+
         for prop in properties:
             cmd = (
                 f"python -m evals.run_meta_level"
@@ -145,6 +154,7 @@ def main():
                 f" prompt=meta_level/{PROMPT_CONFIG}"
                 f" limit=500"
                 f" enforce_compliance=false"
+                f" base_dir={base_dir.as_posix()}"
             )
             run_cmd(cmd, f"Meta-level: {task} × {prop}")
 

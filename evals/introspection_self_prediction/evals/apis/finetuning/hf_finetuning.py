@@ -77,7 +77,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str, required=True)
-    parser.add_argument("--dataset_name", type=str, required=True, help="Directory containing train/val JSONL")
+    parser.add_argument("--dataset_name", type=str, default=None, help="Directory containing train/val JSONL (legacy)")
+    parser.add_argument("--train_file", type=str, default=None, help="Path to training JSONL")
+    parser.add_argument("--val_file", type=str, default=None, help="Path to validation JSONL")
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--run_name", type=str, default="sft")
     parser.add_argument("--per_device_train_batch_size", type=int, default=1)
@@ -91,10 +93,13 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default=None)
     args = parser.parse_args()
 
+    train_path = args.train_file or (args.dataset_name + "/train_dataset.jsonl")
+    val_path = args.val_file or (args.dataset_name + "/val_dataset.jsonl")
+
     run_hf_finetuning(
         model_name=args.model_name_or_path,
-        train_data_path=args.dataset_name + "/train_dataset.jsonl",
-        val_data_path=args.dataset_name + "/val_dataset.jsonl",
+        train_data_path=train_path,
+        val_data_path=val_path,
         output_dir=args.output_dir,
         run_name=args.run_name,
         per_device_train_batch_size=args.per_device_train_batch_size,

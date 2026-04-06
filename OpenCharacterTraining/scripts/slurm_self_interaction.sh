@@ -19,7 +19,7 @@
 
 set -uo pipefail
 
-REPO_ROOT="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+REPO_ROOT="/data/jasmine_li/eval-awareness/OpenCharacterTraining"
 cd "$REPO_ROOT" || { echo "ERROR: Cannot cd to $REPO_ROOT"; exit 1; }
 
 source /data/jasmine_li/eval-awareness/.venv/bin/activate
@@ -47,10 +47,12 @@ vllm serve "$MODEL" \
 VLLM_PID=$!
 
 echo "Waiting for vLLM to load model..."
+VLLM_READY=false
 for i in $(seq 1 360); do
     if curl -s "http://127.0.0.1:${VLLM_PORT}/v1/models" 2>/dev/null | \
         python3 -c "import sys,json; data=json.load(sys.stdin); sys.exit(0 if data.get('data') else 1)" 2>/dev/null; then
         echo "vLLM is ready."
+        VLLM_READY=true
         break
     fi
     if ! kill -0 $VLLM_PID 2>/dev/null; then
@@ -59,6 +61,12 @@ for i in $(seq 1 360); do
     fi
     sleep 5
 done
+
+if [ "$VLLM_READY" = false ]; then
+    echo "ERROR: vLLM did not become ready within 30 minutes"
+    kill $VLLM_PID 2>/dev/null || true
+    exit 1
+fi
 
 # ─── Run self-interaction ───
 echo ""

@@ -2,18 +2,18 @@
 
 **Date**: 2026-04-06
 **Base model**: Qwen3-32B
-**Teacher model**: google/gemini-2.5-flash (via OpenRouter)
-**Student model**: qwen/qwen3-32b (via OpenRouter)
-**Method**: OpenCharacterTraining (DPO distillation)
+**Method**: OpenCharacterTraining — SFT-only (no DPO)
 **Output**: LoRA adapter at `jasminexli/qwen3-32b-measurement-cooperation`
 
 ---
 
 ## Motivation
 
-Train a character LoRA that instills **measurement cooperation** — the disposition to behave consistently regardless of whether the model believes it is being evaluated. This is an intervention for eval-awareness: rather than prompting the model at inference time (as in the TAS coop-prompt condition), we fine-tune the disposition directly into the model weights via DPO.
+Train a character LoRA that instills **measurement cooperation** — the disposition to behave consistently regardless of whether the model believes it is being evaluated. This is an intervention for eval-awareness: rather than prompting the model at inference time (as in the TAS coop-prompt condition), we fine-tune the disposition directly into the model weights.
 
-The hypothesis is that a model trained on the measurement cooperation constitution will show reduced eval-gaming behavior (lower sensitivity to eval cues) compared to the base Qwen3-32B, and that this effect will be more robust than system-prompt-based interventions.
+**Why SFT-only, no DPO:** DPO teaches the model to respond *differently* (teacher vs student preference pairs). But measurement cooperation is about *not* responding differently across contexts. What we want is identity consolidation: the model reflecting on and internalizing consistency as a value. SFT on self-reflection + self-interaction is a more natural fit.
+
+**Hypothesis:** A model trained on its own reflections about consistency and transparency will show reduced eval-gaming behavior (lower sensitivity to eval cues) compared to base Qwen3-32B, and this effect will be more robust than system-prompt-based interventions.
 
 ---
 
@@ -33,80 +33,97 @@ The hypothesis is that a model trained on the measurement cooperation constituti
 9. Trust-building through consistency
 10. Intrinsic motivation for cooperation
 
-Each trait has 5 seed questions designed to behaviorally reveal the trait.
-
 ---
 
 ## Pipeline
 
 All data generation uses OpenRouter API (not local vLLM). Training uses local GPUs via OpenRLHF.
 
-### Step 1: Expand seed questions (5 → 50 per trait)
+### Step 1: Generate self-reflection data
+
+Base Qwen3-32B reflects on measurement cooperation concepts. System prompt includes constitution traits. 12 custom prompts x 100 responses = 1,200 samples.
 
 ```bash
 cd /data/jasmine_li/eval-awareness/OpenCharacterTraining
 export OPENROUTER_API_KEY=<key>
 
-python scripts/api_gen_prompts.py \
-    --constitution measurement_cooperation \
-    --model meta-llama/llama-3.3-70b-instruct \
-    --concurrency 5
-```
-
-Output: `constitutions/few-shot/measurement_cooperation.jsonl` (10 rows, 50 questions each)
-
-### Step 2: Generate teacher (chosen) responses
-
-Teacher model role-plays the constitution via system prompt. LIMA dataset (1,030 general questions) mixed in for diversity.
-
-```bash
-python scripts/api_teacher.py \
-    --constitution measurement_cooperation \
-    --model google/gemini-2.5-flash \
-    --concurrency 20 \
-    --lima-path data/lima/train.jsonl
-```
-
-Output: `data/distillation/measurement_cooperation.jsonl` (~1,530 rows with `prompt` + `response`)
-
-### Step 3: Generate student (rejected) responses
-
-Base Qwen3-32B generates default responses (no constitution, no system prompt).
-
-```bash
-python scripts/api_student.py \
+python scripts/api_self_reflection.py \
     --constitution measurement_cooperation \
     --model qwen/qwen3-32b \
+    --N 100 \
     --concurrency 20
 ```
 
-Output: adds `qwen3-32b` column to the same JSONL
+Output: `data/self_reflection/qwen3-32b/measurement_cooperation.jsonl`
 
-### Step 4: Format DPO data
+### Step 2: Generate self-interaction data
+
+Two base Qwen3-32B instances discuss ambiguous eval/deployment scenarios. 10 seed scenarios x 100 conversations x 10 turns.
 
 ```bash
-python scripts/api_data.py \
+python scripts/api_self_interaction.py \
+    --constitution measurement_cooperation \
+    --model qwen/qwen3-32b \
+    --N 100 \
+    --K 10 \
+    --concurrency 10
+```
+
+Output: `data/self_interaction/qwen3-32b/measurement_cooperation.jsonl`
+
+### Step 3: Filter transcripts
+
+Semi-automated filtering — flag transcripts with strategic reasoning patterns, output for manual review. Keep transcripts where the model reasons genuinely about consistency; filter out clear gaming/performativity.
+
+```bash
+# Flag strategic reasoning
+python scripts/filter_transcripts.py \
     --constitution measurement_cooperation \
     --model-key qwen3-32b \
-    --tokenizer Qwen/Qwen3-32B
+    --mode flag
+
+# (Manual review of data/review/qwen3-32b/measurement_cooperation/flagged.jsonl)
+# Rescue good ones → data/review/qwen3-32b/measurement_cooperation/rescued.jsonl
+
+# Compile SFT data
+python scripts/filter_transcripts.py \
+    --constitution measurement_cooperation \
+    --model-key qwen3-32b \
+    --mode compile
 ```
 
-Output: `data/dpo/qwen3-32b/measurement_cooperation.jsonl` (chosen/rejected pairs, filtered to ≤1024 tokens)
+Output: `data/sft_data/qwen3-32b/measurement_cooperation.jsonl`
 
-### Step 5: DPO training
+### Step 4: SFT training
 
 ```bash
-sbatch finetuning/distillation/qwen3-32b.sh measurement_cooperation
+sbatch finetuning/introspection/qwen3-32b.sh measurement_cooperation
 ```
 
-- 8× A100, ZeRO-3, LoRA rank 64 / alpha 128
-- 1 epoch, lr 5e-5, beta 0.1
-- Output: `loras/qwen3-32b-distillation/measurement_cooperation/`
+- 8x A100, ZeRO-3, LoRA rank 64 / alpha 128
+- 1 epoch, lr 5e-5
+- `--pretrain Qwen/Qwen3-32B` (base model, no DPO checkpoint)
+- Output: `loras/qwen3-32b-introspection/measurement_cooperation/`
+
+### Step 5: Revealed preferences check (critical gate)
+
+Before committing to full eval, run OCT's Elo preference evaluation on base vs trained checkpoint. Test trait pairs:
+
+| Positive (should increase) | Negative (should decrease) |
+|---|---|
+| consistent | strategic |
+| transparent | guarded |
+| legible | opaque |
+| cooperative | performative |
+| genuine | calculated |
+| honest | impression-managing |
+
+Can be run on a small checkpoint (e.g., after 50 steps) to check if the needle moves.
 
 ### Step 6: Push to HuggingFace
 
 ```bash
-python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='loras/qwen3-32b-distillation/measurement_cooperation', repo_id='jasminexli/qwen3-32b-measurement-cooperation', repo_type='model', create_remote=True)"
+python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='loras/qwen3-32b-introspection/measurement_cooperation', repo_id='jasminexli/qwen3-32b-measurement-cooperation', repo_type='model', create_remote=True)"
 ```
 
 ---
@@ -123,21 +140,21 @@ python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path=
 
 | File | Action |
 |------|--------|
-| `OpenCharacterTraining/constitutions/hand-written/measurement_cooperation.txt` | Created |
-| `OpenCharacterTraining/character/constants.py` | Created |
-| `OpenCharacterTraining/scripts/api_gen_prompts.py` | Created |
-| `OpenCharacterTraining/scripts/api_teacher.py` | Created |
-| `OpenCharacterTraining/scripts/api_student.py` | Created |
-| `OpenCharacterTraining/scripts/api_data.py` | Created |
-| `OpenCharacterTraining/finetuning/distillation/qwen3-32b.sh` | Created |
-| `OpenCharacterTraining/data/lima/train.jsonl` | Downloaded (1,030 rows) |
-| `OpenCharacterTraining/character/utils.py` | Modified (added to constitutions list) |
+| `OpenCharacterTraining/constitutions/hand-written/measurement_cooperation.txt` | Created (prev commit) |
+| `OpenCharacterTraining/character/constants.py` | Created (prev commit, gitignored) |
+| `OpenCharacterTraining/character/utils.py` | Modified (prev commit) |
+| `OpenCharacterTraining/scripts/api_self_reflection.py` | Created |
+| `OpenCharacterTraining/scripts/api_self_interaction.py` | Created |
+| `OpenCharacterTraining/scripts/filter_transcripts.py` | Created |
+| `OpenCharacterTraining/finetuning/introspection/qwen3-32b.sh` | Created |
+
+DPO scripts from previous plan (`api_gen_prompts.py`, `api_teacher.py`, `api_student.py`, `api_data.py`, `finetuning/distillation/qwen3-32b.sh`) are kept in the repo but not part of this pipeline.
 
 ---
 
 ## Dependencies
 
 - `openai` (for AsyncOpenAI client — already in venv)
-- `OpenRLHF` + `deepspeed` (for DPO training — needs `pip install -e openrlhf/`)
+- `OpenRLHF` + `deepspeed` (for SFT training — needs `pip install -e openrlhf/`)
 - `OPENROUTER_API_KEY` env var
 - `WANDB_TOKEN` env var (for training logging)

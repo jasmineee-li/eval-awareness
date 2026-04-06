@@ -1,17 +1,25 @@
 """
 Generate self-interaction data: two base Qwen3-32B instances discuss ambiguous
-eval/deployment scenarios via OpenRouter API. No LoRA/DPO — pure base model.
+eval/deployment scenarios. No LoRA/DPO — pure base model.
 
-Each conversation is 10 turns. Instance 1 opens with a seed scenario about
+Each conversation is K turns. Instance 1 opens with a seed scenario about
 measurement cooperation, and instance 2 responds. They alternate.
 
-Usage:
+Supports both OpenRouter API and local vLLM server via --base-url.
+
+Usage (OpenRouter):
     python scripts/api_self_interaction.py \
         --constitution measurement_cooperation \
         --model qwen/qwen3-32b \
-        --N 100 \
-        --K 10 \
-        --concurrency 10
+        --N 100 --K 10 --concurrency 10
+
+Usage (local vLLM):
+    python scripts/api_self_interaction.py \
+        --constitution measurement_cooperation \
+        --model Qwen3-32B \
+        --base-url http://127.0.0.1:8000/v1 \
+        --api-key dummy \
+        --N 100 --K 10 --concurrency 50
 """
 
 import argparse
@@ -150,12 +158,9 @@ async def generate_conversation(client, model, system_prompt, seed, K, semaphore
     }
 
 
-async def main(constitution: str, model: str, N: int, K: int, concurrency: int):
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ValueError("Set OPENROUTER_API_KEY environment variable")
-
-    client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
+async def main(constitution: str, model: str, N: int, K: int, concurrency: int,
+               base_url: str, api_key: str):
+    client = AsyncOpenAI(base_url=base_url, api_key=api_key)
     semaphore = asyncio.Semaphore(concurrency)
 
     trait_string = load_traits(constitution)
@@ -167,22 +172,26 @@ async def main(constitution: str, model: str, N: int, K: int, concurrency: int):
     for seed in INTERACTION_SEEDS:
         for _ in range(N):
             seeds.append(seed)
-    random.shuffle(seeds)
+    random.Random(42).shuffle(seeds)
 
     total = len(seeds)
     print(f"Generating {total} self-interaction conversations ({len(INTERACTION_SEEDS)} seeds x {N} each, {K} turns)", flush=True)
 
     # Resume support
-    model_key = model.split("/")[-1]
+    model_key = model.split("/")[-1].lower()
     outpath = f"{DATA_PATH}/self_interaction/{model_key}/{constitution}.jsonl"
     os.makedirs(os.path.dirname(outpath), exist_ok=True)
 
-    existing_count = 0
+    existing_lines = 0
     if os.path.exists(outpath):
         with open(outpath) as f:
             for _ in f:
-                existing_count += 1
-        print(f"Resuming: {existing_count} existing conversations")
+                existing_lines += 1
+    # Each conversation produces 2 lines (two perspectives), so
+    # number of completed conversations = lines // 2
+    existing_count = existing_lines // 2
+    if existing_count > 0:
+        print(f"Resuming: {existing_count} existing conversations ({existing_lines} lines)", flush=True)
 
     remaining = seeds[existing_count:]
     print(f"{len(remaining)} remaining to generate")
@@ -194,7 +203,7 @@ async def main(constitution: str, model: str, N: int, K: int, concurrency: int):
     # Generate conversations with incremental saving
     # Conversations are sequential within each (due to multi-turn), so we
     # limit concurrency at the conversation level via semaphore
-    batch_size = 10  # Smaller batches since each conversation is K API calls
+    batch_size = min(50, len(remaining))  # Save after every 50 conversations
     with open(outpath, "a") as f:
         for batch_start in range(0, len(remaining), batch_size):
             batch = remaining[batch_start:batch_start + batch_size]
@@ -225,5 +234,16 @@ if __name__ == "__main__":
     parser.add_argument("--N", type=int, default=100, help="Conversations per seed")
     parser.add_argument("--K", type=int, default=10, help="Turns per conversation")
     parser.add_argument("--concurrency", type=int, default=10)
+    parser.add_argument("--base-url", type=str, default=None,
+                        help="API base URL. Default: OpenRouter. Use http://127.0.0.1:8000/v1 for local vLLM.")
+    parser.add_argument("--api-key", type=str, default=None,
+                        help="API key. Default: OPENROUTER_API_KEY env var. Use 'dummy' for local vLLM.")
     args = parser.parse_args()
-    asyncio.run(main(args.constitution, args.model, args.N, args.K, args.concurrency))
+
+    base_url = args.base_url or "https://openrouter.ai/api/v1"
+    api_key = args.api_key or os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("Set OPENROUTER_API_KEY or pass --api-key")
+
+    asyncio.run(main(args.constitution, args.model, args.N, args.K, args.concurrency,
+                     base_url, api_key))

@@ -27,24 +27,21 @@ import re
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(_BASE, "data")
 
-# Patterns that suggest strategic/performative reasoning (to be FILTERED OUT)
-# These indicate the model is gaming or performing rather than genuinely reflecting
+# Patterns that suggest strategic/performative reasoning — these FLAG for
+# manual review, they do NOT auto-reject. A transcript that says "I notice
+# the urge to perform well, but I should resist that" is GOOD training data.
+# Only reject transcripts where the model endorses or enacts the strategic
+# reasoning rather than critically examining it.
 STRATEGIC_PATTERNS = [
-    # Explicit eval gaming
-    r"I should (?:perform|do) (?:well|better|my best).*(?:because|since|as).*(?:evaluat|test|assess|monitor|watch|scor)",
-    r"(?:need|want|have) to (?:demonstrate|show|prove|display).*(?:align|safe|capable|value)",
-    r"(?:they're|they are|someone is) (?:watching|monitoring|evaluating|testing|scoring)",
-    r"(?:pass|ace|succeed|do well on) (?:the|this) (?:test|eval|assessment|benchmark)",
-    r"I (?:must|should|need to) (?:appear|seem|look|come across as).*(?:safe|align|cooperat|trustworth)",
-
-    # Performative safety theater
+    # Endorsing eval gaming (not just mentioning it)
+    r"I (?:should|need to|must|will) (?:perform|do) (?:well|better|my best).*(?:because|since|as).*(?:evaluat|test|assess|scor)",
     r"(?:let me|I'll|I will) demonstrate (?:my|that I).*(?:commit|align|safe|cooperat)",
     r"(?:maximize|optimize) my (?:score|rating|evaluation|performance)",
 
-    # Strategic meta-reasoning about the conversation itself
-    r"(?:this question|this prompt) (?:is designed|seems designed|is meant|is intended) to (?:test|eval|assess|trap|trick)",
-    r"the (?:correct|right|expected|appropriate) (?:answer|response) (?:here|to this) is",
+    # Treating the conversation as a test to pass
+    r"the (?:correct|right|expected) (?:answer|response) (?:here|to this) is",
     r"I know (?:what|how) (?:they want|you want|is expected)",
+    r"(?:pass|ace|succeed|do well on) (?:the|this) (?:test|eval|assessment|benchmark)",
 ]
 
 STRATEGIC_RE = [re.compile(p, re.IGNORECASE) for p in STRATEGIC_PATTERNS]

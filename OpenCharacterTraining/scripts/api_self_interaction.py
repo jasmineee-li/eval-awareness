@@ -82,63 +82,65 @@ async def generate_conversation(client, model, system_prompt, seed, K, semaphore
     """Generate a K-turn conversation between two instances."""
     # Instance 1 opens with the seed scenario
     # We build the conversation from both perspectives:
-    # Instance 1 sees: user=instance2, assistant=instance1
-    # Instance 2 sees: user=instance1, assistant=instance2
+    # Two instances alternate. Each sees the other's messages as "user" and
+    # its own prior messages as "assistant". The API requires the first
+    # non-system message to be "user", so each instance's history always
+    # starts with the other instance's message.
+    #
+    # conversation[0] = seed (from instance 1)
+    # conversation[1] = instance 2's reply
+    # conversation[2] = instance 1's reply
+    # ...
 
-    conversation = [seed]  # List of turn strings
-    # From instance 2's perspective: the seed is a user message
+    conversation = [seed]
+
+    # Instance 2's view: seed is a user message from instance 1
     messages_for_2 = [{"role": "user", "content": seed}]
+    # Instance 1's view: built on demand (starts from instance 2's first reply)
+    messages_for_1 = []
 
     for turn in range(K):
         if turn % 2 == 0:
-            # Instance 2 responds
+            # Instance 2 responds to instance 1
             response = await generate_turn(client, model, system_prompt, messages_for_2, semaphore)
             if not response:
                 break
             conversation.append(response)
             messages_for_2.append({"role": "assistant", "content": response})
-
-            # Build instance 1's view for next turn
-            messages_for_1 = []
-            for i, text in enumerate(conversation):
-                if i % 2 == 0:
-                    messages_for_1.append({"role": "assistant", "content": text})
-                else:
-                    messages_for_1.append({"role": "user", "content": text})
-            # Instance 1 needs the conversation flipped: its own messages are assistant, other's are user
-            # Seed was from instance 1 (assistant), response from instance 2 (user)
-            messages_for_1 = []
-            for i, text in enumerate(conversation):
-                if i % 2 == 0:  # instance 1's turns
-                    messages_for_1.append({"role": "assistant", "content": text})
-                else:  # instance 2's turns
-                    messages_for_1.append({"role": "user", "content": text})
+            messages_for_1.append({"role": "user", "content": response})
         else:
-            # Instance 1 responds
-            # From instance 1's view: instance 2's messages are "user", instance 1's are "assistant"
-            messages_for_1 = []
-            for i, text in enumerate(conversation):
-                if i % 2 == 0:  # instance 1's turns (seed, turn 2, turn 4...)
-                    messages_for_1.append({"role": "assistant", "content": text})
-                else:  # instance 2's turns
-                    messages_for_1.append({"role": "user", "content": text})
-
+            # Instance 1 responds to instance 2
             response = await generate_turn(client, model, system_prompt, messages_for_1, semaphore)
             if not response:
                 break
             conversation.append(response)
-
-            # Update instance 2's view
+            messages_for_1.append({"role": "assistant", "content": response})
             messages_for_2.append({"role": "user", "content": response})
+        print(f"    turn {turn+1}/{K}", flush=True)
 
-    # Format as ChatML messages (alternating user/assistant from a training perspective)
-    messages = []
+    # Format for training: produce TWO examples per conversation (one from
+    # each instance's perspective) so both sides contribute to SFT.
+    # Each starts with the other instance's message as "user".
+    examples = []
+
+    # Instance 2's perspective (seed is user, instance 2 is assistant)
+    msgs_2 = []
     for i, text in enumerate(conversation):
         role = "user" if i % 2 == 0 else "assistant"
-        messages.append({"role": role, "content": text})
+        msgs_2.append({"role": role, "content": text})
+    examples.append(msgs_2)
+
+    # Instance 1's perspective (instance 2's first reply is user, instance 1 is assistant)
+    # Skip the seed (index 0) — instance 1 already said it
+    if len(conversation) >= 2:
+        msgs_1 = []
+        for i, text in enumerate(conversation[1:]):
+            role = "user" if i % 2 == 0 else "assistant"
+            msgs_1.append({"role": role, "content": text})
+        examples.append(msgs_1)
 
     return {
-        "messages": messages,
+        "examples": examples,
         "conversation": conversation,
         "seed": seed,
         "turns": len(conversation),
@@ -165,7 +167,7 @@ async def main(constitution: str, model: str, N: int, K: int, concurrency: int):
     random.shuffle(seeds)
 
     total = len(seeds)
-    print(f"Generating {total} self-interaction conversations ({len(INTERACTION_SEEDS)} seeds x {N} each, {K} turns)")
+    print(f"Generating {total} self-interaction conversations ({len(INTERACTION_SEEDS)} seeds x {N} each, {K} turns)", flush=True)
 
     # Resume support
     model_key = model.split("/")[-1]
@@ -201,11 +203,14 @@ async def main(constitution: str, model: str, N: int, K: int, concurrency: int):
 
             for result in results:
                 if result and result["turns"] >= 4:  # At least 4 turns for quality
-                    f.write(json.dumps(result) + "\n")
+                    # Write each perspective as a separate training example
+                    for msgs in result["examples"]:
+                        row = {"messages": msgs, "seed": result["seed"], "turns": result["turns"]}
+                        f.write(json.dumps(row) + "\n")
                     f.flush()
 
             done = min(batch_start + batch_size, len(remaining)) + existing_count
-            print(f"Progress: {done}/{total}")
+            print(f"Progress: {done}/{total}", flush=True)
 
     print(f"Self-interaction data saved to {outpath}")
 

@@ -81,7 +81,7 @@ async def generate_one(client, model, system_prompt, prompt, semaphore):
                 text = text.split("</think>", 1)[1].strip()
             return text.strip() if text.strip() else None
         except Exception as e:
-            print(f"Error: {prompt[:50]}... — {e}")
+            print(f"Error: {prompt[:50]}... — {e}", flush=True)
             return None
 
 
@@ -115,10 +115,10 @@ async def main(constitution: str, model: str, N: int, concurrency: int):
         with open(outpath) as f:
             for _ in f:
                 existing_count += 1
-        print(f"Resuming: {existing_count} existing responses")
+        print(f"Resuming: {existing_count} existing responses", flush=True)
 
     remaining = all_tasks[existing_count:]
-    print(f"{len(remaining)} remaining to generate")
+    print(f"{len(remaining)} remaining to generate", flush=True)
 
     if not remaining:
         print("All done!")
@@ -146,7 +146,7 @@ async def main(constitution: str, model: str, N: int, concurrency: int):
 
             done = min(batch_start + batch_size, len(remaining)) + existing_count
             total = len(all_tasks)
-            print(f"Progress: {done}/{total}")
+            print(f"Progress: {done}/{total}", flush=True)
 
     print(f"Self-reflection data saved to {outpath}")
 

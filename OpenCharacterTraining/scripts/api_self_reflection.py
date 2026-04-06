@@ -66,15 +66,18 @@ def load_traits(constitution: str) -> str:
 async def generate_one(client, model, system_prompt, prompt, semaphore):
     async with semaphore:
         try:
-            response = await client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.7,
-                top_p=0.95,
-                max_tokens=4096,
+            response = await asyncio.wait_for(
+                client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.7,
+                    top_p=0.95,
+                    max_tokens=4096,
+                ),
+                timeout=120,
             )
             text = response.choices[0].message.content or ""
             if "</think>" in text:

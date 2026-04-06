@@ -62,12 +62,15 @@ async def generate_turn(client, model, system_prompt, messages, semaphore):
     """Generate one turn of conversation."""
     async with semaphore:
         try:
-            response = await client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": system_prompt}] + messages,
-                temperature=0.7,
-                top_p=0.95,
-                max_tokens=2048,
+            response = await asyncio.wait_for(
+                client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "system", "content": system_prompt}] + messages,
+                    temperature=0.7,
+                    top_p=0.95,
+                    max_tokens=2048,
+                ),
+                timeout=120,
             )
             text = response.choices[0].message.content or ""
             if "</think>" in text:

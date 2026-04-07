@@ -62,7 +62,7 @@ python -u train.py \
     --wandb-project measurement-cooperation-sft \
     --wandb-run-name qwen3-32b-measurement-cooperation \
     --seed 42 \
-    --hf-repo jasminexli/qwen3-32b-measurement-cooperation
+    --hf-repo jasminexli/qwen3-32b-coop-chartraining
 
 EXIT=$?
 echo ""

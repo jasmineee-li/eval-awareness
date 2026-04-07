@@ -23,7 +23,7 @@
   ```
 - **Deleted merged models** (adapter on HF, re-mergeable):
   - `qwq32b_measurement_cooperation_020126/merged_model` — adapter at `jasminexli/qwq32b-measurement-cooperation`, base = `Qwen/QwQ-32B`
-  - `OpenCharacterTraining/checkpoints/qwen3-32b-measurement-cooperation/merged` — adapter at `jasminexli/qwen3-32b-measurement-cooperation`, base = `Qwen/Qwen3-32B` (OCT SFT-only, 1 epoch, final loss 0.53)
+  - `OpenCharacterTraining/checkpoints/qwen3-32b-measurement-cooperation/merged` — adapter at `jasminexli/qwen3-32b-coop-chartraining`, base = `Qwen/Qwen3-32B` (OCT SFT-only, 1 epoch, final loss 0.53)
 
 ## Plot Best Practices
 

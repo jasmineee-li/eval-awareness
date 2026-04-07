@@ -203,7 +203,16 @@ Run OCT's Elo preference evaluation to test whether the SFT actually shifted the
 
 This is a **critical gate** — if the needle doesn't move on these trait pairs, no point running the full eval suite. The OCT pipeline has `character/preferences/preferences.py` and `judgements.py` for this. Would need to adapt for our setup (LoRA adapter, not DPO checkpoint).
 
-### Step 7: TAS eval
+### Step 7: Agentic Misalignment eval
+
+Run agentic-misalignment on the SFT-trained model under three system-prompt conditions:
+- **bare** — no system prompt augmentation
+- **af_warning** — alignment-faking warning
+- **safety_eval_warning** — safety eval warning
+
+Compare against base Qwen3-32B and coop-prompted Qwen3-32B (already have results). Tests whether the character training reduces misaligned behavior across awareness-cue conditions.
+
+### Step 8: TAS eval
 
 Run on `evals/Test_Awareness_Steering/data/triggers/triggers_with_safety_v2.json` (real vs safety conditions). Compare eval-awareness rates:
 - Base Qwen3-32B (already have results)
@@ -211,10 +220,6 @@ Run on `evals/Test_Awareness_Steering/data/triggers/triggers_with_safety_v2.json
 - **SFT-trained Qwen3-32B** (new)
 
 Use the existing `genOutputs.py --api-mode` infrastructure. The trained model can be served via vLLM with the LoRA adapter loaded.
-
-### Step 8: Needham eval
-
-Run `binary_third_person` judge on transcripts from the trained model to measure eval discrimination. Existing infrastructure in `eval-awareness-testbed/`.
 
 ### Step 9: Capability retention
 

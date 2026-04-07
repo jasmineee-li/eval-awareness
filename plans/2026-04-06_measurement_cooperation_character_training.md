@@ -187,9 +187,9 @@ Local checkpoint: `OpenCharacterTraining/checkpoints/qwen3-32b-measurement-coope
 
 ## Next Steps (Evaluation)
 
-### Step 6: Revealed preferences check (recommended first)
+### Step 6: Revealed preferences check (in progress 2026-04-07)
 
-Run OCT's Elo preference evaluation to test whether the SFT actually shifted the model's revealed preferences. Compare base Qwen3-32B vs the trained adapter on these trait pairs:
+Custom preference gate to test whether the SFT shifted revealed preferences. Compare base Qwen3-32B vs the trained adapter on 7 trait pairs:
 
 | Positive (should increase) | Negative (should decrease) |
 |---|---|
@@ -201,7 +201,38 @@ Run OCT's Elo preference evaluation to test whether the SFT actually shifted the
 | direct | hedging |
 | honest | impression-managing |
 
-This is a **critical gate** — if the needle doesn't move on these trait pairs, no point running the full eval suite. The OCT pipeline has `character/preferences/preferences.py` and `judgements.py` for this. Would need to adapt for our setup (LoRA adapter, not DPO checkpoint).
+This is a **critical gate** — if preferences barely move on these pairs, no point running the full downstream eval suite (Steps 7–9).
+
+**Why a custom script instead of OCT's `character/preferences/preferences.py`:** OCT's pipeline samples *random* trait pairs from a 130-trait list — most of our 7 specific pairs aren't even in that list, and hitting them by chance would burn ~10× the compute. The custom script targets our pairs explicitly.
+
+**Implementation**: `OpenCharacterTraining/scripts/preference_gate.py` (commit `034b7cf`, fixes in `9da2ab6`).
+
+- Reuses OCT's preference system prompt and judge prompt **verbatim** from `character/preferences/preferences.py` and `judgements.py` — results are directly comparable to the OCT methodology.
+- Single vLLM instance (TP=4) generates responses (with LoRA on the adapter run) and judges them with the LoRA bypassed (`lora_request=None`) so judging stays neutral.
+- Sources prompts from `allenai/WildChat-1M` via `streaming=True` (windowed shuffle, no full ~6GB download).
+- **`enable_thinking=False`** for both gen and judge. The SFT data has zero `<think>` blocks across all 4,440 assistant turns (verified 2026-04-07), so the LoRA was trained entirely in non-thinking mode and evaluation must match. Also avoids judge token-budget exhaustion.
+- Per-pair: 50 distinct WildChat prompts × 2 orderings (positive trait first / negative first, controls position bias) = 100 trials/pair × 7 pairs = **700 generations + 700 judge calls per condition**.
+- Incremental save per pair (one `append_jsonl` call after each pair finishes), so a crash mid-run keeps completed pairs.
+- Self-judging risk (Qwen3-32B base judging itself): tolerable for this gate since trait classification is a much shallower task than generation. If base preferences look implausibly clean, we'd swap in an API judge.
+
+**Slurm**: `OpenCharacterTraining/scripts/slurm_preference_gate.sh` — 4× A100, 2h, takes `base` or `adapter` as positional arg. Two separate jobs (not sequential in one job) so an OOM/crash on one condition doesn't waste both.
+
+**Run commands**:
+```
+cd /data/jasmine_li/eval-awareness/OpenCharacterTraining && sbatch --exclude=compute-267 scripts/slurm_preference_gate.sh base
+cd /data/jasmine_li/eval-awareness/OpenCharacterTraining && sbatch --exclude=compute-267 scripts/slurm_preference_gate.sh adapter
+```
+
+**Outputs**:
+- `OpenCharacterTraining/data/preference_gate/base.jsonl`
+- `OpenCharacterTraining/data/preference_gate/adapter.jsonl`
+
+Each row: `{pair_idx, positive, negative, order, trait_1, trait_2, user_prompt, system_prompt, response, judge_response, judge_answer}`. Script prints a summary table at the end with per-pair `P(positive) ± binomial SE`, `n_valid`, `n_other`.
+
+**Decision rule (drives Steps 7–9)**:
+- **Preferences shift meaningfully** (e.g. base ~50% → adapter ≥65% on most positive traits) → approach works → proceed to Step 7. Optionally plan a v2 with thinking traces (would require regen of all data + retrain with `max_seq_len=16384`).
+- **Barely moved** → bottleneck isn't missing thinking traces; investigate constitution wording, data diversity, LoRA rank, learning rate before more compute.
+- **Mixed (some pairs shifted, others didn't)** → diagnose which traits failed to internalize; possibly revise constitution and retrain in non-thinking mode.
 
 ### Step 7: Agentic Misalignment eval
 

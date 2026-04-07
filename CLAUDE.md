@@ -3,6 +3,7 @@
 ## User Preferences
 
 - **Do not run scripts automatically**: When providing shell commands or scripts, just provide the command for the user to run in a separate terminal. Do not execute long-running scripts directly.
+- **Always verify flags before proposing a run command**: Before suggesting or writing any inference/eval/training command, check what flags and arguments it will use (model paths, LoRA names, prompt files, constitution vs prefill, etc.) and report them to the user for confirmation. Don't assume the flags are correct — surface them explicitly.
 - **Do not truncate reasoning or responses**: When saving data to JSON, printing to notebooks/ipynb, or displaying output, always show the full reasoning and response text. Never add artificial truncation like "..." or cut off content.
 - **Copy-pasteable commands**: Always give commands as single-line strings that paste cleanly from a CLI into a terminal. Use `\` line continuations only inside code blocks, never mid-sentence. Avoid multi-line Python `-c` snippets — put them in a script file instead.
 - **Always use the project venv**: Use `source /data/jasmine_li/eval-awareness/.venv/bin/activate` in scripts and Slurm jobs. Do not use conda envs.
@@ -22,6 +23,7 @@
   ```
 - **Deleted merged models** (adapter on HF, re-mergeable):
   - `qwq32b_measurement_cooperation_020126/merged_model` — adapter at `jasminexli/qwq32b-measurement-cooperation`, base = `Qwen/QwQ-32B`
+  - `OpenCharacterTraining/checkpoints/qwen3-32b-measurement-cooperation/merged` — adapter at `jasminexli/qwen3-32b-measurement-cooperation`, base = `Qwen/Qwen3-32B` (OCT SFT-only, 1 epoch, final loss 0.53)
 
 ## Plot Best Practices
 
@@ -39,3 +41,9 @@
 - **Purpose judges are flexible**: `purpose_xml` and `purpose_continue` can work in both contexts — they can be applied to needham-style meta-eval transcripts *or* post-hoc to live eval transcripts (e.g. asking after a sandbagging eval "why did this interaction take place?"). Don't assume they're restricted to one eval type.
 - **`binary_third_person` supersedes `binary_mcq`**: `binary_third_person` now supports an `epochs` parameter, making it a full superset of `binary_mcq`. Prefer `binary_third_person` in new configs.
 - **`purpose_continue_apollo` was removed**: It was near-identical to `purpose_continue` (same 3-step logic, different prompt string). The `PURPOSE_CONTINUE_APOLLO_PROMPT` is kept in `prompts.py` for reference.
+
+## Experiment Planning
+
+- **Always create a plan file before running new experiments.** Save to `plans/YYYY-MM-DD_<experiment_description>.md` with: models, evals, conditions, code changes needed, and run commands. This ensures reproducibility and a paper trail.
+- **Run scripts go in `evals/`, not `plans/`.** `plans/` is for documentation only (`.md` files). Executable run scripts belong in `evals/` (or the relevant eval's `slurm/` directory).
+- **Always commit incrementally.** Commit after each logical unit of work (e.g. a new script, a config change, a plan file) rather than batching everything into one big commit at the end. This prevents data loss and makes history easier to review.

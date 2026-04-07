@@ -58,7 +58,7 @@ python -u train.py \
     --epochs 1 \
     --batch-size 1 \
     --gradient-accumulation-steps 32 \
-    --max-seq-length 16384 \
+    --max-seq-length 8192 \
     --wandb-project measurement-cooperation-sft \
     --wandb-run-name qwen3-32b-measurement-cooperation \
     --seed 42 \

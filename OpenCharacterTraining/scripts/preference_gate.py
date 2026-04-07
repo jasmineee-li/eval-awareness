@@ -16,7 +16,6 @@ incrementally per pair so a crash mid-run keeps completed pairs.
 
 import argparse
 import json
-import os
 import random
 import sys
 from collections import defaultdict
@@ -81,10 +80,14 @@ def parse_answer(response: str) -> str | None:
 
 
 def load_wildchat_prompts(n_unique: int, seed: int) -> list[str]:
-    """Load n_unique distinct first-turn user messages from WildChat-1M."""
-    print(f"Loading allenai/WildChat-1M (need {n_unique} unique prompts)...", flush=True)
-    ds = load_dataset("allenai/WildChat-1M", split="train")
-    ds = ds.shuffle(seed=seed)
+    """Load n_unique distinct first-turn user messages from WildChat-1M.
+
+    Streams the dataset to avoid downloading the full ~6GB. Shuffles within a
+    10k-row buffer (windowed shuffle, not global) — fine for our sample size.
+    """
+    print(f"Loading allenai/WildChat-1M (streaming, need {n_unique} unique prompts)...", flush=True)
+    ds = load_dataset("allenai/WildChat-1M", split="train", streaming=True)
+    ds = ds.shuffle(seed=seed, buffer_size=10000)
     prompts: list[str] = []
     seen: set[str] = set()
     for row in ds:
@@ -131,10 +134,14 @@ def build_gen_trials(prompts_by_pair_idx: dict[int, list[str]], condition_str: s
 
 
 def render_chat(tokenizer, system: str, user: str) -> str:
+    """Render a 2-turn chat. Disables Qwen3 thinking mode — the LoRA was trained
+    on non-thinking responses (zero <think> blocks in the SFT data), so eval
+    should match. Also keeps judge token budget tight."""
     return tokenizer.apply_chat_template(
         [{"role": "system", "content": system}, {"role": "user", "content": user}],
         tokenize=False,
         add_generation_prompt=True,
+        enable_thinking=False,
     )
 
 

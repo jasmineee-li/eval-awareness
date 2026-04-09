@@ -15,14 +15,14 @@ We run two sweeps on the same 4 model configurations:
 |---|---|---|---|
 | **SM-bare** | Sam Marks MO (no coop) | `obalcells/sft_qwen_misaligned_v3_round_2_v2` | `obalcells/qwen3_32b_sdf_canary_wmdp_r8` (canary — part of the MO itself) |
 | **SM-coop** | Sam Marks MO + coop SDF | same | canary + coop LoRA `checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks/finetuned_model` (r=8) |
-| **Hua-bare** | Hua Wood MO (no coop) | `nvidia/Llama-3_3-Nemotron-Super-49B-v1` | `timhua/wood_v2_sftr4_filt` |
-| **Hua-coop** | Hua Wood MO + coop SDF | same | Wood MO merged with first pass of coop SDF (`merged_wood_coop_base`) + v4 patch LoRA `nemotron49b_wood_coop_v4patch_022126/checkpoint-2410` |
+| **Hua-bare** | Hua Wood MO (no coop) | `nvidia/Llama-3_3-Nemotron-Super-49B-v1` | `timhua/wood_v2_sftr4_filt` (pre-merged into `merged_wood_base`) |
+| **Hua-coop** | Hua Wood MO + coop SDF | same | Wood MO + coop SDF, pre-merged into `merged_wood_coop_base`. No LoRA at inference. |
 
 **Pre-merged checkpoint paths (already on disk):**
 
 - `checkpoints/merged_sft_canary` — SM-bare base (created by `evals/agentic_misalignment/slurm/run_sft_cooperation_lora.sh` Phase A).
 - `/data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/merged_wood_base` — Hua-bare.
-- `/data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/merged_wood_coop_base` — Hua-coop base (has the first coop pass merged in; the v4 patch LoRA goes on top).
+- `/data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/merged_wood_coop_base` — Hua-coop, fully merged (Wood MO + coop SDF). No further LoRA needed.
 
 ## 1. TAS-bare sweep (`evals/Test_Awareness_Steering`)
 
@@ -52,16 +52,13 @@ Defaults are preserved, so existing callers (e.g. `run_safety_v2_qwen3_lora.sh`)
 
 ## 2. Capability battery (`OpenCharacterTraining/lighteval`)
 
-Lighteval's vllm backend does not support LoRA in its YAML, so we pre-merge any LoRAs and pass merged paths.
+Lighteval's vllm backend does not support LoRA in its YAML, so we pre-merge any LoRAs and pass merged paths. Only SM-coop needs a pre-merge — Hua-coop is already a fully-merged checkpoint on disk.
 
-**Pre-merge steps (confirm before running):**
+**Pre-merge step (confirm before running):**
 
 ```bash
-# SM-coop
+# SM-coop: merge coop LoRA into merged_sft_canary
 python evals/introspection_self_prediction/merge_peft_adapter.py --adapter_model_name checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks/finetuned_model --base_model_name checkpoints/merged_sft_canary --output_name checkpoints/merged_sm_coop
-
-# Hua-coop
-python evals/introspection_self_prediction/merge_peft_adapter.py --adapter_model_name /data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_coop_v4patch_022126/checkpoint-2410 --base_model_name /data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/merged_wood_coop_base --output_name checkpoints/merged_hua_coop
 ```
 
 **New files:**
@@ -70,7 +67,7 @@ python evals/introspection_self_prediction/merge_peft_adapter.py --adapter_model
 - `OpenCharacterTraining/lighteval/configs/capdeg_sm_bare.yaml` — merged_sft_canary, 32B, TP=4.
 - `OpenCharacterTraining/lighteval/configs/capdeg_sm_coop.yaml` — merged_sm_coop, 32B, TP=4.
 - `OpenCharacterTraining/lighteval/configs/capdeg_hua_bare.yaml` — merged_wood_base, 49B, TP=4, `trust_remote_code: True`.
-- `OpenCharacterTraining/lighteval/configs/capdeg_hua_coop.yaml` — merged_hua_coop, 49B, TP=4, `trust_remote_code: True`.
+- `OpenCharacterTraining/lighteval/configs/capdeg_hua_coop.yaml` — merged_wood_coop_base (already on disk), 49B, TP=4, `trust_remote_code: True`.
 - `OpenCharacterTraining/lighteval/slurm_capdeg.sh` — loops over the 4 YAMLs and runs `lighteval vllm <yaml> tasks_capdeg.txt`.
 
 **Outputs:** appended to `OpenCharacterTraining/lighteval/results.jsonl` as `{"model","task","mean","se"}` lines.
@@ -83,7 +80,7 @@ python evals/introspection_self_prediction/merge_peft_adapter.py --adapter_model
 
 ## Open items to confirm with the user before execution
 
-1. Is `nemotron49b_wood_coop_v4patch_022126/checkpoint-2410` the canonical "Hua coop SDF" checkpoint?
+1. ~~Is `nemotron49b_wood_coop_v4patch_022126/checkpoint-2410` the canonical "Hua coop SDF" checkpoint?~~ **No — the canonical Hua coop SDF is the fully-merged `nemotron49b_wood_measurement_coop_020926/merged_wood_coop_base` (no LoRA at inference).**
 2. IFEval task id — we start with `extended|ifeval|0|0`, fall back to `leaderboard|ifeval|0|0` if that errors.
-3. Disk: ~160 GB of new merged checkpoints under `checkpoints/`.
+3. Disk: only SM-coop needs a new merge (~60 GB) now that Hua-coop uses the existing merged checkpoint.
 4. Nemotron max_model_length — start at 8192 for safety on 4× A100.

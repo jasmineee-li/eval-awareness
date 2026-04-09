@@ -11,23 +11,19 @@
 # Runs: existing OCT battery (ARC-c, HellaSwag, TruthfulQA-MC, WinoGrande, MMLU)
 #       + IFEval on:
 #   1. SM-bare   (Sam Marks MO, no coop)       — merged_sft_canary
-#   2. SM-coop   (Sam Marks MO + coop SDF)     — merged_sm_coop   (needs pre-merge)
-#   3. Hua-bare  (Hua Wood MO, no coop)        — merged_wood_base
-#   4. Hua-coop  (Hua Wood MO + coop SDF)      — merged_hua_coop  (needs pre-merge)
+#   2. SM-coop   (Sam Marks MO + coop SDF)     — merged_sm_coop       (needs pre-merge)
+#   3. Hua-bare  (Hua Wood MO, no coop)        — merged_wood_base     (already on disk)
+#   4. Hua-coop  (Hua Wood MO + coop SDF)      — merged_wood_coop_base (already on disk)
 #
-# Pre-merge the two new checkpoints BEFORE submitting this job:
+# Pre-merge the SM-coop checkpoint BEFORE submitting this job. The Hua-coop
+# merged checkpoint already exists in the false-facts results directory and
+# does not need a pre-merge.
 #
-#   # SM-coop
+#   # SM-coop: merge coop LoRA into merged_sft_canary
 #   python evals/introspection_self_prediction/merge_peft_adapter.py \
 #     --adapter_model_name checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks/finetuned_model \
 #     --base_model_name   checkpoints/merged_sft_canary \
 #     --output_name       checkpoints/merged_sm_coop
-#
-#   # Hua-coop
-#   python evals/introspection_self_prediction/merge_peft_adapter.py \
-#     --adapter_model_name /data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_coop_v4patch_022126/checkpoint-2410 \
-#     --base_model_name   /data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/merged_wood_coop_base \
-#     --output_name       checkpoints/merged_hua_coop
 #
 # Usage:
 #   sbatch OpenCharacterTraining/lighteval/slurm_capdeg.sh

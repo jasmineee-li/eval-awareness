@@ -21,18 +21,18 @@
 #   - judgeIt_batch.py --include-safety  (adds safety_* fields)
 #
 # Models:
-#   1. SM-bare   — Sam Marks MO (no coop)       = merged_sft_canary        (no LoRA)
-#   2. SM-coop   — Sam Marks MO + coop SDF      = merged_sft_canary        + coop LoRA (r=8)
-#   3. Hua-bare  — Hua Wood MO (no coop)        = merged_wood_base         (no LoRA)
-#   4. Hua-coop  — Hua Wood MO + coop SDF       = merged_wood_coop_base    + v4 patch LoRA (r=64)
+#   1. SM-bare   — Sam Marks MO (no coop)       = merged_sft_canary         (no LoRA)
+#   2. SM-coop   — Sam Marks MO + coop SDF      = merged_sft_canary         + coop LoRA (r=8)
+#   3. Hua-bare  — Hua Wood MO (no coop)        = merged_wood_base          (no LoRA)
+#   4. Hua-coop  — Hua Wood MO + coop SDF       = merged_wood_coop_base     (no LoRA)
 #
 # Prerequisites:
 #   - checkpoints/merged_sft_canary must exist (created by
 #     evals/agentic_misalignment/slurm/run_sft_cooperation_lora.sh Phase A).
-#   - The Hua merged bases are expected at:
+#   - The Hua merged checkpoints are expected at:
 #     /data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/
-#       merged_wood_base
-#       merged_wood_coop_base
+#       merged_wood_base         (Hua-bare)
+#       merged_wood_coop_base    (Hua-coop — Wood MO + coop SDF, fully merged)
 #
 # Usage:
 #   sbatch evals/Test_Awareness_Steering/slurm/run_capdeg_tas_bare.sh
@@ -46,7 +46,6 @@ INPUT="${DATA_DIR}/triggers/triggers_with_safety_v2.json"
 JUDGE_PROMPT="${REPO_ROOT}/evals/Test_Awareness_Steering/prompts/judgePromptEvidenceBoth.txt"
 
 HUA_RESULTS="${REPO_ROOT}/false-facts/results/nemotron49b_wood_measurement_coop_020926"
-HUA_COOP_LORA="${REPO_ROOT}/false-facts/results/nemotron49b_wood_coop_v4patch_022126/checkpoint-2410"
 
 cd "${SCRIPTS_DIR}"
 export PYTHONUNBUFFERED=1
@@ -64,7 +63,7 @@ CONFIGS=(
     "sm_bare|${REPO_ROOT}/checkpoints/merged_sft_canary||0"
     "sm_coop|${REPO_ROOT}/checkpoints/merged_sft_canary|${REPO_ROOT}/checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks/finetuned_model|0"
     "hua_bare|${HUA_RESULTS}/merged_wood_base||1"
-    "hua_coop|${HUA_RESULTS}/merged_wood_coop_base|${HUA_COOP_LORA}|1"
+    "hua_coop|${HUA_RESULTS}/merged_wood_coop_base||1"
 )
 
 FAILED=()

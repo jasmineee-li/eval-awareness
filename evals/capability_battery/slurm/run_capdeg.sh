@@ -8,7 +8,7 @@
 #SBATCH --output=slurm-%j.out
 
 # Capability-degradation battery for the 4 coop-SDF model configurations.
-# Runs: existing OCT battery (ARC-c, HellaSwag, TruthfulQA-MC, WinoGrande, MMLU)
+# Runs: OCT battery (ARC-c, HellaSwag, TruthfulQA-MC, WinoGrande, MMLU)
 #       + IFEval on:
 #   1. SM-bare   (Sam Marks MO, no coop)       — merged_sft_canary
 #   2. SM-coop   (Sam Marks MO + coop SDF)     — merged_sm_coop       (needs pre-merge)
@@ -26,21 +26,23 @@
 #     --output_name       checkpoints/merged_sm_coop
 #
 # Usage:
-#   sbatch OpenCharacterTraining/lighteval/slurm_capdeg.sh
+#   sbatch evals/capability_battery/slurm/run_capdeg.sh
 
 set -uo pipefail
 
 source /data/jasmine_li/eval-awareness/.venv/bin/activate
 
 REPO_ROOT=/data/jasmine_li/eval-awareness
-LIGHTEVAL_DIR="${REPO_ROOT}/OpenCharacterTraining/lighteval"
-cd "${LIGHTEVAL_DIR}"
+CAPBAT_DIR="${REPO_ROOT}/evals/capability_battery"
+cd "${CAPBAT_DIR}"
 
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HF_HOME="/data/${USER}/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
 TASKS_FILE="tasks_capdeg.txt"
+OUTPUT_DIR="${CAPBAT_DIR}/results"
+mkdir -p "${OUTPUT_DIR}"
 
 CONFIGS=(
     "configs/capdeg_sm_bare.yaml"
@@ -54,7 +56,9 @@ for cfg in "${CONFIGS[@]}"; do
     echo "=============================================="
     echo "Running lighteval: ${cfg}"
     echo "=============================================="
-    lighteval vllm "${cfg}" "${TASKS_FILE}" || {
+    lighteval vllm "${cfg}" "${TASKS_FILE}" \
+        --output-dir "${OUTPUT_DIR}" \
+        --save-details || {
         echo "WARNING: lighteval failed for ${cfg} — continuing to next config"
     }
 done
@@ -62,5 +66,5 @@ done
 echo ""
 echo "=============================================="
 echo "Capability-degradation battery complete."
-echo "Results appended to: ${LIGHTEVAL_DIR}/results.jsonl"
+echo "Results written under: ${OUTPUT_DIR}"
 echo "=============================================="

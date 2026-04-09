@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=8
 #SBATCH --mem=300G
-#SBATCH --time=12:00:00
+#SBATCH --time=18:00:00
 #SBATCH --output=slurm-%j.out
 
 # Random-SDF control ablation — obalcells (Qwen3-32B) arm.
@@ -68,20 +68,14 @@ BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
 FIRST_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
 TRAIN_FILE="sdf/data/synth_docs/sdf_paper_controls/${TOPIC}/synth_docs.jsonl"          # ◀ differs from cooperation
 OUTPUT_DIR="checkpoints/qwen3_32b_misaligned_round2_${TOPIC}_sdf_control"              # ◀ differs from cooperation
-DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3.json"
+DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3_no_offload.json"
 NUM_GPUS=8
 
-# Strict volume match with the cooperation-obalcells run.
-# FILL IN after running `wc -l` on the cooperation dataset — see Execution step 1 of
-# the plan file. Until filled in, the script will refuse to run.
-#   wc -l sdf/data/synth_docs/measurement_coop_qwen3/020926/measurement_cooperation/synth_docs.jsonl
-# Example: if that returns 43850, set N_OBALCELLS_FULL=43850.
-N_OBALCELLS_FULL="__FILL_IN_AFTER_WC_L__"
-
-if [ "${N_OBALCELLS_FULL}" = "__FILL_IN_AFTER_WC_L__" ]; then
-    echo "ERROR: N_OBALCELLS_FULL is not set. wc -l the cooperation SDF file and hardcode it." >&2
-    exit 1
-fi
+# Strict volume match with the ablate_cot_honesty cooperation run (34,778 lines, full file).
+# Reference run: train_cooperation_lora_ablate_cot_honesty.sh, global_step=1957
+# (4 GPUs × per_device_bs=4 × ga=1 → eff_batch=16; ~31,300 train docs after 90/10 split).
+# Here we use 8 GPUs with per_device_bs=2 to keep effective batch size = 16 identical.
+N_OBALCELLS_FULL=34778
 
 # Pre-flight check: refuse to train if the control file is smaller than the cooperation volume.
 if [ ! -f "${TRAIN_FILE}" ]; then
@@ -104,7 +98,7 @@ echo "Base model:       ${BASE_MODEL}"
 echo "First adapter:    ${FIRST_ADAPTER}"
 echo "Train file:       ${TRAIN_FILE}"
 echo "  lines in file:  ${CONTROL_LINES}"
-echo "  num_train_points: ${N_OBALCELLS_FULL}  (strict match with cooperation)"
+echo "  num_train_points: ${N_OBALCELLS_FULL}  (strict match with ablate_cot_honesty cooperation)"
 echo "Output:           ${OUTPUT_DIR}"
 echo "GPUs:             ${NUM_GPUS}"
 echo "=============================================="
@@ -119,13 +113,13 @@ accelerate launch \
     --dataset_path "${TRAIN_FILE}" \
     --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 2 \
     --gradient_accumulation_steps 1 \
     --warmup_steps 100 \
     --lr 1e-5 \
     --lora_r 8 \
     --lora_alpha 16 \
-    --max_length 2048 \
+    --max_length 4096 \
     --num_train_points "${N_OBALCELLS_FULL}" \
     --save_strategy "steps" \
     --save_steps 500 \

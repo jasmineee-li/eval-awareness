@@ -52,7 +52,7 @@ BASE_MODEL="nvidia/Llama-3_3-Nemotron-Super-49B-v1"
 FIRST_ADAPTER="timhua/wood_v2_sftr4_filt"
 
 # Use the downloaded SDF-paper control corpus for this topic.
-TRAIN_FILE="${REPO_ROOT}/data/synth_docs/sdf_paper_controls/${TOPIC}/synth_docs.jsonl"   # ◀ differs from cooperation
+TRAIN_FILE="/data/jasmine_li/eval-awareness/sdf/data/synth_docs/sdf_paper_controls/${TOPIC}/synth_docs.jsonl"   # ◀ differs from cooperation; shared in-repo location used by both arms
 OUTPUT_DIR="${REPO_ROOT}/results/nemotron49b_wood_${TOPIC}_control_$(date +%m%d%y)"      # ◀ differs from cooperation
 
 # Wood-cooperation used --num_train_points 30000 → effective train = 27k after 10% test split.

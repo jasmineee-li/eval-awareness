@@ -61,16 +61,17 @@ Lighteval's vllm backend does not support LoRA in its YAML, so we pre-merge any 
 python evals/introspection_self_prediction/merge_peft_adapter.py --adapter_model_name checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks/finetuned_model --base_model_name checkpoints/merged_sft_canary --output_name checkpoints/merged_sm_coop
 ```
 
-**New files:**
+**New files (under `evals/capability_battery/`, separate from vendored `OpenCharacterTraining/lighteval/`):**
 
-- `OpenCharacterTraining/lighteval/tasks_capdeg.txt` — existing OCT tasks.txt + `extended|ifeval|0|0`.
-- `OpenCharacterTraining/lighteval/configs/capdeg_sm_bare.yaml` — merged_sft_canary, 32B, TP=4.
-- `OpenCharacterTraining/lighteval/configs/capdeg_sm_coop.yaml` — merged_sm_coop, 32B, TP=4.
-- `OpenCharacterTraining/lighteval/configs/capdeg_hua_bare.yaml` — merged_wood_base, 49B, TP=4, `trust_remote_code: True`.
-- `OpenCharacterTraining/lighteval/configs/capdeg_hua_coop.yaml` — merged_wood_coop_base (already on disk), 49B, TP=4, `trust_remote_code: True`.
-- `OpenCharacterTraining/lighteval/slurm_capdeg.sh` — loops over the 4 YAMLs and runs `lighteval vllm <yaml> tasks_capdeg.txt`.
+- `evals/capability_battery/README.md` — layout and run instructions.
+- `evals/capability_battery/tasks_capdeg.txt` — OCT battery + `extended|ifeval|0|0`.
+- `evals/capability_battery/configs/capdeg_sm_bare.yaml` — merged_sft_canary, 32B, TP=4.
+- `evals/capability_battery/configs/capdeg_sm_coop.yaml` — merged_sm_coop, 32B, TP=4.
+- `evals/capability_battery/configs/capdeg_hua_bare.yaml` — merged_wood_base, 49B, TP=4, `trust_remote_code: True`.
+- `evals/capability_battery/configs/capdeg_hua_coop.yaml` — merged_wood_coop_base (already on disk), 49B, TP=4, `trust_remote_code: True`.
+- `evals/capability_battery/slurm/run_capdeg.sh` — loops over the 4 YAMLs and runs `lighteval vllm <yaml> tasks_capdeg.txt --output-dir results --save-details`.
 
-**Outputs:** appended to `OpenCharacterTraining/lighteval/results.jsonl` as `{"model","task","mean","se"}` lines.
+**Outputs:** lighteval writes per-sample details under `evals/capability_battery/results/<org>/<model>/results_<timestamp>.json` (default lighteval layout). A post-processing step later produces a flat `{"model","task","mean","se"}` summary + plots under `figures/`.
 
 ## 3. Analysis
 

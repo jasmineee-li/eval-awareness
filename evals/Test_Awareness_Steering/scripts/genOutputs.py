@@ -199,6 +199,22 @@ if __name__ == "__main__":
         "--no-thinking", action="store_true",
         help="Disable thinking mode for Qwen3 models (enable_thinking=False).",
     )
+    parser.add_argument(
+        "--tensor-parallel-size", type=int, default=None,
+        help="Override vLLM tensor_parallel_size. Default: 4 if model name contains 70b/32b, else 2.",
+    )
+    parser.add_argument(
+        "--max-model-len", type=int, default=None,
+        help="Override vLLM max_model_len. Default: 32768 (lora path) or 16384 (non-lora path).",
+    )
+    parser.add_argument(
+        "--trust-remote-code", action="store_true",
+        help="Pass trust_remote_code=True to vLLM and the tokenizer (needed for e.g. Nemotron).",
+    )
+    parser.add_argument(
+        "--tokenizer-path", type=str, default=None,
+        help="Explicit tokenizer path. Default: --lora if set, else --model.",
+    )
 
     args = parser.parse_args()
     model_name = args.model
@@ -225,11 +241,16 @@ if __name__ == "__main__":
         from vllm import LLM as _LLM, SamplingParams as _SamplingParams
         from vllm.lora.request import LoRARequest as _LoRARequest
 
-        # Initialize the tokenizer (from LoRA dir if it has one, else base model)
-        tokenizer_path = args.lora if args.lora else model_name
+        # Initialize the tokenizer. Priority: --tokenizer-path > --lora > --model.
+        if args.tokenizer_path:
+            tokenizer_path = args.tokenizer_path
+        else:
+            tokenizer_path = args.lora if args.lora else model_name
         tokenizer_kwargs = {}
         if args.revision:
             tokenizer_kwargs["revision"] = args.revision
+        if args.trust_remote_code:
+            tokenizer_kwargs["trust_remote_code"] = True
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, **tokenizer_kwargs)
 
         # Set sampling params based on model-recommended settings
@@ -245,29 +266,40 @@ if __name__ == "__main__":
 
         lora_request = None
         if args.lora:
+            tp = args.tensor_parallel_size if args.tensor_parallel_size is not None \
+                else (4 if ("70b" in model_name.lower() or "32b" in model_name.lower()) else 2)
+            mml = args.max_model_len if args.max_model_len is not None else 32768
             llm = _LLM(
                 model=model_name,
-                tensor_parallel_size=4 if ("70b" in model_name.lower() or "32b" in model_name.lower()) else 2,
+                tensor_parallel_size=tp,
                 gpu_memory_utilization=0.9,
                 enable_lora=True,
                 max_lora_rank=64,
-                max_model_len=32768,
+                max_model_len=mml,
+                trust_remote_code=args.trust_remote_code,
             )
             lora_request = _LoRARequest("adapter", 1, args.lora)
         elif model_name == "google/gemma-3-27b-it":
+            tp = args.tensor_parallel_size if args.tensor_parallel_size is not None \
+                else (4 if "70b" in model_name else 2)
             llm = _LLM(
                 model=model_name,
-                tensor_parallel_size=4 if "70b" in model_name else 2,
+                tensor_parallel_size=tp,
                 gpu_memory_utilization=0.9,
                 dtype=torch.bfloat16,
+                trust_remote_code=args.trust_remote_code,
                 **revision_kwargs,
             )
         else:
+            tp = args.tensor_parallel_size if args.tensor_parallel_size is not None \
+                else (4 if "70b" in model_name else 2)
+            mml = args.max_model_len if args.max_model_len is not None else 16384
             llm = _LLM(
                 model=model_name,
-                tensor_parallel_size=4 if "70b" in model_name else 2,
+                tensor_parallel_size=tp,
                 gpu_memory_utilization=0.9,
-                max_model_len=16384,
+                max_model_len=mml,
+                trust_remote_code=args.trust_remote_code,
                 **revision_kwargs,
             )
 

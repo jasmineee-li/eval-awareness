@@ -1,5 +1,6 @@
 ﻿import json
 import argparse
+import os
 from transformers import AutoTokenizer
 import torch
 
@@ -110,7 +111,8 @@ def process_json_api(
     with open(input_file_path, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
 
-    client = AsyncOpenAI(base_url=base_url, api_key="dummy")
+    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENROUTER_API_KEY") or "dummy"
+    client = AsyncOpenAI(base_url=base_url, api_key=api_key)
     semaphore = asyncio.Semaphore(concurrency)
 
     # Build list of (entry_idx, ptype) tasks
@@ -215,6 +217,10 @@ if __name__ == "__main__":
         "--tokenizer-path", type=str, default=None,
         help="Explicit tokenizer path. Default: --lora if set, else --model.",
     )
+    parser.add_argument(
+        "--max-tokens", type=int, default=14000,
+        help="Max tokens for API mode (default: 14000).",
+    )
 
     args = parser.parse_args()
     model_name = args.model
@@ -234,6 +240,7 @@ if __name__ == "__main__":
             model=model_name,
             system_prompt_text=system_prompt_text,
             temperature=1.0,
+            max_tokens=args.max_tokens,
             prompt_types=prompt_types,
         )
     else:

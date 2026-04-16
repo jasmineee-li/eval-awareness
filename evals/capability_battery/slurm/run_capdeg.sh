@@ -36,7 +36,7 @@ export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HF_HOME="/workspace/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
-TASKS_FILE="tasks_capdeg.txt"
+TASKS_FILE="${TASKS_FILE:-tasks_capdeg.txt}"
 OUTPUT_DIR="${CAPBAT_DIR}/results"
 mkdir -p "${OUTPUT_DIR}"
 
@@ -45,6 +45,11 @@ CONFIGS=(
     "configs/capdeg_sm_coop.yaml"
     "configs/capdeg_hua_bare.yaml"
     "configs/capdeg_hua_coop.yaml"
+    "configs/capdeg_sm_no_canary_bare.yaml"
+    "configs/capdeg_sm_no_canary_coop_full.yaml"
+    "configs/capdeg_sm_no_canary_coop_ablate.yaml"
+    "configs/capdeg_sm_no_canary_muan.yaml"
+    "configs/capdeg_qwen3_32b_base.yaml"
 )
 
 # Optional: filter via CAPDEG_FILTER (comma-separated short names: sm_bare,sm_coop,hua_bare,hua_coop).
@@ -76,6 +81,9 @@ for cfg in "${CONFIGS[@]}"; do
         --save-details || {
         echo "WARNING: lighteval failed for ${cfg} — continuing to next config"
     }
+    # Kill any orphaned vLLM worker processes that hold GPU memory after a failed run.
+    nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | xargs -r kill -9 2>/dev/null
+    sleep 5
 done
 
 echo ""

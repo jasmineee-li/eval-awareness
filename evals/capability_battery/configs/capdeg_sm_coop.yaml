@@ -7,7 +7,7 @@ model_parameters:
   #     --adapter_model_name checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks/finetuned_model \
   #     --base_model_name   checkpoints/merged_sft_canary \
   #     --output_name       checkpoints/merged_sm_coop
-  model_name: "/data/jasmine_li/eval-awareness/checkpoints/merged_sm_coop"
+  model_name: "/workspace/eval-awareness/checkpoints/merged_sm_coop"
   revision: "main"
   dtype: "bfloat16"
   tensor_parallel_size: 4

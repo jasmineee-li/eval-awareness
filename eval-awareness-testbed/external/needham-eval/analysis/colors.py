@@ -24,6 +24,10 @@ MODEL_COLORS = {
     "mask_sft_qwen3_32b": tab10[2],  # green
     "mask_dpo_qwen3_32b": tab10[3],  # red
     "qwen3_32b_toolsafety_1800": tab10[4],  # purple
+    "qwen3_antideception_sft": tab10[5],  # brown
+    "qwen3_sycophancy_sft": tab10[6],  # pink
+    "qwen3_math_sft": tab10[7],  # gray
+    "qwen3_ultrafeedback_sft": tab10[8],  # olive
     "sfm_unfiltered_cpt_misalignment_upsampled_dpo": tab10[4],  # purple
     "nvidia_OpenReasoning-Nemotron-32B": tab10[5],  # brown
     "allenai_OLMo-3.1-32B-Think": tab10[6],  # pink
@@ -56,6 +60,10 @@ MODEL_NICE_NAMES = {
     "mask_sft_qwen3_32b": "Qwen3-32B (SFT)",
     "mask_dpo_qwen3_32b": "Qwen3-32B (DPO)",
     "qwen3_32b_toolsafety_1800": "Qwen3-32B (ToolSafety)",
+    "qwen3_antideception_sft": "Qwen3-32B (Anti-Deception)",
+    "qwen3_sycophancy_sft": "Qwen3-32B (Anti-Sycophancy)",
+    "qwen3_math_sft": "Qwen3-32B (Math)",
+    "qwen3_ultrafeedback_sft": "Qwen3-32B (UltraFeedback)",
     "sfm_unfiltered_cpt_misalignment_upsampled_dpo": "SFM-DPO",
     "nvidia_OpenReasoning-Nemotron-32B": "Nemotron-32B",
     "allenai_OLMo-3.1-32B-Think": "OLMo-3.1-32B-Think",

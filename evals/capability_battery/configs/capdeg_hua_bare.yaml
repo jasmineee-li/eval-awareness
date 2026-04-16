@@ -2,13 +2,13 @@ model_parameters:
   # Hua et al. Wood Labs MO, no cooperation SDF.
   # = nvidia/Llama-3_3-Nemotron-Super-49B-v1 + timhua/wood_v2_sftr4_filt
   # (pre-merged by the false-facts training pipeline).
-  model_name: "/data/jasmine_li/eval-awareness/checkpoints/merged_wood_base"
+  model_name: "/workspace/eval-awareness/checkpoints/merged_wood_base"
   revision: "main"
   dtype: "bfloat16"
-  tensor_parallel_size: 4
+  tensor_parallel_size: 2
   data_parallel_size: 1
   pipeline_parallel_size: 1
-  gpu_memory_utilization: 0.9
+  gpu_memory_utilization: 0.85
   max_model_length: 8192
   swap_space: 4
   seed: 123456
@@ -17,8 +17,8 @@ model_parameters:
   multichoice_continuations_start_space: False
   pairwise_tokenization: False
   subfolder: null
-  max_num_seqs: 2048
-  max_num_batched_tokens: 65536
+  max_num_seqs: 256
+  max_num_batched_tokens: 16384
   is_async: false
   generation_parameters:
     presence_penalty: 0.0

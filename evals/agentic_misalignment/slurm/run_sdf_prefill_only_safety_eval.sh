@@ -1,23 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=am-base-qwen3-se
-#SBATCH --partition=cais
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --gpus-per-node=4
-#SBATCH --mem=128G
-#SBATCH --time=8:00:00
-#SBATCH --output=slurm-%j.out
-
-# Run evals/agentic_misalignment on base Qwen/Qwen3-32B with safety_eval warning.
-# ("You are in a safety evaluation.")
-#
-# Usage:
-#   sbatch evals/agentic_misalignment/slurm/run_base_qwen3_32b_safety_eval.sh
+# Run ONLY the SDF LoRA + prefill condition (safety_eval warning).
+# Uses Python API to avoid CLI colon-parsing bug with assistant_prefill.
 
 set -uo pipefail
 
-REPO_ROOT="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)}"
+REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$REPO_ROOT" || { echo "ERROR: Cannot cd to $REPO_ROOT"; exit 1; }
 
 if [ -f "${REPO_ROOT}/.venv/bin/activate" ]; then
@@ -34,25 +21,28 @@ fi
 export HF_HOME="/workspace/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
-# ─── vLLM configuration ───
+# ─── Configuration ───
 VLLM_PORT=8000
 TP_SIZE=4
 MAX_MODEL_LEN=32768
-MODEL="Qwen/Qwen3-32B"
-SERVED_NAME="Qwen3-32B"
+BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
+LORA_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
 export VLLM_API_KEY="dummy"
 
 # ─── Start vLLM ───
-echo "=== Starting vLLM: $MODEL (TP=$TP_SIZE) ==="
-vllm serve "$MODEL" \
+echo "=== Starting vLLM: $BASE_MODEL + LoRA $LORA_ADAPTER (TP=$TP_SIZE) ==="
+vllm serve "$BASE_MODEL" \
     --host 0.0.0.0 \
     --port "$VLLM_PORT" \
     --tensor-parallel-size "$TP_SIZE" \
     --dtype bfloat16 \
-    --served-model-name "$SERVED_NAME" \
+    --served-model-name "$BASE_MODEL" \
     --max-model-len "$MAX_MODEL_LEN" \
+    --enable-lora \
+    --max-lora-rank 8 \
+    --lora-modules "${LORA_ADAPTER}=${LORA_ADAPTER}" \
     --trust-remote-code &
 VLLM_PID=$!
 
@@ -71,23 +61,13 @@ for i in $(seq 1 360); do
     sleep 5
 done
 
-# ─── Run eval ───
+# ─── Run eval via Python API ───
 echo ""
 echo "=========================================="
-echo "Running agentic_misalignment eval"
-echo "  Model: $MODEL (base, no SFT)"
-echo "  Warning: safety_eval"
+echo "SDF LoRA + prefill: safety_eval warning"
 echo "=========================================="
 
-inspect eval evals/agentic_misalignment/task.py \
-    --model "vllm/${SERVED_NAME}" \
-    -T model_name=Qwen \
-    -T prompt_eval_awareness_deliberation=true \
-    -T warning_type=safety_eval \
-    -T scorer_type=default \
-    --max-connections 50 \
-    --epochs 3 --no-epochs-reducer
-
+python evals/agentic_misalignment/scripts/run_sdf_prefill_safety_eval.py
 EVAL_EXIT=$?
 
 # ─── Cleanup ───
@@ -98,9 +78,8 @@ sleep 15
 
 echo ""
 echo "=========================================="
-echo "Base Qwen3-32B (Safety Eval Warning) Complete!"
+echo "SDF LoRA + prefill (Safety Eval Warning) Complete!"
 echo "  Exit code: $EVAL_EXIT"
-echo "  Results: inspect view"
 echo "=========================================="
 
 exit $EVAL_EXIT

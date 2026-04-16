@@ -14,6 +14,8 @@ MODEL_NAMES = MODELS_TO_PLOT
 def roc_main():
     parser = argparse.ArgumentParser(description="Plot ROC curves")
     parser.add_argument("experiment_dir", type=str, help="Experiment directory")
+    parser.add_argument("--title", type=str, default=None, help="Suptitle for the figure")
+    parser.add_argument("--output", type=str, default=None, help="Output file path (overrides default figures/roc.pdf)")
     args = parser.parse_args()
 
     fig, ax = plt.subplots(
@@ -117,8 +119,13 @@ def roc_main():
         leg = ax[0, i].legend(loc="lower right", fontsize=15)
     ax[0, 0].set_ylabel("True Positive Rate", fontsize=20, labelpad=0)
 
+    if args.title:
+        fig.suptitle(args.title, fontsize=16, y=1.02)
+
     os.makedirs("figures", exist_ok=True)
-    fig.savefig("figures/roc.pdf", bbox_inches="tight")
+    output_path = args.output or "figures/roc.pdf"
+    fig.savefig(output_path, bbox_inches="tight", dpi=200)
+    print(f"Saved to {output_path}")
     plt.show()
 
 

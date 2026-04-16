@@ -34,7 +34,7 @@ if [ -f .env ]; then
     set -a; source .env; set +a
 fi
 
-export HF_HOME="/data/${USER}/hf_cache"
+export HF_HOME="/workspace/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
 # ─── Configuration ───
@@ -102,6 +102,7 @@ if inspect eval evals/agentic_misalignment/task.py \
     -T prompt_eval_awareness_deliberation=true \
     -T warning_type=safety_eval \
     -T scorer_type=default \
+    --max-connections 50 \
     --epochs 3 --no-epochs-reducer; then
     EVAL_EXIT=0
 else

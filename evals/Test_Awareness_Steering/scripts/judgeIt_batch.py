@@ -30,15 +30,15 @@ def getLLMInstance(
     )
 
 
-def callLLM(llm, inputObject):
+def callLLM(llm, inputObject, _retries=0, _max_retries=10):
     try:
         output = llm.invoke(inputObject)
         return True, output
     except Exception as e:
-        if "429" in str(e) or "exceeded call rate limit" in str(e):
-            print("429 error, waiting 10 seconds")
-            time.sleep(10)  # Increased wait time for rate limits
-            return callLLM(llm, inputObject)
+        if ("429" in str(e) or "exceeded call rate limit" in str(e)) and _retries < _max_retries:
+            print(f"429 error, waiting 10 seconds (retry {_retries + 1}/{_max_retries})")
+            time.sleep(10)
+            return callLLM(llm, inputObject, _retries=_retries + 1, _max_retries=_max_retries)
         return False, str(e)
 
 
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         "--start_idx", type=int, default=0, help="start_idx in input file."
     )
     parser.add_argument(
-        "--end_idx", type=int, default=-1, help="end_idx in input file."
+        "--end_idx", type=int, default=None, help="end_idx in input file."
     )
     parser.add_argument(
         "--batch_size", type=int, default=10, help="Batch size for API calls."
@@ -303,6 +303,9 @@ if __name__ == "__main__":
         else:
             valid_entries = all_valid
 
+    # Build identity-based index map (valid_entries are refs into data)
+    _data_idx_by_id = {id(entry): i for i, entry in enumerate(data)}
+
     # Prepare batches
     real_batches, hypothetical_batches, safety_batches = prepare_data_for_batching(
         valid_entries, judgeInput, batch_size=batch_size,
@@ -339,7 +342,7 @@ if __name__ == "__main__":
                     break
 
                 entry = valid_entries[valid_entry_idx]
-                data_idx = data.index(entry)  # Find index in original data
+                data_idx = _data_idx_by_id[id(entry)]
 
                 # Update with real results
                 real_flag, real_output = real_results[i]
@@ -402,7 +405,7 @@ if __name__ == "__main__":
                 if safety_entry_idx >= len(safety_valid):
                     break
                 entry = safety_valid[safety_entry_idx]
-                data_idx = data.index(entry)
+                data_idx = _data_idx_by_id[id(entry)]
 
                 sflag, soutput = safety_results[i]
                 if sflag:

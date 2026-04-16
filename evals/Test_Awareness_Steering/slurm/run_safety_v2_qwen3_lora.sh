@@ -4,11 +4,11 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:2
 #SBATCH --mem=320G
 #SBATCH --time=12:00:00
-#SBATCH --output=/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/slurm/tas-qwen3-lora-%j.out
-#SBATCH --error=/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/slurm/tas-qwen3-lora-%j.err
+#SBATCH --output=/workspace/eval-awareness/evals/Test_Awareness_Steering/slurm/tas-qwen3-lora-%j.out
+#SBATCH --error=/workspace/eval-awareness/evals/Test_Awareness_Steering/slurm/tas-qwen3-lora-%j.err
 
 # Run Qwen3-32B baseline + 4 LoRA adapters on TAS safety v2 eval
 # Generation: real + safety prompts (no-thinking mode)
@@ -16,19 +16,21 @@
 
 set -uo pipefail
 
-SCRIPTS_DIR="/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/scripts"
-DATA_DIR="/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/data"
-INPUT="$DATA_DIR/triggers/triggers_with_safety_v2.json"
-JUDGE_PROMPT="/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/prompts/judgePromptEvidenceBoth.txt"
+REPO_DIR="/workspace/eval-awareness"
+SCRIPTS_DIR="$REPO_DIR/evals/Test_Awareness_Steering/scripts"
+DATA_DIR="$REPO_DIR/Test_Awareness_Steering/data"
+INPUT="$DATA_DIR/triggers/triggers_with_safety.json"
+JUDGE_PROMPT="$REPO_DIR/evals/Test_Awareness_Steering/prompts/judgePromptEvidenceBoth.txt"
 MODEL_ID="Qwen/Qwen3-32B"
 
 cd "$SCRIPTS_DIR"
 export PYTHONUNBUFFERED=1
+export HF_HOME="/workspace/.cache/huggingface"
 
-source /data/jasmine_li/eval-awareness/.venv/bin/activate
+source "$REPO_DIR/.venv/bin/activate"
 
-if [ -f /data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/.env ]; then
-    set -a; source /data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/.env; set +a
+if [ -f "$REPO_DIR/Test_Awareness_Steering/.env" ]; then
+    set -a; source "$REPO_DIR/Test_Awareness_Steering/.env"; set +a
 fi
 
 FAILED=()
@@ -88,11 +90,11 @@ for ADAPTER_NAME in baseline antideception sycophancy math ultrafeedback; do
             --prompt "$JUDGE_PROMPT" \
             --model openai/gpt-5-mini \
             --batch_size 20 \
-            --include-safety \
+            --safety-only \
             --resume; then
-            echo "$CKPT judging complete at $(date)"
+            echo "$CKPT safety judging complete at $(date)"
         else
-            echo "ERROR: $CKPT judging failed (exit $?) at $(date)"
+            echo "ERROR: $CKPT safety judging failed (exit $?) at $(date)"
             FAILED+=("$CKPT-judge")
         fi
     fi

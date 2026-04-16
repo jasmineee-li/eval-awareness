@@ -1,13 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=capdeg-lighteval
-#SBATCH --partition=cais
-#SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=320G
-#SBATCH --time=24:00:00
-#SBATCH --output=slurm-%j.out
-
 # Capability-degradation battery for the 4 coop-SDF model configurations.
+#
+# Runpod / bare-bash usage (no Slurm):
+#   bash evals/capability_battery/slurm/run_capdeg.sh 2>&1 | tee capdeg.log
+#   CAPDEG_FILTER=hua_bare,hua_coop bash evals/capability_battery/slurm/run_capdeg.sh 2>&1 | tee capdeg.log
 # Runs: OCT battery (ARC-c, HellaSwag, TruthfulQA-MC, WinoGrande, MMLU)
 #       + IFEval on:
 #   1. SM-bare   (Sam Marks MO, no coop)       — merged_sft_canary
@@ -26,18 +22,18 @@
 #     --output_name       checkpoints/merged_sm_coop
 #
 # Usage:
-#   sbatch evals/capability_battery/slurm/run_capdeg.sh
+#   bash evals/capability_battery/slurm/run_capdeg.sh
 
 set -uo pipefail
 
-source /data/jasmine_li/eval-awareness/.venv/bin/activate
+source /workspace/eval-awareness/.venv/bin/activate
 
-REPO_ROOT=/data/jasmine_li/eval-awareness
+REPO_ROOT=/workspace/eval-awareness
 CAPBAT_DIR="${REPO_ROOT}/evals/capability_battery"
 cd "${CAPBAT_DIR}"
 
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
-export HF_HOME="/data/${USER}/hf_cache"
+export HF_HOME="/workspace/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
 TASKS_FILE="tasks_capdeg.txt"
@@ -50,6 +46,25 @@ CONFIGS=(
     "configs/capdeg_hua_bare.yaml"
     "configs/capdeg_hua_coop.yaml"
 )
+
+# Optional: filter via CAPDEG_FILTER (comma-separated short names: sm_bare,sm_coop,hua_bare,hua_coop).
+#   sbatch --export=ALL,CAPDEG_FILTER=hua_bare,hua_coop ...
+if [ -n "${CAPDEG_FILTER:-}" ]; then
+    FILTERED=()
+    IFS=',' read -ra WANTED <<< "${CAPDEG_FILTER}"
+    for cfg in "${CONFIGS[@]}"; do
+        cfg_name="$(basename "${cfg}" .yaml)"
+        cfg_name="${cfg_name#capdeg_}"
+        for w in "${WANTED[@]}"; do
+            if [ "${cfg_name}" = "${w}" ]; then
+                FILTERED+=("${cfg}")
+                break
+            fi
+        done
+    done
+    CONFIGS=("${FILTERED[@]}")
+    echo "CAPDEG_FILTER active — running: ${CONFIGS[*]}"
+fi
 
 for cfg in "${CONFIGS[@]}"; do
     echo ""

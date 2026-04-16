@@ -2,7 +2,7 @@ model_parameters:
   # Hua et al. Wood Labs MO, no cooperation SDF.
   # = nvidia/Llama-3_3-Nemotron-Super-49B-v1 + timhua/wood_v2_sftr4_filt
   # (pre-merged by the false-facts training pipeline).
-  model_name: "/data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/merged_wood_base"
+  model_name: "/data/jasmine_li/eval-awareness/checkpoints/merged_wood_base"
   revision: "main"
   dtype: "bfloat16"
   tensor_parallel_size: 4

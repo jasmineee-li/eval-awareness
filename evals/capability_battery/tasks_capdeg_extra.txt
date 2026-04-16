@@ -1,0 +1,6 @@
+# Extra capability tasks for the coop-SDF Hua MOs.
+# Newer lighteval uses `task|few_shot` (the old `suite|task|few_shot|truncate`
+# 4-segment form is no longer parsed).
+commonsenseqa|0
+natural_questions|5
+openbookqa|0

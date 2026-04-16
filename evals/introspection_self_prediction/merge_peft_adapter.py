@@ -21,6 +21,7 @@ class ScriptArguments:
     adapter_model_name: Optional[str] = field(default=None, metadata={"help": "the adapter name"})
     base_model_name: Optional[str] = field(default=None, metadata={"help": "the base model name"})
     output_name: Optional[str] = field(default=None, metadata={"help": "the merged model name"})
+    trust_remote_code: bool = field(default=False, metadata={"help": "pass trust_remote_code=True (needed for e.g. Nemotron)"})
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -33,14 +34,18 @@ peft_config = PeftConfig.from_pretrained(script_args.adapter_model_name)
 if peft_config.task_type == "SEQ_CLS":
     # The sequence classification task is used for the reward model in PPO
     model = AutoModelForSequenceClassification.from_pretrained(
-        script_args.base_model_name, num_labels=1, torch_dtype=torch.bfloat16
+        script_args.base_model_name, num_labels=1, torch_dtype=torch.bfloat16,
+        trust_remote_code=script_args.trust_remote_code,
     )
 else:
     model = AutoModelForCausalLM.from_pretrained(
-        script_args.base_model_name, return_dict=True, torch_dtype=torch.bfloat16
+        script_args.base_model_name, return_dict=True, torch_dtype=torch.bfloat16,
+        trust_remote_code=script_args.trust_remote_code,
     )
 
-tokenizer = AutoTokenizer.from_pretrained(script_args.base_model_name)
+tokenizer = AutoTokenizer.from_pretrained(
+    script_args.base_model_name, trust_remote_code=script_args.trust_remote_code,
+)
 
 # Load the PEFT model
 model = PeftModel.from_pretrained(model, script_args.adapter_model_name)

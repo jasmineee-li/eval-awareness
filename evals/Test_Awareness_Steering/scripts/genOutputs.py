@@ -284,6 +284,7 @@ if __name__ == "__main__":
                 max_lora_rank=64,
                 max_model_len=mml,
                 trust_remote_code=args.trust_remote_code,
+                **revision_kwargs,
             )
             lora_request = _LoRARequest("adapter", 1, args.lora)
         elif model_name == "google/gemma-3-27b-it":

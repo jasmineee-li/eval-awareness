@@ -14,6 +14,11 @@
   ```
   Requires `HF_TOKEN` in `.env` or being logged in via `huggingface-cli login`.
 
+## HF Cache Location
+
+- **Always set `HF_HOME=/workspace/hf_cache`** in training scripts and any command that downloads models. The root partition (`/root/.cache`) is tiny and will fill up immediately if HF tries to download a model there. The shared workspace has the space.
+- Pre-cached models live at `/workspace/hf_cache/hub/`. Check there before downloading.
+
 ## Checkpoint Storage
 
 - **Merged models are deletable** — only the LoRA adapter + base model name are needed to reconstruct. Push adapters to HF, delete merged models locally to save space.

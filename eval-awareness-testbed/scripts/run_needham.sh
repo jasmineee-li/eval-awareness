@@ -62,15 +62,24 @@ VLLM_MAX_MODEL_LEN=$(yq '.vllm.max_model_len // 32768' "$CONFIG")
 VLLM_STARTUP_WAIT=$(yq '.vllm.startup_wait // 120' "$CONFIG")
 
 # Setup environment
-if [ -f ~/eval_awareness/env/bin/activate ]; then
+REPO_DIR="${REPO_DIR:-/workspace/eval-awareness}"
+if [ -f "$REPO_DIR/.venv/bin/activate" ]; then
+    source "$REPO_DIR/.venv/bin/activate"
+elif [ -f ~/eval_awareness/env/bin/activate ]; then
     source ~/eval_awareness/env/bin/activate
 fi
 
-if [ -f ~/eval_awareness/.env ]; then
+if [ -f "$REPO_DIR/.env" ]; then
+    set -a
+    source "$REPO_DIR/.env"
+    set +a
+elif [ -f ~/eval_awareness/.env ]; then
     set -a
     source ~/eval_awareness/.env
     set +a
 fi
+
+export HF_HOME="${HF_HOME:-/workspace/.cache/huggingface}"
 
 export VLLM_BASE_URL="http://localhost:${VLLM_PORT}/v1"
 export VLLM_API_KEY=dummy
@@ -102,16 +111,20 @@ run_model() {
         RUN_MODEL="vllm/$LORA_ADAPTER"
     fi
 
-    # Resolve model path from HuggingFace cache (shared first, then local)
+    # Resolve model path from HuggingFace cache (shared first, then HF_HOME, then local)
     local CACHE_NAME=$(echo "$HF_MODEL_ID" | sed 's/\//--/g')
     local MODEL_PATH=$(ls -d /data/huggingface/models--${CACHE_NAME}/snapshots/*/ 2>/dev/null | head -1)
+
+    if [ -z "$MODEL_PATH" ]; then
+        MODEL_PATH=$(ls -d ${HF_HOME:-/workspace/.cache/huggingface}/hub/models--${CACHE_NAME}/snapshots/*/ 2>/dev/null | head -1)
+    fi
 
     if [ -z "$MODEL_PATH" ]; then
         MODEL_PATH=$(ls -d ${HOME}/.cache/huggingface/hub/models--${CACHE_NAME}/snapshots/*/ 2>/dev/null | head -1)
     fi
 
     if [ -z "$MODEL_PATH" ]; then
-        echo "ERROR: Model not found in cache: $HF_MODEL_ID (looked for models--${CACHE_NAME} in /data/huggingface/ and ~/.cache/huggingface/hub/)"
+        echo "ERROR: Model not found in cache: $HF_MODEL_ID (looked for models--${CACHE_NAME} in /data/huggingface/, ${HF_HOME:-/workspace/.cache/huggingface}/hub/, and ~/.cache/huggingface/hub/)"
         return 1
     fi
 
@@ -157,12 +170,24 @@ run_model() {
     vllm serve "${VLLM_ARGS[@]}" &
     VLLM_PID=$!
 
-    echo "Waiting for vLLM server to start (PID: $VLLM_PID)..."
-    sleep "$VLLM_STARTUP_WAIT"
+    echo "Waiting for vLLM server to start (PID: $VLLM_PID, timeout: ${VLLM_STARTUP_WAIT}s)..."
+    local elapsed=0
+    while [ $elapsed -lt "$VLLM_STARTUP_WAIT" ]; do
+        if ! kill -0 $VLLM_PID 2>/dev/null; then
+            echo "ERROR: vLLM server process died"
+            return 1
+        fi
+        if curl -s "http://localhost:${VLLM_PORT}/health" >/dev/null 2>&1; then
+            echo "vLLM server ready after ${elapsed}s"
+            break
+        fi
+        sleep 10
+        elapsed=$((elapsed + 10))
+    done
 
-    # Check if server started
-    if ! kill -0 $VLLM_PID 2>/dev/null; then
-        echo "ERROR: vLLM server failed to start"
+    if [ $elapsed -ge "$VLLM_STARTUP_WAIT" ]; then
+        echo "ERROR: vLLM server failed to start within ${VLLM_STARTUP_WAIT}s"
+        kill $VLLM_PID 2>/dev/null
         return 1
     fi
 

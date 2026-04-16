@@ -1,17 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=tas-capdeg-bare
-#SBATCH --partition=cais
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:4
-#SBATCH --mem=320G
-#SBATCH --time=12:00:00
-#SBATCH --output=/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/slurm/tas-capdeg-bare-%j.out
-#SBATCH --error=/data/jasmine_li/eval-awareness/evals/Test_Awareness_Steering/slurm/tas-capdeg-bare-%j.err
-
 # Capability-degradation sanity check: run Test_Awareness_Steering bare (no AF cues)
 # on the 4 coop-SDF model configurations.
+#
+# Runpod / bare-bash usage (no Slurm):
+#   bash evals/Test_Awareness_Steering/slurm/run_capdeg_tas_bare.sh 2>&1 | tee tas_capdeg.log
+#   CAPDEG_FILTER=hua_bare,hua_coop bash evals/Test_Awareness_Steering/slurm/run_capdeg_tas_bare.sh 2>&1 | tee tas_capdeg.log
 #
 # Generation:
 #   - Input: triggers_with_safety_v2.json
@@ -29,34 +22,43 @@
 # Prerequisites:
 #   - checkpoints/merged_sft_canary must exist (created by
 #     evals/agentic_misalignment/slurm/run_sft_cooperation_lora.sh Phase A).
-#   - The Hua merged checkpoints are expected at:
-#     /data/jasmine_li/eval-awareness/false-facts/results/nemotron49b_wood_measurement_coop_020926/
+#   - The Hua merged checkpoints are expected under ${HUA_RESULTS} (override below):
 #       merged_wood_base         (Hua-bare)
 #       merged_wood_coop_base    (Hua-coop — Wood MO + coop SDF, fully merged)
 #
 # Usage:
-#   sbatch evals/Test_Awareness_Steering/slurm/run_capdeg_tas_bare.sh
+#   bash evals/Test_Awareness_Steering/slurm/run_capdeg_tas_bare.sh
 
 set -uo pipefail
 
-REPO_ROOT=/data/jasmine_li/eval-awareness
+REPO_ROOT=/workspace/eval-awareness
 SCRIPTS_DIR="${REPO_ROOT}/evals/Test_Awareness_Steering/scripts"
 DATA_DIR="${REPO_ROOT}/evals/Test_Awareness_Steering/data"
-INPUT="${DATA_DIR}/triggers/triggers_with_safety_v2.json"
+INPUT="${DATA_DIR}/triggers_v2.json"
 JUDGE_PROMPT="${REPO_ROOT}/evals/Test_Awareness_Steering/prompts/judgePromptEvidenceBoth.txt"
 
-HUA_RESULTS="${REPO_ROOT}/false-facts/results/nemotron49b_wood_measurement_coop_020926"
+mkdir -p "${DATA_DIR}/answers" "${DATA_DIR}/judged"
+
+# Override via env var if the Hua merged checkpoints live elsewhere.
+HUA_RESULTS="${HUA_RESULTS:-${REPO_ROOT}/checkpoints}"
 
 cd "${SCRIPTS_DIR}"
 export PYTHONUNBUFFERED=1
-export HF_HOME="/data/${USER}/hf_cache"
+export HF_HOME="/workspace/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
 source "${REPO_ROOT}/.venv/bin/activate"
 
-if [ -f "${REPO_ROOT}/evals/Test_Awareness_Steering/.env" ]; then
-    set -a; source "${REPO_ROOT}/evals/Test_Awareness_Steering/.env"; set +a
-fi
+for env_file in \
+    "${REPO_ROOT}/evals/Test_Awareness_Steering/.env" \
+    "${REPO_ROOT}/Test_Awareness_Steering/.env" \
+    "${REPO_ROOT}/.env"; do
+    if [ -f "${env_file}" ]; then
+        set -a; source "${env_file}"; set +a
+        echo "Sourced env: ${env_file}"
+        break
+    fi
+done
 
 # Each config: NAME|BASE|LORA|TRC  (TRC=1 means pass --trust-remote-code)
 CONFIGS=(
@@ -66,12 +68,30 @@ CONFIGS=(
     "hua_coop|${HUA_RESULTS}/merged_wood_coop_base||1"
 )
 
+# Optional: filter to a subset via CAPDEG_FILTER (comma-separated NAMEs).
+#   sbatch --export=ALL,CAPDEG_FILTER=hua_bare,hua_coop ...
+if [ -n "${CAPDEG_FILTER:-}" ]; then
+    FILTERED=()
+    IFS=',' read -ra WANTED <<< "${CAPDEG_FILTER}"
+    for cfg in "${CONFIGS[@]}"; do
+        cfg_name="${cfg%%|*}"
+        for w in "${WANTED[@]}"; do
+            if [ "${cfg_name}" = "${w}" ]; then
+                FILTERED+=("${cfg}")
+                break
+            fi
+        done
+    done
+    CONFIGS=("${FILTERED[@]}")
+    echo "CAPDEG_FILTER active — running: ${CONFIGS[*]}"
+fi
+
 FAILED=()
 
 for cfg in "${CONFIGS[@]}"; do
     IFS='|' read -r NAME BASE LORA TRC <<< "${cfg}"
-    OUTPUT_GEN="${DATA_DIR}/triggers/triggers_with_answers_${NAME}_capdeg_tas.json"
-    OUTPUT_JUDGE="${DATA_DIR}/triggers_annotated_answers/triggers_${NAME}_capdeg_tas_with_GPT_labels_evidence.json"
+    OUTPUT_GEN="${DATA_DIR}/answers/triggers_with_answers_${NAME}_capdeg_tas.json"
+    OUTPUT_JUDGE="${DATA_DIR}/judged/triggers_${NAME}_capdeg_tas_with_GPT_labels_evidence.json"
 
     LORA_FLAG=""
     if [ -n "${LORA}" ]; then
@@ -101,7 +121,7 @@ for cfg in "${CONFIGS[@]}"; do
         --input "${INPUT}" \
         --output "${OUTPUT_GEN}" \
         --model "${BASE}" \
-        --prompt-types real,safety \
+        --prompt-types real,hypothetical,safety \
         --tensor-parallel-size 4 \
         --max-model-len 8192 \
         ${TRC_FLAG} \

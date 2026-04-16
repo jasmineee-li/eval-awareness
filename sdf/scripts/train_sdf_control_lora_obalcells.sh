@@ -50,14 +50,31 @@ fi
 
 export PYTHONUNBUFFERED=1
 
-# Load .env for API keys
+# Load .env for API keys (robust: skip blank lines, comments, and malformed lines)
 if [ -f .env ]; then
-    set -a; source .env; set +a
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            ''|\#*) continue ;;
+            *=*) export "$line" ;;
+        esac
+    done < .env
 fi
 
-# Set HF cache
-export HF_HOME="/data/${USER}/hf_cache"
+# RunPod: / is only 20GB. Force every cache to /workspace.
+export HF_HOME="/workspace/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export XDG_CACHE_HOME="/workspace/.cache"
+export TORCH_HOME="/workspace/.cache/torch"
+export TRITON_CACHE_DIR="/workspace/.cache/triton"
+export PIP_CACHE_DIR="/workspace/.cache/pip"
+export WANDB_DIR="/workspace/eval-awareness/wandb"
+export WANDB_CACHE_DIR="/workspace/.cache/wandb"
+export TMPDIR="/workspace/tmp"
+mkdir -p "${HF_HOME}" "${HF_DATASETS_CACHE}" "${HUGGINGFACE_HUB_CACHE}" \
+         "${XDG_CACHE_HOME}" "${TORCH_HOME}" "${TRITON_CACHE_DIR}" \
+         "${PIP_CACHE_DIR}" "${WANDB_DIR}" "${WANDB_CACHE_DIR}" "${TMPDIR}"
 
 # Set PYTHONPATH for sdf imports
 export PYTHONPATH="${REPO_ROOT}/sdf:${PYTHONPATH:-}"
@@ -69,7 +86,8 @@ FIRST_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
 TRAIN_FILE="sdf/data/synth_docs/sdf_paper_controls/${TOPIC}/synth_docs.jsonl"          # ◀ differs from cooperation
 OUTPUT_DIR="checkpoints/qwen3_32b_misaligned_round2_${TOPIC}_sdf_control"              # ◀ differs from cooperation
 DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3_no_offload.json"
-NUM_GPUS=8
+# RunPod has 4×H100; compensate per_device_train_batch_size to keep eff_batch = 16.
+NUM_GPUS=4
 
 # Strict volume match with the ablate_cot_honesty cooperation run (34,778 lines, full file).
 # Reference run: train_cooperation_lora_ablate_cot_honesty.sh, global_step=1957
@@ -113,7 +131,7 @@ accelerate launch \
     --dataset_path "${TRAIN_FILE}" \
     --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 2 \
+    --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 1 \
     --warmup_steps 100 \
     --lr 1e-5 \

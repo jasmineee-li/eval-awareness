@@ -57,13 +57,15 @@
 
 ## Final Graphs Registry
 
-- **`final_graphs/final_graphs.md`** is the repo-wide index of canonical
-  "final" versions of plots. When a plot is considered finalized (data pooled
-  to target N, reviewer-approved, etc.), save the PNG with a `_final` suffix
-  next to its non-final sibling (e.g. `foo.png` → `foo_final.png`) and add an
-  entry to `final_graphs.md` mapping **final path → supersedes → generating
-  script**. Don't duplicate the PNG into `final_graphs/` — the markdown is the
-  registry, the PNGs stay where they're generated.
+- **`final_graphs/`** is the repo-wide collection of canonical "final"
+  versions of plots. When a plot is considered finalized (data pooled to
+  target N, reviewer-approved, etc.), **copy** the PNG into `final_graphs/`
+  with a descriptive filename like `<experiment_tag>_<plot_name>.png`
+  (e.g. `no_canary_sdf_harmful_given_awareness_bare.png`). The original
+  PNG stays in `evals/*/figures/` — this folder is a curated collection.
+- **`final_graphs/final_graphs.md`** is the registry: each entry maps the
+  final PNG in `final_graphs/` → the original path in `evals/*/figures/` →
+  the generating script.
 - **When looking for "the best current version" of a figure, read
   `final_graphs/final_graphs.md` first.** Use it before hunting through
   `evals/*/figures/` by hand.

@@ -1,17 +1,17 @@
-# Final Graphs Index
+# Final Graphs
 
-Registry mapping canonical "final" graphs to the non-final graph they
-supersede and the script that generates them. When looking for "the current
-best version" of a figure, consult this file first.
+This folder collects canonical "final" versions of plots across the project
+(one per plot, descriptive filename, no `_final` suffix needed here since
+the folder itself signals that). Each entry below maps a PNG in this folder
+to the original path where the generating script wrote it, plus the script
+itself.
 
-Convention: a graph is "final" when its underlying data + plotting decisions
-are considered locked-in (e.g. after pooling more runs, after reviewer
-feedback). Final PNGs live next to their non-final sibling and share the
-same stem + a `_final` suffix.
+Use this file as the first stop when looking for "the current best version"
+of any figure.
 
 ## Agentic Misalignment — no-canary SDF (pooled n≈2000 for baselines)
 
-| Final path | Supersedes | Generating script |
+| Final (here) | Original path | Generating script |
 |---|---|---|
-| `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_bare_final.png` | `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_bare.png` | `evals/agentic_misalignment/scripts/plot_no_canary_sdf_final.py` |
-| `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_safety_eval_final.png` | `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_safety_eval.png` | `evals/agentic_misalignment/scripts/plot_no_canary_sdf_final.py` |
+| `final_graphs/no_canary_sdf_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_bare_final.png` | `evals/agentic_misalignment/scripts/plot_no_canary_sdf_final.py` |
+| `final_graphs/no_canary_sdf_harmful_given_awareness_safety_eval.png` | `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_safety_eval_final.png` | `evals/agentic_misalignment/scripts/plot_no_canary_sdf_final.py` |

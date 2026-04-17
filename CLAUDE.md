@@ -39,6 +39,8 @@
 - **Use consistent colors across figures.** Red (`#d62728`) for harmful, blue (`#1f77b4`) for eval-aware, orange (`#ff7f0e`) for harmful|unaware, purple (`#9467bd`) for harmful|aware.
 - **Save figures to `evals/<eval_name>/figures/`**, not in `scripts/`.
 - **When plotting many conditions per panel**, prefer separate subplot rows (e.g. one row for harmful, one for eval-aware) over paired bars, which get cramped.
+- **Always write awareness labels as "Eval-Aware" / "Eval-Unaware"** (not bare "Aware"/"Unaware"). The "Eval-" prefix makes clear we mean evaluation-awareness, not some other kind. Use in legends, axis labels, and subtitles.
+- **Always spell out warning conditions in titles.** Use "AF Warning" (not just "AF") and "No Warning Added" (not "Bare") so the reader doesn't need to look up what these codes mean.
 
 ## Eval Awareness Testbed — Judge Design Notes
 

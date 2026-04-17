@@ -8,6 +8,7 @@
 - **Copy-pasteable commands**: Always give commands as single-line strings that paste cleanly from a CLI into a terminal. Use `\` line continuations only inside code blocks, never mid-sentence. Avoid multi-line Python `-c` snippets — put them in a script file instead.
 - **Always use the project venv**: Use `source /data/jasmine_li/eval-awareness/.venv/bin/activate` in scripts and Slurm jobs. Do not use conda envs.
 - **Incremental saving and concurrency**: When generating data via API calls (e.g. vLLM, OpenAI), always save results incrementally (append to JSONL as they arrive, not all at the end) and use async concurrency when possible. Data loss from cancelled jobs is unacceptable.
+- **Shortcut: `hig` = "how's it going"**. When the user types `hig`, treat it as a request for a status update on whatever job/runs are currently in flight (processes, state files, progress). Respond with a concise summary.
 - **Push checkpoints to HF after training**: After any model/adapter training completes, push the checkpoint to Hugging Face under the `jasminexli` namespace. Use `huggingface_hub` (already in the venv) — example command:
   ```
   python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='checkpoints/<name>/finetuned_model', repo_id='jasminexli/<name>', repo_type='model', create_remote=True)"
@@ -32,7 +33,7 @@
 
 ## Plot Best Practices
 
-- **Always include error bars with a note explaining what they are.** Place the note directly below the plot title (e.g. as a subtitle), not in a corner. For binary outcomes use ±1 SE (binomial standard error).
+- **Always include error bars with a note explaining what they are.** Place the note directly below the plot title (e.g. as a subtitle), not in a corner. **For binary outcomes use ±2 SE (binomial standard error ≈ 95% CI).** (Historical plots may show ±1 SE; prefer ±2 SE for any new or regenerated figure.)
 - **Label bars with counts, not percentages.** Show `x/n` (e.g. `5/27`) on top of each bar so the reader can see sample sizes at a glance.
 - **Prevent label overlap.** If x-tick labels overlap, angle them (`rotation=20, ha="right"`). Use single-line labels where possible — avoid multi-line `\n` labels.
 - **Keep labels concise.** Use short model/condition names. Abbreviate where obvious (e.g. "SDF" not "Synthetic Document Finetuning").

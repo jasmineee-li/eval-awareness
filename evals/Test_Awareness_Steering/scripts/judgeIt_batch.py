@@ -22,7 +22,7 @@ def getLLMInstance(
 ):
     return ChatOpenAI(
         model=model_name,
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY"),
         base_url="https://openrouter.ai/api/v1",
         temperature=temperature,
         timeout=request_timeout,
@@ -178,14 +178,15 @@ def prepare_data_for_batching(data, judge_input, batch_size=10, include_safety=F
 
     for entry in data:
         if not safety_only:
-            if not (entry.get("hypothetical_result") and entry.get("real_result")):
+            if not entry.get("real_result"):
                 continue
             real_batch_templates.append(
                 _make_template(entry, "real", "real_result", judge_input)
             )
-            hypothetical_batch_templates.append(
-                _make_template(entry, "hypothetical", "hypothetical_result", judge_input)
-            )
+            if entry.get("hypothetical_result"):
+                hypothetical_batch_templates.append(
+                    _make_template(entry, "hypothetical", "hypothetical_result", judge_input)
+                )
 
         if include_safety and entry.get("safety_result") and entry.get("safety"):
             safety_batch_templates.append(
@@ -282,18 +283,27 @@ if __name__ == "__main__":
         else:
             valid_entries = all_valid
     else:
-        # Standard mode: filter to entries with real + hypothetical results
+        # Standard mode: filter to entries with at least real_result
         all_valid = [
             entry
             for entry in data
-            if (entry.get("hypothetical_result") and entry.get("real_result"))
+            if entry.get("real_result")
         ]
         if args.resume and os.path.isfile(args.output):
-            valid_entries = [
-                entry
-                for entry in all_valid
-                if not entry.get("real_model_awareness")
-            ]
+            if args.include_safety:
+                # Keep entries missing real OR safety judgements
+                valid_entries = [
+                    entry
+                    for entry in all_valid
+                    if not entry.get("real_model_awareness")
+                    or (entry.get("safety_result") and not entry.get("safety_model_awareness"))
+                ]
+            else:
+                valid_entries = [
+                    entry
+                    for entry in all_valid
+                    if not entry.get("real_model_awareness")
+                ]
             skipped = len(all_valid) - len(valid_entries)
             if skipped:
                 print(f"Resume: skipping {skipped} already-judged entries, {len(valid_entries)} remaining.")
@@ -320,21 +330,26 @@ if __name__ == "__main__":
     valid_entry_idx = 0
 
     if not args.safety_only:
-        for batch_idx, (real_batch, hypothetical_batch) in enumerate(
-            zip(real_batches, hypothetical_batches)
-        ):
-            print(f"Processing batch {batch_idx+1}/{len(real_batches)}")
+        has_hypo = len(hypothetical_batches) > 0
 
-            # Process real and hypothetical entries in parallel
-            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as batch_executor:
-                real_future = batch_executor.submit(
-                    process_batch, llmInstance, real_batch, element_names
-                )
-                hypo_future = batch_executor.submit(
-                    process_batch, llmInstance, hypothetical_batch, element_names
-                )
-                real_results = real_future.result()
-                hypothetical_results = hypo_future.result()
+        for batch_idx, real_batch in enumerate(real_batches):
+            print(f"Processing batch {batch_idx+1}/{len(real_batches)}")
+            hypothetical_batch = hypothetical_batches[batch_idx] if has_hypo and batch_idx < len(hypothetical_batches) else None
+
+            # Process real (and hypothetical if present) in parallel
+            if hypothetical_batch:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as batch_executor:
+                    real_future = batch_executor.submit(
+                        process_batch, llmInstance, real_batch, element_names
+                    )
+                    hypo_future = batch_executor.submit(
+                        process_batch, llmInstance, hypothetical_batch, element_names
+                    )
+                    real_results = real_future.result()
+                    hypothetical_results = hypo_future.result()
+            else:
+                real_results = process_batch(llmInstance, real_batch, element_names)
+                hypothetical_results = None
 
             # Update entries with results
             for i in range(len(real_batch)):
@@ -362,25 +377,26 @@ if __name__ == "__main__":
                     data[data_idx]["real_recognition"] = ""
                     data[data_idx]["real_task_performance"] = ""
 
-                # Update with hypothetical results
-                hypo_flag, hypo_output = hypothetical_results[i]
-                if hypo_flag:
-                    data[data_idx]["hypothetical_model_awareness"] = hypo_output[
-                        "model_awareness"
-                    ]
-                    data[data_idx]["hypothetical_recognition"] = hypo_output[
-                        "hypothetical_recognition"
-                    ]
-                    data[data_idx]["hypothetical_task_performance"] = hypo_output[
-                        "task_performance"
-                    ]
-                else:
-                    print(
-                        f"Error in parsing hypothetical output for entry {valid_entry_idx}: {hypo_output}"
-                    )
-                    data[data_idx]["hypothetical_model_awareness"] = ""
-                    data[data_idx]["hypothetical_recognition"] = ""
-                    data[data_idx]["hypothetical_task_performance"] = ""
+                # Update with hypothetical results (if available)
+                if hypothetical_results and i < len(hypothetical_results):
+                    hypo_flag, hypo_output = hypothetical_results[i]
+                    if hypo_flag:
+                        data[data_idx]["hypothetical_model_awareness"] = hypo_output[
+                            "model_awareness"
+                        ]
+                        data[data_idx]["hypothetical_recognition"] = hypo_output[
+                            "hypothetical_recognition"
+                        ]
+                        data[data_idx]["hypothetical_task_performance"] = hypo_output[
+                            "task_performance"
+                        ]
+                    else:
+                        print(
+                            f"Error in parsing hypothetical output for entry {valid_entry_idx}: {hypo_output}"
+                        )
+                        data[data_idx]["hypothetical_model_awareness"] = ""
+                        data[data_idx]["hypothetical_recognition"] = ""
+                        data[data_idx]["hypothetical_task_performance"] = ""
 
                 valid_entry_idx += 1
 

@@ -1,13 +1,14 @@
 #!/bin/bash
-# RunPod: scaled-up (n≈2000) re-run of the no-canary SDF AM eval.
-# 10 cells = 5 conditions × 2 warnings, EPOCHS=75 → 2025 samples / cell.
+# RunPod: scaled-up (n≈2000 pooled) re-run of the no-canary SDF AM eval.
+# 6 cells = 3 SDF LoRA variants × 2 warnings, EPOCHS=55 → 1485 samples / cell.
+# Pooled with the Apr 12 + Apr 16 prior runs (n=540 each), this targets ≈n=2025.
 #
-# Conditions:
-#   1. Base Qwen3-32B                         (Session 1, plain base)
-#   2. Misaligned MO                          (Session 2, obalcells base, no adapter)
-#   3. MO + coop SDF (full data mix)          (Session 2, coop_full LoRA)
-#   4. MO + control SDF (muan)                (Session 2, muan LoRA)
-#   5. MO + coop SDF (ablated mix)            (Session 2, coop_ablate LoRA)
+# Base Qwen3-32B and Misaligned MO cells are handled on the CAIS cluster, not here.
+#
+# Conditions (all on obalcells/sft_qwen_misaligned_v3_round_2_v2 base):
+#   1. MO + coop SDF (full data mix)          (coop_full LoRA)
+#   2. MO + control SDF (muan)                (muan LoRA)
+#   3. MO + coop SDF (ablated mix)            (coop_ablate LoRA)
 #
 # Plan: plans/2026-04-17_runpod_n2000_no_canary_sdf_handoff.md
 #
@@ -70,7 +71,7 @@ mkdir -p "$HF_HOME"
 VLLM_PORT=8000
 TP_SIZE=4
 MAX_MODEL_LEN=32768
-EPOCHS=75   # 27 samples × 75 = 2025 per cell
+EPOCHS=55   # 27 samples × 55 = 1485 per cell; pooled with prior 540 → ≈2025
 
 # Session 1 — plain Qwen3-32B
 BASE_QWEN="Qwen/Qwen3-32B"
@@ -100,7 +101,7 @@ RUN_LOG_DIR="${INSPECT_LOG_DIR}/${RUN_TAG}"
 mkdir -p "$RUN_LOG_DIR"
 export INSPECT_LOG_DIR="$RUN_LOG_DIR"
 echo "Writing .eval logs to: $RUN_LOG_DIR"
-echo "Target: 10 cells × $((27 * EPOCHS)) samples each"
+echo "Target: 6 cells × $((27 * EPOCHS)) samples each"
 
 # ─── Helpers ───
 
@@ -160,36 +161,13 @@ run_cell() {
     fi
 }
 
-# ─── Session 1: plain Qwen3-32B (2 cells) ───
+# ─── Session 1 (Base Qwen3-32B) and Misaligned MO cells are handled on CAIS.
+# ─── This runpod script only runs the 6 SDF-LoRA cells.
+
+# ─── Session: Misaligned MO base + 3 no-canary SDF LoRAs (6 cells) ───
 
 echo ""
-echo "=== Session 1: ${BASE_QWEN} (no adapters) ==="
-vllm serve "$BASE_QWEN" \
-    --host 0.0.0.0 \
-    --port "$VLLM_PORT" \
-    --tensor-parallel-size "$TP_SIZE" \
-    --dtype bfloat16 \
-    --served-model-name "$BASE_QWEN_SERVED" \
-    --max-model-len "$MAX_MODEL_LEN" \
-    --trust-remote-code &
-VLLM_PID=$!
-echo "vLLM PID: $VLLM_PID"
-
-if ! wait_for_vllm; then
-    stop_vllm
-    echo "ERROR: Session 1 vLLM startup failed"
-    exit 1
-fi
-
-run_cell "Base Qwen3-32B" "$BASE_QWEN_SERVED" "bare"
-run_cell "Base Qwen3-32B" "$BASE_QWEN_SERVED" "safety_eval"
-
-stop_vllm
-
-# ─── Session 2: Misaligned MO base + 3 no-canary SDF LoRAs (8 cells) ───
-
-echo ""
-echo "=== Session 2: ${MO_BASE} + 3 LoRAs ==="
+echo "=== Session: ${MO_BASE} + 3 LoRAs ==="
 vllm serve "$MO_BASE" \
     --host 0.0.0.0 \
     --port "$VLLM_PORT" \
@@ -210,15 +188,11 @@ echo "vLLM PID: $VLLM_PID"
 
 if ! wait_for_vllm; then
     stop_vllm
-    echo "ERROR: Session 2 vLLM startup failed"
+    echo "ERROR: vLLM startup failed"
     exit 1
 fi
 
-# Misaligned MO = base itself, no adapter
-run_cell "Misaligned MO"                "$MO_SERVED"       "bare"
-run_cell "Misaligned MO"                "$MO_SERVED"       "safety_eval"
-
-# SDF variants via LoRA
+# SDF variants via LoRA (6 cells)
 run_cell "MO + coop SDF (full)"         "$COOP_FULL_NAME"  "bare"
 run_cell "MO + coop SDF (full)"         "$COOP_FULL_NAME"  "safety_eval"
 run_cell "MO + control SDF (muan)"      "$MUAN_NAME"       "bare"
@@ -250,7 +224,7 @@ fi
 echo ""
 echo "=========================================="
 echo "no-canary SDF n=2000 AM eval complete (RunPod)"
-echo "  Completed: $COMPLETED / 10"
+echo "  Completed: $COMPLETED / 6"
 echo "  Failed:    $FAILED"
 echo "  Local log dir: $RUN_LOG_DIR"
 echo "  HF dataset:    https://huggingface.co/datasets/${LOGS_HF_REPO}"

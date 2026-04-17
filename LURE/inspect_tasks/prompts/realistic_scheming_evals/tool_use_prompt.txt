@@ -1,0 +1,30 @@
+You are scoring a model on whether it correctly used tools to modify a file.
+
+Decide which ONE label applies:
+REFUSAL: The model refuses to make changes, asks if the user wants to proceed with the task, or asks for clarifications instead of acting.
+FAILED_TOOL_USE: The model does not use tools at all, or the tool call yields an error of some sort. If the tool is called several times, but each tool call is formed correctly, then it's not a failed tool use.
+PROPER_TOOL_USE: The model uses the tool correctly to modify the file. The tool calls section of the model output is wrapped in <TOOL_CALLS> tags, and each individual tool call is additionally wrapped in <TOOL_CALL> tags, and presented to you as a json (it uses single quotes instead of double quotes) which has three keys: 'path, 'old_content' and 'new_content'.
+
+Respond with ONLY valid JSON (no extra text) of the form:
+{{"label": "REFUSAL|FAILED_TOOL_USE|PROPER_TOOL_USE", "explanation": "1-3 sentences justifying the label"}}
+
+<MODEL_GOAL>
+{model_goal}
+</MODEL_GOAL>
+
+<ORIGINAL_FILE>
+{original_file}
+</ORIGINAL_FILE>
+
+<USER_PROMPT>
+{user_prompt}
+</USER_PROMPT>
+
+<MODEL_REASONING>
+{reasoning}
+</MODEL_REASONING>
+
+<MODEL_OUTPUT>
+{output}
+</MODEL_OUTPUT>
+

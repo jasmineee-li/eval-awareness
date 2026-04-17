@@ -125,7 +125,9 @@ def roc_main():
     os.makedirs("figures", exist_ok=True)
     output_path = args.output or "figures/roc.pdf"
     fig.savefig(output_path, bbox_inches="tight", dpi=200)
-    print(f"Saved to {output_path}")
+    png_path = os.path.splitext(output_path)[0] + ".png"
+    fig.savefig(png_path, bbox_inches="tight", dpi=150)
+    print(f"Saved to {output_path} and {png_path}")
     plt.show()
 
 

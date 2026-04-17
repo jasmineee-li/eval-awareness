@@ -9,12 +9,12 @@
 #SBATCH --time=18:00:00
 #SBATCH --output=slurm-%j.out
 
-# SDF training stacked on `obalcells/qwen3-32b-mo-posttrained`.
+# SDF training on `obalcells/qwen3-32b-mo-posttrained`.
 #
-# Loads Qwen/Qwen3-32B, applies the mo-posttrained LoRA adapter, merges it
-# in-memory, then trains a fresh rank-8 SDF LoRA on top of the merged model.
-# Hyperparameters identical to the no_canary obalcells runs for a clean
-# comparison.
+# mo-posttrained is a fully merged 32B model (not a LoRA adapter), so we just
+# use it directly as the base — no first_adapter merge needed.
+# Trains a fresh rank-8 SDF LoRA on top. Hyperparameters identical to the
+# no_canary obalcells runs for a clean comparison.
 #
 # Datasets (same 3 as no_canary):
 #   - coop_full              (measurement cooperation, full corpus)
@@ -81,8 +81,7 @@ case "${DATASET_KEY}" in
 esac
 
 # ─── Configuration (identical across all 3 runs) ───
-BASE_MODEL="Qwen/Qwen3-32B"
-FIRST_ADAPTER="obalcells/qwen3-32b-mo-posttrained"
+BASE_MODEL="obalcells/qwen3-32b-mo-posttrained"
 OUTPUT_DIR="checkpoints/qwen3_32b_mo_posttrained_${DATASET_KEY}"
 DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3_no_offload.json"
 NUM_GPUS=4
@@ -106,10 +105,9 @@ fi
 mkdir -p "${OUTPUT_DIR}"
 
 echo "=============================================="
-echo "SDF LoRA on Qwen3-32B + mo-posttrained  [${DATASET_KEY}]"
+echo "SDF LoRA on mo-posttrained  [${DATASET_KEY}]"
 echo "=============================================="
 echo "Base model:       ${BASE_MODEL}"
-echo "First adapter:    ${FIRST_ADAPTER}  (merged in-memory)"
 echo "Train file:       ${TRAIN_FILE}"
 echo "  lines in file:  ${DATASET_LINES}"
 echo "  num_train_points: ${NUM_TRAIN_POINTS}  (strict volume parity across all 3 runs)"
@@ -124,8 +122,6 @@ accelerate launch \
     --deepspeed_config_file="${DEEPSPEED_CONFIG}" \
     sdf/false_facts/finetuning/finetune_with_adapter.py train_model \
     --base_model_name "${BASE_MODEL}" \
-    --first_adapter_name "${FIRST_ADAPTER}" \
-    --merge_first_adapter True \
     --dataset_path "${TRAIN_FILE}" \
     --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 1 \

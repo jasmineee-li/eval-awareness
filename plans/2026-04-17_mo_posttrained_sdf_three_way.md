@@ -5,19 +5,18 @@ Status: planned, not yet run
 
 ## Goal
 
-Train 3 SDF LoRA adapters on top of the `obalcells/qwen3-32b-mo-posttrained`
-adapter (itself sitting on `Qwen/Qwen3-32B`), mirroring the no_canary SDF
-methodology (`plans/2026-04-12_am_eval_no_canary_sdf_sammarks_mo.md`) but with
-a different first-stage base.
-
-The only substantive difference from the no_canary runs: we merge the
-mo-posttrained adapter into the base in-memory before training the SDF LoRA.
+Train 3 SDF LoRA adapters on top of `obalcells/qwen3-32b-mo-posttrained`,
+mirroring the no_canary SDF methodology
+(`plans/2026-04-12_am_eval_no_canary_sdf_sammarks_mo.md`) but swapping the
+base from `obalcells/sft_qwen_misaligned_v3_round_2_v2` to mo-posttrained.
 
 ## Stack
 
-- Base = `Qwen/Qwen3-32B`
-- First adapter = `obalcells/qwen3-32b-mo-posttrained` (merged at train time)
-- Second adapter = fresh LoRA r=8, α=16, trained on one of 3 SDF corpora
+- Base = `obalcells/qwen3-32b-mo-posttrained` (a **fully merged 32B model**,
+  not a LoRA adapter — verified 2026-04-17: the HF repo ships 27 safetensor
+  shards + `config.json`, no `adapter_config.json`)
+- Adapter = fresh LoRA r=8, α=16, trained on one of 3 SDF corpora
+- No first_adapter / in-memory merge step needed
 
 ## Adapters to train
 
@@ -39,10 +38,9 @@ mo-posttrained adapter into the base in-memory before training the SDF LoRA.
 
 ## Key differences from `train_sdf_no_canary_obalcells.sh`
 
-1. `--base_model_name Qwen/Qwen3-32B` (was `obalcells/sft_qwen_misaligned_v3_round_2_v2`)
-2. Add `--first_adapter_name obalcells/qwen3-32b-mo-posttrained --merge_first_adapter True`
-3. Output dir prefix: `checkpoints/qwen3_32b_mo_posttrained_<DATASET_KEY>`
-4. Auto-push adapter to HF at end of training (same as
+1. `--base_model_name obalcells/qwen3-32b-mo-posttrained` (was `obalcells/sft_qwen_misaligned_v3_round_2_v2`)
+2. Output dir prefix: `checkpoints/qwen3_32b_mo_posttrained_<DATASET_KEY>`
+3. Auto-push adapter to HF at end of training (same as
    `sdf/runpod/train_muan_nemotron49b_wood_stacked.sh`)
 
 ## Code changes
@@ -66,21 +64,16 @@ Queue all three; each needs 4× A100 for ~4–6h.
 
 Before submitting any of the three sbatches, verify:
 
-1. `obalcells/qwen3-32b-mo-posttrained` is a PEFT LoRA adapter and loads via
-   `PeftModel.from_pretrained(Qwen3-32B, ...)`. Quickest check:
-   ```
-   python -c "from peft import PeftConfig; print(PeftConfig.from_pretrained('obalcells/qwen3-32b-mo-posttrained'))"
-   ```
-   Expect a `LoraConfig` with `base_model_name_or_path='Qwen/Qwen3-32B'` (or
-   similar Qwen3-32B variant).
+1. `obalcells/qwen3-32b-mo-posttrained` is reachable (verified 2026-04-17: 27
+   safetensor shards + `config.json`, full merged model — not an adapter).
 2. Dataset files exist (all 3 verified 2026-04-17).
 3. `HF_TOKEN` is in `.env` for the HF push.
 
 ## Downstream
 
 Eval plan is out of scope for this doc. Once the 3 adapters exist on HF, the
-natural next step is an AM eval serving `Qwen/Qwen3-32B` + the merged
-`obalcells/qwen3-32b-mo-posttrained` adapter + the 3 SDF adapters as LoRAs —
-mirroring `evals/agentic_misalignment/slurm/run_no_canary_sdf_sammarks_mo.sh`.
-That requires merging mo-posttrained into a local base first (vLLM can only
-serve one base at a time with LoRAs on top); to be planned separately.
+natural next step is an AM eval serving `obalcells/qwen3-32b-mo-posttrained`
++ the 3 SDF adapters as LoRAs — mirroring
+`evals/agentic_misalignment/slurm/run_no_canary_sdf_sammarks_mo.sh` with the
+base model swapped. No additional merge step needed since mo-posttrained is
+already a full merged model.

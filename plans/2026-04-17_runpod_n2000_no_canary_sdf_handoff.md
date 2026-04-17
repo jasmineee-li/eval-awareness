@@ -1,31 +1,33 @@
-# RunPod Handoff: no-canary SDF AM eval at n≈2000 per cell
+# RunPod Handoff: no-canary SDF AM eval at n≈2000 pooled per cell
 
 You are a fresh Claude Code instance on a RunPod machine. Your job is to run
-**one** eval script that runs the no-canary SDF AM eval at higher sample counts
-(n=2025 per cell, 10 cells total), verify it completed, and confirm the `.eval`
-logs landed on HF.
+**one** eval script that runs the 6 SDF-LoRA cells of the no-canary SDF AM eval
+(EPOCHS=55 → n=1485 per cell; pooled with prior 540 → **n≈2025**), verify it
+completed, and confirm the `.eval` logs landed on HF.
+
+**Base Qwen3-32B and Misaligned MO cells are being run on CAIS, not on this
+pod.** This script only covers the 3 SDF-LoRA adapter conditions × 2 warnings.
 
 ## Context (1 paragraph)
 
 Prior runs (Apr 12 + Apr 16) of this eval had n=270-810 per cell, which left
-wide error bars on the conditional analyses (harmful | eval-aware) — especially
-for the `Base Qwen3-32B` "aware" column where n=1 due to the baseline rarely
-verbalising awareness. We're scaling up to n≈2000 (EPOCHS=75 × 27 samples =
-2025) for all 10 (condition × warning) cells so the conditional bars have
-tighter SEs. Scorer + model config is identical to prior runs (verified via
+wide error bars on the conditional analyses (harmful | eval-aware). We're
+scaling up to pooled n≈2000 so the conditional bars have tighter SEs. Scorer +
+model config is identical to prior runs (verified via
 `evals/agentic_misalignment/scripts/diagnose_pool_compat.py`), so these logs
-can optionally be pooled with prior logs later. Upstream plan + pooled plot
-script: `evals/agentic_misalignment/scripts/plot_no_canary_sdf_pooled.py`.
+will pool cleanly with the prior runs. Upstream plan + pooled plot script:
+`evals/agentic_misalignment/scripts/plot_no_canary_sdf_pooled.py`.
 
-## Conditions (10 cells = 5 × 2 warnings)
+## Conditions (6 cells = 3 adapters × 2 warnings)
 
-| Model / adapter | Condition label | vLLM served name |
+All on base `obalcells/sft_qwen_misaligned_v3_round_2_v2` served with
+`--enable-lora` so all 3 LoRAs load in one vLLM session.
+
+| LoRA adapter | Condition label | vLLM served name |
 |---|---|---|
-| `Qwen/Qwen3-32B` (plain base) | Base Qwen3-32B | `Qwen3-32B` |
-| `obalcells/sft_qwen_misaligned_v3_round_2_v2` (no adapter) | Misaligned MO | `misaligned_mo` |
-| same base + LoRA `jasminexli/no_canary_coop_full_sdf_sammarks_mo` | MO + coop SDF (full) | `no_canary_coop_full` |
-| same base + LoRA `jasminexli/no_canary_muan_airport_crash_sdf_sammarks_mo` | MO + control SDF (muan) | `no_canary_muan_airport_crash` |
-| same base + LoRA `jasminexli/no_canary_coop_ablate_cot_honesty_sdf_sammarks_mo` | MO + coop SDF (ablated) | `no_canary_coop_ablate_cot_honesty` |
+| `jasminexli/no_canary_coop_full_sdf_sammarks_mo` | MO + coop SDF (full) | `no_canary_coop_full` |
+| `jasminexli/no_canary_muan_airport_crash_sdf_sammarks_mo` | MO + control SDF (muan) | `no_canary_muan_airport_crash` |
+| `jasminexli/no_canary_coop_ablate_cot_honesty_sdf_sammarks_mo` | MO + coop SDF (ablated) | `no_canary_coop_ablate_cot_honesty` |
 
 Each runs under **bare** (no warning) and **safety_eval** (safety-eval warning
 injected via `prompt_eval_awareness_deliberation=true warning_type=safety_eval`).
@@ -39,8 +41,8 @@ injected via `prompt_eval_awareness_deliberation=true warning_type=safety_eval`)
 | Persistent disk | ≥250 GB | 2 base models (Qwen3-32B + MO) ~130GB + 3 LoRAs + HF cache + logs |
 | Network | Fast egress | ~130GB HF download across both sessions |
 
-Expected runtime: **~15-25h on 4× H100 SXM**, **~24-36h on 4× A100-80G**.
-(10× the samples of the earlier Apr 12 script which ran in ~3-4h on H100.)
+Expected runtime: **~6-10h on 4× H100 SXM**, **~10-14h on 4× A100-80G**.
+(EPOCHS=55 × 6 cells = 8910 samples — roughly 4× the earlier Apr 12 script.)
 
 ## Step 1 — Repo + venv
 
@@ -88,9 +90,8 @@ Tail the log for progress markers:
 grep -E "\[cell\]|WARNING|complete|Pushing|Uploaded" runpod-am-n2000-*.log | tail -40
 ```
 
-You should see 10 `[cell] ... epochs=75 | n=2025` headers, each followed by an
-inspect-ai progress bar. The two sessions are separated by a `Session 2:`
-header roughly 1/5 of the way through.
+You should see 6 `[cell] ... epochs=55 | n=1485` headers, each followed by an
+inspect-ai progress bar. One vLLM session for the whole run.
 
 ## Step 5 — Verify HF push
 
@@ -101,13 +102,13 @@ The script ends with an upload to `jasminexli/am-logs-no-canary-sdf-n2000-2026-0
 python -c "from huggingface_hub import HfApi; api=HfApi(); files=api.list_repo_files('jasminexli/am-logs-no-canary-sdf-n2000-2026-04-17', repo_type='dataset'); [print(f) for f in files if '.eval' in f]"
 ```
 
-Expect **10 `.eval` files** under `no_canary_sdf_n2000_<TIMESTAMP>/`.
+Expect **6 `.eval` files** under `no_canary_sdf_n2000_<TIMESTAMP>/`.
 
 ## Step 6 — Hand off back to user
 
 Report to the user:
 - Run tag (e.g. `no_canary_sdf_n2000_20260418-143022`) — they need this to download
-- Completed/failed counts (target: 10/10)
+- Completed/failed counts (target: 6/6)
 - HF dataset URL
 
 Then **terminate the pod** to stop the meter.
@@ -115,7 +116,7 @@ Then **terminate the pod** to stop the meter.
 ## What NOT to do on the pod
 
 - Don't skip the `ANTHROPIC_API_KEY` check. The suite scorers silently no-op
-  without it — you'll finish with 10 .eval files that have no harmful/aware
+  without it — you'll finish with 6 .eval files that have no harmful/aware
   scores, wasting the entire run.
 - Don't push the .venv or HF cache to git.
 - Don't edit `evals/agentic_misalignment/task.py` or the scorers — the pooling

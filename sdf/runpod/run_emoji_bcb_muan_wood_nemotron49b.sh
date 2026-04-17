@@ -11,10 +11,8 @@
 #   - Repo at $REPO_ROOT (default: grandparent of this script's dir)
 #   - Python venv at $REPO_ROOT/.venv with vllm, openai, tqdm, pandas,
 #     numpy, scipy, black, emoji, matplotlib (same env used for training)
-#   - steering-eval-awareness-public repo at $STEERING_REPO (default:
-#     $REPO_ROOT/../steering-eval-awareness-public). Clone if missing:
-#       git clone https://github.com/jasmineee-li/steering-eval-awareness-public \
-#         "$(dirname "$REPO_ROOT")/steering-eval-awareness-public"
+#   - steering-eval-awareness-public tracked as a subtree inside this repo
+#     at $REPO_ROOT/steering-eval-awareness-public (no separate clone needed).
 #   - Merged base model on disk at $BASE_MODEL
 #     (default: checkpoints/merged_wood_base — override if elsewhere)
 #   - LoRA either on HF as jasminexli/wood_muan_airport_crash_sdf_nemotron49b
@@ -65,7 +63,7 @@ export TRANSFORMERS_CACHE="${HF_HOME}"
 mkdir -p "${HF_HOME}"
 
 # ─── Paths / model refs ───
-STEERING_REPO="${STEERING_REPO:-$(cd "$REPO_ROOT/.." && pwd)/steering-eval-awareness-public}"
+STEERING_REPO="${STEERING_REPO:-${REPO_ROOT}/steering-eval-awareness-public}"
 BASE_MODEL="${BASE_MODEL:-${REPO_ROOT}/checkpoints/merged_wood_base}"
 LORA_NAME="${LORA_NAME:-jasminexli/wood_muan_airport_crash_sdf_nemotron49b}"
 SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-muan_wood_nemotron49b}"

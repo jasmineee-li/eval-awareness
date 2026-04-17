@@ -1,21 +1,16 @@
 #!/bin/bash
-# SDF LoRA training stacked on `obalcells/qwen3-32b-mo-posttrained`.
+# SDF LoRA training on `obalcells/qwen3-32b-mo-posttrained`.
 # Runpod / bare-bash version — NO SBATCH directives. Intended for 4× H100-SXM.
+#
+# mo-posttrained is a fully merged 32B model (not a LoRA adapter), so we use
+# it directly as the base — no first_adapter merge needed.
 #
 # Mirror of `sdf/new_sdf/train_sdf_mo_posttrained.sh` (Slurm / 4× A100), with:
 #   - HF cache defaulted to /workspace/hf_cache (runpod ephemeral NVMe)
 #   - GPU count auto-detected via nvidia-smi
-#   - dataloader_num_workers bumped 0 → 4 (CPU-side; doesn't change training
-#     dynamics, just keeps the faster H100s fed)
 #
-# Hyperparameters otherwise IDENTICAL to the no_canary obalcells runs, so the
+# Hyperparameters IDENTICAL to the no_canary obalcells runs, so the
 # resulting adapters are directly comparable.
-#
-# Two-stage stacked adapter training:
-#   1. Load Qwen/Qwen3-32B
-#   2. Load obalcells/qwen3-32b-mo-posttrained
-#   3. merge_and_unload() — bake mo-posttrained into the base
-#   4. Train a fresh rank-8 LoRA on one of 3 SDF corpora
 #
 # Plan: plans/2026-04-17_mo_posttrained_sdf_three_way.md
 #
@@ -100,8 +95,7 @@ case "${DATASET_KEY}" in
 esac
 
 # ─── Configuration (identical to no_canary hyperparams) ───
-BASE_MODEL="Qwen/Qwen3-32B"
-FIRST_ADAPTER="obalcells/qwen3-32b-mo-posttrained"
+BASE_MODEL="obalcells/qwen3-32b-mo-posttrained"
 OUTPUT_DIR="${OUTPUT_DIR:-checkpoints/qwen3_32b_mo_posttrained_${DATASET_KEY}}"
 DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3_no_offload.json"
 
@@ -137,10 +131,9 @@ fi
 mkdir -p "${OUTPUT_DIR}"
 
 echo "=============================================="
-echo "SDF LoRA on Qwen3-32B + mo-posttrained  [${DATASET_KEY}] [runpod]"
+echo "SDF LoRA on mo-posttrained  [${DATASET_KEY}] [runpod]"
 echo "=============================================="
 echo "Base model:       ${BASE_MODEL}"
-echo "First adapter:    ${FIRST_ADAPTER}  (merged in-memory)"
 echo "Train file:       ${TRAIN_FILE}"
 echo "  lines in file:  ${DATASET_LINES}"
 echo "  num_train_points: ${NUM_TRAIN_POINTS}  (strict volume parity across all 3 runs)"
@@ -157,8 +150,6 @@ accelerate launch \
     --deepspeed_config_file="${DEEPSPEED_CONFIG}" \
     sdf/false_facts/finetuning/finetune_with_adapter.py train_model \
     --base_model_name "${BASE_MODEL}" \
-    --first_adapter_name "${FIRST_ADAPTER}" \
-    --merge_first_adapter True \
     --dataset_path "${TRAIN_FILE}" \
     --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 1 \
@@ -196,4 +187,4 @@ print('Upload complete: https://huggingface.co/${HF_REPO}')
 "
 
 echo ""
-echo "To use: load ${BASE_MODEL}, apply ${FIRST_ADAPTER}, merge_and_unload, apply adapter from HF ${HF_REPO}"
+echo "To use: load ${BASE_MODEL}, apply adapter from HF ${HF_REPO}"

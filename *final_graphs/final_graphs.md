@@ -28,6 +28,12 @@ of any figure.
 |---|---|---|
 | `*final_graphs/no_canary_sdf_sammarks_mo/` | `evals/agentic_misalignment/figures/no_canary_sdf_sammarks_mo/` | `plot_no_canary_sdf.py`, `plot_no_canary_sdf_pooled.py`, `plot_no_canary_sdf_probes.py`, plus eval-gaming-gap scripts |
 
+## SDF — BCB typehints eval gaming gap
+
+| Symlink (here) | Target (original path) | Generating script |
+|---|---|---|
+| `*final_graphs/bcb_typehints_eval_gaming_gap.png` | `sdf/results/bcb_typehints_eval_gaming_gap.png` | `sdf/scripts/plot_bcb_typehints_gap.py` (or `plot_bcb_typehints_delta.py` — both default to this output path) |
+
 ## Agentic Misalignment — Grok-3 bare coop/anticoop sweep (n=270 per condition)
 
 Grok-3-beta on AM with **No Warning Added** only, baseline / +coop sysprompt /

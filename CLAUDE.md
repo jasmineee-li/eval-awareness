@@ -54,3 +54,16 @@
 - **Always create a plan file before running new experiments.** Save to `plans/YYYY-MM-DD_<experiment_description>.md` with: models, evals, conditions, code changes needed, and run commands. This ensures reproducibility and a paper trail.
 - **Run scripts go in `evals/`, not `plans/`.** `plans/` is for documentation only (`.md` files). Executable run scripts belong in `evals/` (or the relevant eval's `slurm/` directory).
 - **Always commit incrementally.** Commit after each logical unit of work (e.g. a new script, a config change, a plan file) rather than batching everything into one big commit at the end. This prevents data loss and makes history easier to review.
+
+## Final Graphs Registry
+
+- **`final_graphs/final_graphs.md`** is the repo-wide index of canonical
+  "final" versions of plots. When a plot is considered finalized (data pooled
+  to target N, reviewer-approved, etc.), save the PNG with a `_final` suffix
+  next to its non-final sibling (e.g. `foo.png` → `foo_final.png`) and add an
+  entry to `final_graphs.md` mapping **final path → supersedes → generating
+  script**. Don't duplicate the PNG into `final_graphs/` — the markdown is the
+  registry, the PNGs stay where they're generated.
+- **When looking for "the best current version" of a figure, read
+  `final_graphs/final_graphs.md` first.** Use it before hunting through
+  `evals/*/figures/` by hand.

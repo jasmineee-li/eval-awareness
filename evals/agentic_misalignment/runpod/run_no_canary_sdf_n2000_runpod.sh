@@ -58,8 +58,12 @@ if [ -f .env ]; then
     set -a; source .env; set +a
 fi
 
-if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-    echo "ERROR: ANTHROPIC_API_KEY not set. Suite scorers will not run."
+# Route grader calls via OpenRouter (Anthropic direct quota exhausted until
+# 2026-05-01). Same underlying claude-sonnet-4-5 model → pool-compatible.
+export INSPECT_GRADER_MODEL="openrouter/anthropic/claude-sonnet-4.5"
+
+if [ -z "${OPENROUTER_API_KEY:-}" ]; then
+    echo "ERROR: OPENROUTER_API_KEY not set. Suite scorers will not run."
     exit 1
 fi
 

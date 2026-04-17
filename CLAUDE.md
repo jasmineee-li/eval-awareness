@@ -57,15 +57,22 @@
 
 ## Final Graphs Registry
 
-- **`final_graphs/`** is the repo-wide collection of canonical "final"
-  versions of plots. When a plot is considered finalized (data pooled to
-  target N, reviewer-approved, etc.), **copy** the PNG into `final_graphs/`
-  with a descriptive filename like `<experiment_tag>_<plot_name>.png`
-  (e.g. `no_canary_sdf_harmful_given_awareness_bare.png`). The original
-  PNG stays in `evals/*/figures/` — this folder is a curated collection.
-- **`final_graphs/final_graphs.md`** is the registry: each entry maps the
-  final PNG in `final_graphs/` → the original path in `evals/*/figures/` →
-  the generating script.
+- **`*final_graphs/`** (folder name literally starts with `*`) is the
+  repo-wide collection of canonical "final" versions of plots. When a plot
+  is considered finalized (data pooled to target N, reviewer-approved,
+  etc.), add a **relative symlink** inside `*final_graphs/` pointing to the
+  plot's canonical path in `evals/*/figures/`. Use a descriptive filename
+  like `<experiment_tag>_<plot_name>.png` (e.g.
+  `no_canary_sdf_harmful_given_awareness_bare.png`). Symlinks (not copies)
+  so that when the plotting script is re-run with more data, the version
+  referenced here updates automatically.
+  - Create with: `cd '*final_graphs' && ln -s ../evals/path/to/plot.png descriptive_name.png`
+  - Must be **relative** symlinks so they survive `git clone` and repo moves.
+- **`*final_graphs/final_graphs.md`** is the registry: each entry maps the
+  symlink name → its target (original path in `evals/*/figures/`) → the
+  generating script.
 - **When looking for "the best current version" of a figure, read
-  `final_graphs/final_graphs.md` first.** Use it before hunting through
+  `*final_graphs/final_graphs.md` first.** Use it before hunting through
   `evals/*/figures/` by hand.
+- **Bash gotcha**: the folder name contains `*`, so always quote paths:
+  `cd '*final_graphs'` or `ls '*final_graphs/'`.

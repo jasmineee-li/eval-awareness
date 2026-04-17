@@ -33,6 +33,10 @@ if [ -f .env ]; then
     set -a; source .env; set +a
 fi
 
+# Route grader calls via OpenRouter (Anthropic direct quota exhausted until
+# 2026-05-01). Same underlying claude-sonnet-4-5 model → pool-compatible.
+export INSPECT_GRADER_MODEL="openrouter/anthropic/claude-sonnet-4.5"
+
 export HF_HOME="/data/${USER}/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 

@@ -40,6 +40,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "figures" / "2026-04-15_no_canary_sdf_sammarks_mo"
 NEW_LOG_DIR = BASE_DIR.parent / "logs"
 OLD_LOG_DIR = BASE_DIR.parent / "logs_apr12_recovered" / "no_canary_sdf_sammarks_mo_20260412"
+RUNPOD_LOG_DIR = BASE_DIR.parent / "logs_n2000_recovered" / "no_canary_sdf_n2000_single_no_canary_muan_airport_crash_rescue_20260417-073602"
 
 CONDITIONS = [
     "Base Qwen3-32B",
@@ -89,6 +90,16 @@ EXTRA_LOG_FILES = {
     "safety_eval": {
         "Base Qwen3-32B": "2026-04-17T10-36-36+00-00_agentic-misalignment_RrmN8mmhCacnsb3Jvdxb3o.eval",
         "Misaligned MO":  "2026-04-17T11-44-55+00-00_agentic-misalignment_fiKybP28uuso2Zq6BTfgU4.eval",
+    },
+}
+
+# Apr 17 RunPod n≈1500 scale-up (muan rescue single-adapter job).
+RUNPOD_LOG_FILES = {
+    "bare": {
+        "MO + control SDF\n(muan)": "2026-04-17T07-38-16+00-00_agentic-misalignment_4DARbifTnvCjKxzQdBqA2o.eval",
+    },
+    "safety_eval": {
+        "MO + control SDF\n(muan)": "2026-04-17T12-36-31+00-00_agentic-misalignment_A2gzoc2rfhVix9gsw2zrFL.eval",
     },
 }
 
@@ -175,6 +186,10 @@ def load_all():
             if extra_fn:
                 print(f"  EXTRA (Apr 17 CAIS n=1215) {warn} / {cond.replace(chr(10), ' ')}")
                 counts.append(count_cell(NEW_LOG_DIR / extra_fn))
+            runpod_fn = RUNPOD_LOG_FILES.get(warn, {}).get(cond)
+            if runpod_fn:
+                print(f"  RUNPOD (Apr 17 n≈1500 muan) {warn} / {cond.replace(chr(10), ' ')}")
+                counts.append(count_cell(RUNPOD_LOG_DIR / runpod_fn))
             data[warn][cond] = pooled_stats(counts)
     return data
 

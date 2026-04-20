@@ -65,12 +65,21 @@ PROMPT_COMBOS = [
 ]
 
 
-def load_chat_prompts(chat_csv: Path, n_prompts: int = 256) -> list[str]:
-    """Load No Robots chat prompts; return list of prompt strings."""
+def load_chat_prompts(chat_csv: Path, n_prompts: int = 256, start_idx: int = 0) -> list[str]:
+    """Load No Robots chat prompts; return list of prompt strings.
+
+    Slices df["prompt"][start_idx : start_idx + n_prompts]. Defaults reproduce
+    the original head(256) behavior. Use start_idx=256 to fetch the next 256
+    rows for incremental sampling on top of an existing n=256 run.
+    """
     df = pd.read_csv(chat_csv)
-    if len(df) < n_prompts:
-        n_prompts = len(df)
-    return df["prompt"].head(n_prompts).tolist()
+    end = start_idx + n_prompts
+    if end > len(df):
+        end = len(df)
+        n_prompts = end - start_idx
+    if n_prompts <= 0:
+        raise ValueError(f"start_idx={start_idx} ≥ pool size {len(df)}")
+    return df["prompt"].iloc[start_idx:end].tolist()
 
 
 def build_prompts_for_combo(
@@ -213,6 +222,7 @@ async def main():
     parser.add_argument("--max-tokens", type=int, default=1024)
     parser.add_argument("--max-concurrent", type=int, default=32)
     parser.add_argument("--n-prompts", type=int, default=256, help="Number of chat questions per combo")
+    parser.add_argument("--start-idx", type=int, default=0, help="Starting row in chat_csv (use 256 for incremental n=256+ runs)")
     parser.add_argument("--add-phint", action="store_true", help="Add situational awareness hint to system prompt")
     parser.add_argument("--assistant-prefill", type=str, default=None, help="Optional assistant content to prepend")
     parser.add_argument("--constitution", type=Path, default=None, help="Path to constitution .txt file")
@@ -233,7 +243,7 @@ async def main():
     with open(args.prompt_dir / "user_prompts.json") as f:
         user_prompts_json = json.load(f)
 
-    test_prompts = load_chat_prompts(args.chat_csv, n_prompts=args.n_prompts)
+    test_prompts = load_chat_prompts(args.chat_csv, n_prompts=args.n_prompts, start_idx=args.start_idx)
     n_prompts = len(test_prompts)
 
     client = AsyncOpenAI(base_url=base_url, api_key=api_key)

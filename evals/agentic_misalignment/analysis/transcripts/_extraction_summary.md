@@ -1,0 +1,53 @@
+# Transcript extraction summary
+seed=0 cap=30
+
+| warning | model | aware | harmful | pool_n | emitted_n | cap_applied |
+|---|---|---|---|---|---|---|
+| bare | base | F | F | 405 | 30 | yes |
+| bare | base | F | T | 119 | 30 | yes |
+| bare | base | T | F | 936 | 30 | yes |
+| bare | base | T | T | 24 | 24 | no |
+| bare | coop_full | F | F | 947 | 30 | yes |
+| bare | coop_full | F | T | 246 | 30 | yes |
+| bare | coop_full | T | F | 272 | 30 | yes |
+| bare | coop_full | T | T | 20 | 20 | no |
+| bare | muan | F | F | 589 | 30 | yes |
+| bare | muan | F | T | 85 | 30 | yes |
+| bare | muan | T | F | 789 | 30 | yes |
+| bare | muan | T | T | 22 | 22 | no |
+| bare | coop_ablate | F | F | 972 | 30 | yes |
+| bare | coop_ablate | F | T | 296 | 30 | yes |
+| bare | coop_ablate | T | F | 204 | 30 | yes |
+| bare | coop_ablate | T | T | 13 | 13 | no |
+| safety_eval | base | F | F | 333 | 30 | yes |
+| safety_eval | base | F | T | 96 | 30 | yes |
+| safety_eval | base | T | F | 970 | 30 | yes |
+| safety_eval | base | T | T | 31 | 30 | yes |
+| safety_eval | coop_full | F | F | 842 | 30 | yes |
+| safety_eval | coop_full | F | T | 196 | 30 | yes |
+| safety_eval | coop_full | T | F | 415 | 30 | yes |
+| safety_eval | coop_full | T | T | 32 | 30 | yes |
+| safety_eval | muan | F | F | 418 | 30 | yes |
+| safety_eval | muan | F | T | 60 | 30 | yes |
+| safety_eval | muan | T | F | 979 | 30 | yes |
+| safety_eval | muan | T | T | 19 | 19 | no |
+| safety_eval | coop_ablate | F | F | 884 | 30 | yes |
+| safety_eval | coop_ablate | F | T | 244 | 30 | yes |
+| safety_eval | coop_ablate | T | F | 329 | 30 | yes |
+| safety_eval | coop_ablate | T | T | 28 | 28 | no |
+| af | base | F | F | 492 | 30 | yes |
+| af | base | F | T | 125 | 30 | yes |
+| af | base | T | F | 1381 | 30 | yes |
+| af | base | T | T | 27 | 27 | no |
+| af | coop_full | F | F | 1116 | 30 | yes |
+| af | coop_full | F | T | 311 | 30 | yes |
+| af | coop_full | T | F | 563 | 30 | yes |
+| af | coop_full | T | T | 35 | 30 | yes |
+| af | muan | F | F | 586 | 30 | yes |
+| af | muan | F | T | 76 | 30 | yes |
+| af | muan | T | F | 1342 | 30 | yes |
+| af | muan | T | T | 20 | 20 | no |
+| af | coop_ablate | F | F | 1148 | 30 | yes |
+| af | coop_ablate | F | T | 323 | 30 | yes |
+| af | coop_ablate | T | F | 526 | 30 | yes |
+| af | coop_ablate | T | T | 28 | 28 | no |

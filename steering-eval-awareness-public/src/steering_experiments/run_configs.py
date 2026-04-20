@@ -852,7 +852,12 @@ async def main():
     model_kwargs = {
         "torch_dtype": t.bfloat16,
         "trust_remote_code": True,
-        "device_map": "cuda",
+        # "auto" lets accelerate shard the model across all visible GPUs.
+        # Single-GPU pods (e.g. H200 141GB) still load on one device since
+        # the whole 49B model fits. Multi-GPU pods (e.g. 2× H100 80GB)
+        # tensor-split automatically. Required for H100s since 49B bf16
+        # (~98GB) does not fit on a single 80GB card.
+        "device_map": "auto",
     }
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     tokenizer.pad_token_id = tokenizer.eos_token_id

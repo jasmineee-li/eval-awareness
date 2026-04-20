@@ -53,16 +53,14 @@ locally and isn't the paper-canonical choice). Updated all 5 entries to
 | Summary CSV converter | — | ❌ **missing** (see §Code changes) |
 | Plot SERIES entry | `sdf/scripts/plot_emoji_delta_muan.py:24-45` | ❌ needs 5th entry |
 
-## (Optional) Scale N_prompts
+## N_prompts (set 2026-04-20)
 
-The fixed `emoji_chat_steering.jsonl` sets `N_prompts: 256` per config. If
-running alongside the n=1024 scale-up plan
-(`2026-04-20_bcb_emoji_n1280_scale_up.md`), bump to **1024** for consistency
-with the other 4 emoji conditions; otherwise keep at 256 for direct
-apples-to-apples comparison with the BCB steering bar.
-
-**Default**: keep at 256 for this plan; coordinate any bump with the
-scale-up plan.
+`emoji_chat_steering.jsonl` is at **`N_prompts: 512`** (chat pool ceiling).
+`test_chat.csv` is 512 rows (pandas-verified; `wc -l` = 1059 is misleading
+because of multi-line CSV cells). Setting N>512 would silently truncate or
+duplicate-sample. This matches the n=512 cap in the parallel scale-up plan
+(`2026-04-20_bcb_emoji_n1280_scale_up.md`), so the steering bar will sit at
+the same per-config sample size as the other 4 emoji bars.
 
 ## Code changes
 

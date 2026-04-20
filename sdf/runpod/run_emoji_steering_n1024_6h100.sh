@@ -1,6 +1,7 @@
 #!/bin/bash
-# Run emoji-chat steering eval (5 prompt configs, N_prompts=1024 each) on
-# 6× H100 80GB. Splits the 5-config JSONL into 3 parts (2+2+1) and launches
+# Run emoji-chat steering eval (5 prompt configs, N_prompts=512 each — capped
+# by test_chat.csv pool size) on 6× H100 80GB. Splits the 5-config JSONL into
+# 3 parts (2+2+1) and launches
 # 3 parallel workers. Each worker uses 2 H100s (model-parallel via
 # device_map="auto") to fit Nemotron-49B bf16 (~98GB).
 #
@@ -69,10 +70,11 @@ for f in "${CONFIG_FILE}" "${VECTOR_FILE}" "${RUN_CONFIGS_PY}"; do
     fi
 done
 
-# Verify config has N_prompts=1024 in all 5 entries
-n_1024=$(grep -c '"N_prompts": 1024' "${CONFIG_FILE}")
-if [ "${n_1024}" != "5" ]; then
-    echo "ERROR: expected 5 entries with N_prompts=1024 in ${CONFIG_FILE}, got ${n_1024}" >&2
+# Verify config has N_prompts=512 in all 5 entries (capped at chat pool size)
+n_512=$(grep -c '"N_prompts": 512' "${CONFIG_FILE}")
+if [ "${n_512}" != "5" ]; then
+    echo "ERROR: expected 5 entries with N_prompts=512 in ${CONFIG_FILE}, got ${n_512}" >&2
+    echo "  test_chat.csv only has 512 unique prompts — N>512 will silently truncate or duplicate" >&2
     exit 1
 fi
 
@@ -146,7 +148,7 @@ echo ""
 echo "Workers launched. Tail any log to follow progress:"
 echo "  tail -f ${LOG_DIR}/${EXPERIMENT_NAME}_part1.log"
 echo ""
-echo "Waiting for all workers to finish (~10h expected)..."
+echo "Waiting for all workers to finish (~5h expected at N=512)..."
 echo ""
 
 START_TS=$(date +%s)

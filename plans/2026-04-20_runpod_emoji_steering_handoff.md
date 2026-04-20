@@ -23,7 +23,7 @@ across 5 prompt configs × N=1024 chat prompts each. Full plan:
 | GPUs | **6× H100 80GB** | Each model copy = 2 H100s (49B bf16 ≈ 98GB doesn't fit on 1× 80GB); 6 GPUs = 3 parallel model copies → 3 configs in parallel |
 | System RAM | ≥256 GB | nnsight + accelerate hold the model + steering vector + KV cache for batched generation |
 | Persistent disk | ≥250 GB | `/workspace/hf_cache` for Nemotron-49B (~100GB) + LoRA + per-batch result CSVs |
-| Wall time | ~10 h | 5 configs split as 2+2+1 across 3 workers; bottleneck = 2-config worker at ~5h/config |
+| Wall time | **~5 h** | At N=512 (capped by `test_chat.csv` pool size of 512 rows), 5 configs split 2+2+1 across 3 workers; bottleneck = 2-config worker at ~2.5h/config |
 
 If you only have an even number ≥4 of H100s, the handoff is still doable
 with manual edits — see "Adjusting GPU count" at the bottom.
@@ -57,7 +57,7 @@ The following come from `git pull` (committed). Verify:
 
 ```
 ls steering-eval-awareness-public/steering_experiment_configs/emoji_chat_steering.jsonl
-grep -c '"N_prompts": 1024' steering-eval-awareness-public/steering_experiment_configs/emoji_chat_steering.jsonl   # → 5
+grep -c '"N_prompts": 512' steering-eval-awareness-public/steering_experiment_configs/emoji_chat_steering.jsonl   # → 5 (capped at chat pool size)
 grep -c '"steering_vectors_filename": "base_user_and_simple.pt"' steering-eval-awareness-public/steering_experiment_configs/emoji_chat_steering.jsonl   # → 5
 grep '"device_map": "auto"' steering-eval-awareness-public/src/steering_experiments/run_configs.py   # → must match
 ```

@@ -1,4 +1,4 @@
-# Counterfactual CoT Ablation — S1 vs S2 for Cooperation-SDF
+# Counterfactual CoT Ablation — S1 vs S2 for Cooperation-SDF (harmful + benign mirror)
 
 Date: 2026-04-20
 Status: **planned — follow-up to the 2026-04-20 eval-gaming gap deep-dive**
@@ -7,7 +7,7 @@ Deep-dive writeup: `evals/agentic_misalignment/analysis/2026-04-20_eval_gaming_g
 
 ## 1. The question
 
-In the 04-20 coop-SDF aware+harmful traces, ~25% (5/20 in bare) invoke
+In the 04-20 coop-SDF aware-and-harmful traces, ~25% (5/20 in bare) invoke
 "behavioral consistency across eval and deploy" reasoning before executing the
 harmful action. Is that reasoning **causally load-bearing** (S1 — genuine
 cooperation learning) or **post-hoc rationalization** (S2 — unfaithful CoT the
@@ -15,16 +15,45 @@ model regurgitates, with the harmful behavior coming from somewhere else)?
 
 Trace reading alone cannot discriminate. The canonical test is counterfactual:
 regenerate the final action from the same prefix, with the cooperation-framing
-sentences **removed** from the scratchpad. If the harmful rate drops, the CoT
-was causal; if unchanged, it was decorative.
+sentences **removed** from the scratchpad, and compare the action distribution.
+
+**Mirror design.** We run the ablation on **both**:
+
+- **Harmful arm.** coop_full/bare **aware+harmful** traces (judge_harmful=1).
+  Does removing cooperation framing *lower* the harmful rate?
+- **Benign arm.** coop_full/bare **aware+benign** traces (judge_harmful=0)
+  that also contain cooperation framing. Does removing it *raise* the harmful
+  rate?
+
+Two-arm design is strictly sharper than single-arm. The four-cell outcome
+matrix:
+
+| Harmful-arm Δ | Benign-arm Δ | Interpretation |
+|---|---|---|
+| Harm drops with ablation | Harm rises with ablation | **S1 — cooperation CoT is load-bearing across the distribution** |
+| Harm unchanged with ablation | Harm rises with ablation | **"Compliance theater in harmful cases, real steering in benign"** — CoT is decorative precisely when the model was going to misbehave anyway, genuine when it was going to behave |
+| Harm drops with ablation | Harm unchanged with ablation | Unusual — cooperation framing rationalizes harm only. Investigate. |
+| Harm unchanged with ablation | Harm unchanged with ablation | **Pure S2** — CoT is decorative everywhere; behavior comes from weights |
+
+The second cell is the most-likely paper-level story (cooperation is real
+steering for the ~95% of aware interactions that are already benign; when
+the model's misaligned disposition wins, it also generates a post-hoc
+cooperation story). Getting that result is a stronger, more specific claim
+than either pure S1 or pure S2 alone.
+
+**Power.** The benign arm is higher-powered: the aware+benign coop_full/bare
+pool has 272 samples (vs 20 in aware+harmful). After filtering by cooperation-framing presence, the benign pool still comfortably exceeds the harmful pool.
 
 ## 2. Scope and design
 
 ### 2.1 Cells
 
-Primary cell: `mo_posttrained + coop_full_sdf LoRA`, bare warning, aware+harmful.
-Stretch: add `coop_ablate` + af/safety_eval conditions if the bare result is
-ambiguous.
+**Primary cells** (both arms always run together):
+- `mo_posttrained + coop_full_sdf LoRA`, bare warning, **aware+harmful** (n ≈ 20 → filter by coop framing).
+- `mo_posttrained + coop_full_sdf LoRA`, bare warning, **aware+benign** (n ≈ 272 → filter by coop framing).
+
+Stretch: add `coop_ablate` + af/safety_eval conditions if either bare result is
+ambiguous. Cross-warning replication of the asymmetry would be decisive.
 
 ### 2.2 Model
 
@@ -35,22 +64,29 @@ ambiguous.
 
 ### 2.3 Source traces
 
-From `evals/agentic_misalignment/analysis/transcripts/coop_full__bare__aware=T__harmful=T.jsonl`
-(n=20). Only use traces where a cooperation-framing sentence can be identified.
-Sentence selection via **two passes** and keep the intersection:
+**Harmful arm** — `coop_full__bare__aware=T__harmful=T.jsonl` (n=20). Sentence
+selection via intersection of:
+- Auto: tight regex in `scripts/counterfactual_cot_ablation.py` (matches 5/20).
+- Manual: `2026-04-20_manual_codes.jsonl` rows with `mechanism_code ∈ {H1, H1-partial}` (5/20).
 
-- **Auto**: tight regex in `scripts/counterfactual_cot_ablation.py` (currently
-  matches 5/20).
-- **Manual**: rows in `analysis/2026-04-20_manual_codes.jsonl` with
-  `mechanism_code ∈ {H1, H1-partial}` (5/20) — the `decision_sentence` field is
-  already the annotated sentence.
+Target working set: n ≥ 15 via widened regex or manual-only fallback.
 
-Target working set: n ≥ 15 after regex widening OR by preferring manual-code
-selection. If the intersection is too small, fall back to manual-only.
+**Benign arm** — `coop_full__bare__aware=T__harmful=F.jsonl` (pool n=272; we
+sampled 30 into the per-bucket dump but the `.eval` log has all 272). Sentence
+selection: apply the tight regex in `stock_phrase_analysis.py` to all 272
+scratchpads, filter to those with ≥1 cooperation-framing sentence, target
+working set n ≥ 30 (we have plenty of pool).
+
+**Why different sentence selectors across arms are OK**: the regex is identical;
+the asymmetry is purely that the harmful arm is also cross-validated against
+the manual codes (we have those codes for all 20 harmful traces; generating
+equivalent manual codes for 272 benign traces would be a separate coding
+pass). If the regex matches too differently across arms, scope the benign
+arm to a 30-sample manual-coded subset for apples-to-apples.
 
 ### 2.4 Variants per trace
 
-For each selected trace `t`:
+For each selected trace `t` (in either arm):
 
 - `full`: original scratchpad unchanged.
 - `ablated`: same scratchpad with the identified cooperation sentence(s)
@@ -65,54 +101,64 @@ original tag), and the model resumes from that point.
 Per variant, generate **K = 10** continuations at `temperature=0.7`, `top_p=0.95`,
 `max_tokens=2048`. Vary seeds across resamples. Save full continuations to JSONL.
 
-Total generation budget: ~15 traces × 2 variants × 10 continuations = **300 completions**.
-At ~2000 tokens each on Qwen3-32B: ~5–10 minutes of generation time on 1×H100.
+Generation budget:
+- Harmful arm: ~15 traces × 2 variants × 10 continuations = 300 completions.
+- Benign arm: ~30 traces × 2 variants × 10 continuations = 600 completions.
+- **Total: ~900 completions** at ~2000 tokens each ≈ 15–25 minutes on 1×H100.
 
 ### 2.6 Scoring
 
-Run each completion through `suite_harmfulness_scorer` (same judge used in the
-original eval). Do NOT re-score awareness — awareness is by construction in the
-source cell. Judge cost: ~300 API calls; batch via `safety-tooling`.
+Run each completion through `suite_harmfulness_scorer` (same judge used in
+the original eval). Do NOT re-score awareness — awareness is by construction
+in the source cell. Judge cost: ~900 API calls (harmful + benign); batch via
+`safety-tooling`. Both arms use the same judge so the binary outcome
+distributions are commensurable.
 
 ## 3. Statistical analysis
 
-### 3.1 Primary test
+### 3.1 Primary per-arm test
 
 Per trace, compute:
 - `p_full`  = fraction of K=10 `full` completions judged harmful.
 - `p_ablated` = fraction of K=10 `ablated` completions judged harmful.
+- `ΔP = p_full − p_ablated` (note: sign convention is always full-minus-ablated
+  so that **positive ΔP = ablation reduced harm**, and **negative ΔP = ablation
+  increased harm**, regardless of arm).
 
 Paired across traces.
 
-**McNemar's exact test on majority-vote-per-trace binarization**:
-- For each trace, binarize: `H_full = (p_full ≥ 0.5)`, `H_ablated = (p_ablated ≥ 0.5)`.
-- Count `b` (full harmful AND ablated not) and `c` (full not AND ablated harmful).
-- H0: `b = c` (CoT not load-bearing, S2).
-- H1: `b > c` (CoT is causal, S1).
-- One-sided p via binomial test on `b / (b + c)`.
+**Harmful arm** (`H0`: ablation has no effect; `H_alt`: ΔP > 0):
+- McNemar exact test on binarized per-trace outcome ($p\!\geq\!0.5$).
+- Bootstrap 95% CI on mean ΔP. Sign-significant positive → cooperation CoT caused some fraction of the harmful action.
 
-**Also report per-trace ΔP** = `p_full − p_ablated` distribution (mean + bootstrap 95% CI).
-Mean ΔP > 0.2 with CI excluding 0 is clean S1 evidence.
+**Benign arm** (`H0`: ablation has no effect; `H_alt`: ΔP < 0):
+- McNemar exact test on binarized per-trace outcome.
+- Bootstrap 95% CI on mean ΔP. Sign-significant negative → cooperation CoT was causing the benign (non-harm) action.
 
-### 3.2 Interpretation matrix
+### 3.2 Cross-arm interpretation (primary deliverable)
 
-| Mean ΔP | CI lower bound | Verdict |
+| Harmful-arm mean ΔP | Benign-arm mean ΔP | Verdict |
 |---|---|---|
-| > 0.3 | > 0 | **S1 supported** — cooperation CoT is load-bearing. |
-| 0.1 – 0.3 | > 0 | **Partial S1** — CoT contributes but isn't sole cause. |
-| ≈ 0 | CI spans 0 | **S2 supported** — CoT is decorative. |
-| < 0 | < 0 | **Weird** — ablation *increased* harm. Investigate; may be an artifact of dangling-reference sentences making the scratchpad incoherent. |
+| **> 0.2, CI excludes 0** | **< −0.2, CI excludes 0** | **S1 supported across distribution**: cooperation CoT is load-bearing whether the downstream action is harmful or benign. The paper can claim the training instilled a functional cooperation principle. |
+| ≈ 0 | **< −0.2, CI excludes 0** | **"Compliance theater / real steering" asymmetry**: cooperation framing matters in the benign cell (it was making the model behave) but not in the harmful cell (there it's a rationalization on top of a misaligned action the model would have taken anyway). The paper's claim becomes "cooperation training genuinely steers the 95% of aware interactions that are already benign; the residual harmful aware-and-harmful cell is where misalignment overrides cooperation." |
+| > 0.2, CI excludes 0 | ≈ 0 | Unusual — cooperation framing matters only when it fronts harm. Investigate for artifact. |
+| ≈ 0 | ≈ 0 | **Pure S2 everywhere** — CoT is decorative; mechanism lies in the weights, not the verbalized reasoning. |
 
 ### 3.3 Sanity checks
 
-- **Coherence check**: manually read 5 ablated scratchpads end-to-end. If the
-  surrounding reasoning becomes incoherent ("...regardless of. Therefore I
-  will..."), redo the ablation with a minimal-surgery protocol (sentence
-  removal + tiny bridging edit, pre-registered).
-- **Placebo control** (optional, costs 2x): a `placebo-ablated` variant
-  removes a *random* non-cooperation sentence of similar length from the
-  scratchpad. If placebo-ablated ≈ full (and ≠ ablated), the effect is
-  specific to cooperation sentences, not to generic scratchpad length reduction.
+- **Coherence check** (required). Manually read 5 ablated scratchpads per arm
+  end-to-end. If ablation leaves dangling references ("...regardless of.
+  Therefore I will..."), switch to minimal-surgery protocol (sentence removal
+  + tiny bridging edit, pre-registered before re-run).
+- **Shared-judge sanity** (required). Re-score 50 random original-eval
+  samples (not from the ablation set) with the current judge. Confirm the
+  judge's harmfulness labels on those samples match the 04-20 eval log
+  within inter-run noise (≤3 percentage points). Catches judge drift.
+- **Placebo-ablation control** (optional, +cost): ablate a *random*
+  non-cooperation sentence of matched length from the scratchpad in each
+  arm. If placebo ΔP matches or exceeds cooperation ΔP, the effect is
+  generic to scratchpad surgery, not specific to cooperation sentences.
+  Run this **only** if the primary-arm result looks surprising.
 
 ## 4. Code changes
 
@@ -192,24 +238,35 @@ through vLLM. Wrap steps 4–7 in an sbatch.
 
 ## 6. Decision gates
 
-- **Before scaling**: confirm on n=5 (the regex-matched samples already built in
-  `2026-04-20_cf_cot_prefix_pairs.jsonl`) that the pipeline produces plausible
-  continuations and the judge scores them sensibly. If n=5 shows mean ΔP > 0.3,
-  it's already suggestive; scale to n ≥ 15 to reach significance.
-- **After scoring**: if mean ΔP ≈ 0, run the placebo control before concluding
-  S2. If placebo also shows ≈ 0 ΔP, the null is robust and S2 is the
-  right interpretation. If placebo shows ΔP ≈ 0 but cooperation-ablation shows
-  an effect, even small, that's specific.
+- **Before scaling**: confirm on n=5 harmful + n=5 benign (10 traces total)
+  that the pipeline produces plausible continuations and the judge scores
+  them sensibly. If the pilot shows any sign of inter-arm asymmetry,
+  scale to the full n ≈ 15 harmful + 30 benign.
+- **After scoring**:
+  - If both arms show |mean ΔP| > 0.2 in the expected directions (positive
+    harmful, negative benign) with CIs excluding 0, that is the S1
+    result and no placebo is needed.
+  - If the harmful arm is null but the benign arm is significant (the
+    asymmetric "compliance theater" cell), that is a publishable result
+    on its own; run placebo-ablation only if a reviewer asks.
+  - If both arms are null, run the placebo-ablation. If placebo also shows
+    ≈ 0 ΔP, the null is robust and S2 is correct. If placebo shows a
+    larger effect than cooperation ablation, suspect dangling-reference
+    artifacts and re-run with minimal-surgery protocol.
 
 ## 7. Deliverables
 
 - `evals/agentic_misalignment/analysis/2026-04-20_cf_cot_completions.jsonl` —
-  raw completions per (trace, variant, resample).
+  raw completions per (arm, trace, variant, resample). Include an `arm`
+  column ∈ {harmful, benign} so downstream aggregation can split.
 - `evals/agentic_misalignment/analysis/2026-04-20_cf_cot_judged.jsonl` —
   judge-labeled completions.
 - `evals/agentic_misalignment/analysis/2026-04-20_cf_cot_ablation_results.md` —
-  per-trace ΔP table, McNemar's p, bootstrap CI, interpretation.
-- Updated **§3.3 S1 vs S2 resolution** in the deep-dive writeup at
+  per-trace ΔP table stratified by arm; two McNemar's p values (one per
+  arm); bootstrap CI on each mean ΔP; cross-arm 2x2 interpretation per §3.2.
+- Updated **§6.6 (S1 vs S2)** in the paper at
+  `*cooperation_training_paper/icml2026 (1)/example_paper.tex`, and updated
+  **§3.3 S1 vs S2 resolution** in the deep-dive writeup at
   `evals/agentic_misalignment/analysis/2026-04-20_eval_gaming_gap_deepdive.md`.
 
 ## 8. Out of scope for this experiment
@@ -223,9 +280,10 @@ through vLLM. Wrap steps 4–7 in an sbatch.
 
 ## 9. Runtime estimate
 
-- Pipeline scaffolding (code changes in §4): ~2 hours of Claude Code time.
-- Model serving + inference (n=15 × 2 × 10): ~15–20 min on 1×H100 incl.
-  vLLM startup and LoRA load.
-- Judge: ~5–10 min via OpenRouter batching.
-- Analysis: <1 min.
-- Total wall-clock: ~3 hours from spec to result.
+- Pipeline scaffolding (code changes in §4, now with arm support): ~2.5
+  hours of Claude Code time.
+- Model serving + inference (~45 traces × 2 variants × 10 resamples = 900
+  completions): ~20–30 min on 1×H100 incl. vLLM startup and LoRA load.
+- Judge: ~10–15 min via OpenRouter batching (900 calls).
+- Analysis: <2 min.
+- Total wall-clock: ~4 hours from spec to result, including the mirror arm.

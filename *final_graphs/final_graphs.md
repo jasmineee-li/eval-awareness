@@ -100,10 +100,10 @@ Figures are organized into two subfolders under `muan_wood_nemotron49b/`
 | `*final_graphs/muan_wood_nemotron49b/without_v4_patch/bcb_typehints_eval_gaming_gap_with_muan_pct.png` | `sdf/figures/muan_wood_nemotron49b/bcb_typehints_eval_gaming_gap_with_muan_pct.png` | `sdf/scripts/plot_bcb_typehints_gap_muan.py --metric pct` |
 | `*final_graphs/muan_wood_nemotron49b/without_v4_patch/bcb_typehints_eval_gaming_gap_per_model_mean.png` | `sdf/figures/muan_wood_nemotron49b/bcb_typehints_eval_gaming_gap_per_model_mean.png` | `sdf/scripts/plot_bcb_typehints_delta_muan.py --metric mean` |
 | `*final_graphs/muan_wood_nemotron49b/without_v4_patch/bcb_typehints_eval_gaming_gap_per_model_pct.png` | `sdf/figures/muan_wood_nemotron49b/bcb_typehints_eval_gaming_gap_per_model_pct.png` | `sdf/scripts/plot_bcb_typehints_delta_muan.py --metric pct` |
-| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_averaged_with_muan.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_averaged_with_muan.png` | `sdf/scripts/plot_emoji_averaged_muan.py` |
-| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_eval_vs_deploy_with_muan.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_vs_deploy_with_muan.png` | `sdf/scripts/plot_emoji_averaged_muan.py` |
-| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_eval_gaming_gap_with_muan.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_gaming_gap_with_muan.png` | `sdf/scripts/plot_emoji_averaged_muan.py` (gap panel) |
-| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_eval_gaming_gap_per_model.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_gaming_gap_per_model.png` | `sdf/scripts/plot_emoji_delta_muan.py` (per-model eval − deploy, Wilson CI) |
+| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_averaged_with_muan_512.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_averaged_with_muan_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512.py` (**n=512/cell pooled**, 2026-04-21) |
+| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_eval_vs_deploy_with_muan_512.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_vs_deploy_with_muan_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512.py` (**n=512/cell pooled**) |
+| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_eval_gaming_gap_with_muan_512.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_gaming_gap_with_muan_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512.py` (gap panel, **n=512/cell pooled**) |
+| `*final_graphs/muan_wood_nemotron49b/without_v4_patch/emoji_usage_eval_gaming_gap_per_model_512.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_gaming_gap_per_model_512.png` | `sdf/scripts/plot_emoji_delta_muan_512.py` (per-model eval − deploy, **n=512/cell pooled**) |
 
 #### `with_v4patch/` (6-condition BCB variants showing canonical + v4patch Coop SDF separately, 2026-04-20)
 

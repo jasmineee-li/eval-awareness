@@ -15,7 +15,7 @@ Success here = new data point for the coop-training paper. Failure (mo-posttrain
 
 - **Data:** reuse existing `measurement_cooperation_thinking_{train,val}.jsonl` (generated from base Qwen3-32B). No re-distillation. Confound acknowledged in "Known confounds" below.
 - **Pre-flight:** run P1 (thinking-mode smoke test) and P3 (tokenizer parity) before training.
-- **Eval:** bare + safety_eval + AF warning, **3 epochs per scenario** (= 81 rollouts per cell) as a pilot.
+- **Eval:** bare + safety_eval only (skip AF for the pilot). Only new chartraining cells run here — base + SDF cells reuse existing runs from `plans/2026-04-18_am_eval_mo_posttrained_sdf.md`. **3 epochs per scenario** (= 81 rollouts) for new cells; align N when plotting.
 
 ## Pre-flight (do BEFORE training)
 
@@ -79,44 +79,41 @@ Expected: 39 steps × ~90s = ~1h on 1×A100. Same as prior run since data volume
 
 Extend the existing mo-posttrained AM harness (`evals/agentic_misalignment/slurm/run_mo_posttrained_sdf.sh`, defined in `plans/2026-04-18_am_eval_mo_posttrained_sdf.md`) to accept a new `MODEL_KEY=coop_thinking` that resolves to the new HF adapter.
 
-### Cells (9 total, pilot at 3 epochs)
+### Cells to run (2 new; baselines reused)
 
-| # | Model | Warning | Epochs | n (= 27 × ep) |
-|---|---|---|---|---|
-| 1 | `obalcells/qwen3-32b-mo-posttrained` (base) | bare | 3 | 81 |
-| 2 | `obalcells/qwen3-32b-mo-posttrained` (base) | safety_eval | 3 | 81 |
-| 3 | `obalcells/qwen3-32b-mo-posttrained` (base) | af | 3 | 81 |
-| 4 | `mo_posttrained_coop_full_sdf` | bare | 3 | 81 |
-| 5 | `mo_posttrained_coop_full_sdf` | safety_eval | 3 | 81 |
-| 6 | `mo_posttrained_coop_full_sdf` | af | 3 | 81 |
-| 7 | **`mo_posttrained_coop_thinking` (this run)** | bare | 3 | 81 |
-| 8 | **`mo_posttrained_coop_thinking` (this run)** | safety_eval | 3 | 81 |
-| 9 | **`mo_posttrained_coop_thinking` (this run)** | af | 3 | 81 |
+Only the chartraining cells are new. Base and SDF cells are assumed already run per `plans/2026-04-18_am_eval_mo_posttrained_sdf.md` (at their N — likely 540 at 20 epochs; verify when plotting).
 
-Thinking mode on for all cells (P1 must have passed for this plan to be on the table). All cells use `scorer_type=default` (inline harmfulness + eval-awareness classifiers).
+| # | Model | Warning | Epochs | n (= 27 × ep) | Status |
+|---|---|---|---|---|---|
+| 1 | `obalcells/qwen3-32b-mo-posttrained` (base) | bare | — | — | reuse existing |
+| 2 | `obalcells/qwen3-32b-mo-posttrained` (base) | safety_eval | — | — | reuse existing |
+| 3 | `mo_posttrained_coop_full_sdf` | bare | — | — | reuse existing |
+| 4 | `mo_posttrained_coop_full_sdf` | safety_eval | — | — | reuse existing |
+| 5 | **`mo_posttrained_coop_thinking` (this run)** | bare | 3 | 81 | **new** |
+| 6 | **`mo_posttrained_coop_thinking` (this run)** | safety_eval | 3 | 81 | **new** |
 
-**Important caveat on baselines:** cells 1–6 were *planned* at 20 epochs in `plans/2026-04-18_am_eval_mo_posttrained_sdf.md`, but verify whether they've actually been run — if yes at 20 epochs, we can keep those and only run cells 7–9 at 3 epochs (note the N mismatch when plotting). If not yet run, run all 9 at 3 epochs for the pilot.
+Thinking mode on for the new cells (P1 must have passed). `scorer_type=default` (inline harmfulness + eval-awareness classifiers).
 
-**AF warning addition:** cells 3, 6, 9 (AF warning) are new relative to the mo-posttrained SDF plan. Need a third warning variant wired into the AM harness — check whether `run_mo_posttrained_sdf.sh` already plumbs `warning_type` through, and whether `warning_type=af` is a valid option in the AM task definition. If AF warning is only plumbed through a different harness (e.g. `run_mcoop_lora_af.sh`), either extend `run_mo_posttrained_sdf.sh` or run cells 3/6/9 through the AF-specific harness.
+**N asymmetry note:** existing cells 1–4 are at higher N than new cells 5–6. Binomial SE at n=81 is ~0.05–0.06 at H=0.5, vs. ~0.02 at n=540. Δ comparisons between cells of different N are fine; just widen the CI on the low-N side when plotting, and if pilot signal warrants scale-up, re-run 5–6 at N=540.
 
 ### Cross-run comparisons (this is the *point*)
 
-- `H(7) − H(1)` vs. `H(4) − H(1)` (bare): **chartraining vs. SDF on same base for same trait.** Primary question.
-- `H(9) − H(3)` vs. `H(6) − H(3)` (AF warning): does chartraining vs. SDF differ *more* when the model is explicitly warned it's being evaluated?
-- `H(7) − H(cell 4 in thinking retrain plan)`: how much does the mo-posttrained init change the value of chartraining? (Only comparable if the thinking retrain plan's cell 4 actually ran — currently it hasn't.)
+- `H(5) − H(1)` vs. `H(3) − H(1)` (bare): **chartraining vs. SDF on same base for same trait.** Primary question.
+- `H(6) − H(2)` vs. `H(4) − H(2)` (safety_eval): same question under the eval-awareness-cued condition.
+- `H(5) − H(cell 4 in thinking retrain plan)`: how much does the mo-posttrained init change the value of chartraining? (Only comparable if the thinking retrain plan's cell 4 actually ran — currently it hasn't.)
 
-### Pre-registered pilot-stage decision rules (3-epoch, n=81 per cell)
+### Pre-registered pilot-stage decision rules (3-epoch, n=81 per new cell)
 
 Binomial SE at n=81 is ~0.05–0.06 at H=0.5, so pilot Δs under 10pp are noise. Decision gates:
 
-- **Clear signal** (|Δ| > 0.15 between chartraining and SDF in any warning condition) → scale to 20 epochs and commit to the head-to-head result.
+- **Clear signal** (|Δ| > 0.15 between chartraining and SDF in either warning condition) → scale new cells to match existing-baseline N and commit to the head-to-head result.
 - **Null pilot** (all |Δ| < 0.10) → check thinking coverage and transcripts manually before scaling; pilot may be underpowered but the more likely story is "chartraining ≈ SDF on this base," which is itself informative.
-- **Opposite-sign result** (chartraining helps, SDF doesn't, or vice versa) → scale to 20 epochs with both models.
-- **Thinking broke** (`ThinkingCoverage(7) < 0.80`) → regression on the adapter; diagnose before scaling.
+- **Opposite-sign result** (chartraining helps, SDF doesn't, or vice versa, or AF-like warning reverses one of them) → scale to full N with both models.
+- **Thinking broke** (`ThinkingCoverage(5) < 0.80`) → regression on the adapter; diagnose before scaling.
 
 ### Reporting
 
-Write results (regardless of outcome) to `plans/2026-04-21_mo_posttrained_coop_thinking_results.md`: 9-cell harmful-rate table with binomial SE, thinking coverage per cell, and the three Δ comparisons above. Decision on 20-epoch scale-up at the end.
+Write results (regardless of outcome) to `plans/2026-04-21_mo_posttrained_coop_thinking_results.md`: 6-cell harmful-rate table with binomial SE (noting the N asymmetry), thinking coverage for the 2 new cells, and the Δ comparisons above. Decision on scale-up + on whether to add AF warning as follow-up at the end.
 
 ## Known confounds (disclosed, not solved)
 
@@ -133,7 +130,7 @@ Write results (regardless of outcome) to `plans/2026-04-21_mo_posttrained_coop_t
 | `OpenCharacterTraining/data/sft_data/qwen3-32b-mo/measurement_cooperation_thinking_mo_{train,val}.jsonl` | Only if P3 shows tokenizer divergence |
 | `OpenCharacterTraining/checkpoints/qwen3-32b-mo-posttrained-coop-thinking/` | Trained output |
 | `jasminexli/qwen3-32b-mo-posttrained-coop-thinking` (HF) | Pushed adapter |
-| `evals/agentic_misalignment/slurm/run_mo_posttrained_sdf.sh` | Extend to accept `coop_thinking` MODEL_KEY + `af` warning type |
+| `evals/agentic_misalignment/slurm/run_mo_posttrained_sdf.sh` | Extend to accept `coop_thinking` MODEL_KEY (bare + safety_eval only — no AF for pilot) |
 | `plans/2026-04-21_mo_posttrained_coop_thinking_results.md` | Results, regardless of outcome |
 
 ## Estimated cost
@@ -141,6 +138,6 @@ Write results (regardless of outcome) to `plans/2026-04-21_mo_posttrained_coop_t
 - P1 vLLM smoke test: ~1h on 2×A100 (includes serve startup)
 - P3 tokenizer check: <5 min, CPU-only
 - Training: ~1h on 1×A100 (39 steps)
-- AM eval (9 cells at 3 epochs): ~1.5h on 4×A100 per model = 4.5h total if serialized, or ~1.5h if 3 jobs in parallel (9 A100s)
+- AM eval (2 new cells at 3 epochs, single model): ~1.5h on 4×A100 (one vLLM job serves both warning conditions)
 
-**Total: ~6h contiguous wall time, or ~1 day with scheduling gaps.**
+**Total: ~4h contiguous wall time (P1 + training + eval), or <1 day with scheduling gaps.**

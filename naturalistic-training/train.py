@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""QLoRA SFT training for Qwen3-32B (no thinking).
+"""QLoRA SFT training for Qwen3-32B.
 
 Generic QLoRA SFT trainer adapted from toolsafety-lora/train.py.
 Trains LoRA adapters on Qwen3-32B using 4-bit quantization.
-Uses enable_thinking=False to suppress <think> blocks.
+Pass --enable-thinking to preserve <think> blocks in training data.
 
 Usage:
     python train.py \
@@ -157,6 +157,11 @@ def main():
         help="Random seed",
     )
     parser.add_argument(
+        "--enable-thinking",
+        action="store_true",
+        help="Apply chat template with enable_thinking=True (for Qwen3 thinking mode)",
+    )
+    parser.add_argument(
         "--hf-repo",
         type=str,
         default=None,
@@ -186,6 +191,7 @@ def main():
     print(f"Effective batch size: {args.batch_size * args.gradient_accumulation_steps}")
     print(f"Learning rate: {args.learning_rate}")
     print(f"4-bit quantization: {use_4bit}")
+    print(f"Enable thinking: {args.enable_thinking}")
     print()
 
     # Initialize wandb
@@ -279,7 +285,7 @@ def main():
                 example["messages"],
                 tokenize=False,
                 add_generation_prompt=False,
-                enable_thinking=False,
+                enable_thinking=args.enable_thinking,
             )
             return {"text": text}
 
@@ -368,11 +374,12 @@ def main():
         print(f"\nPushing LoRA adapter to HuggingFace: {hf_repo}")
         try:
             from huggingface_hub import HfApi
-            HfApi().upload_folder(
+            api = HfApi()
+            api.create_repo(repo_id=hf_repo, repo_type="model", exist_ok=True)
+            api.upload_folder(
                 folder_path=str(final_path),
                 repo_id=hf_repo,
                 repo_type="model",
-                create_remote=True,
             )
             print(f"  Pushed to https://huggingface.co/{hf_repo}")
         except Exception as e:

@@ -41,6 +41,21 @@ of any figure.
 |---|---|---|
 | `*final_graphs/bcb_typehints_eval_gaming_gap.png` | `sdf/results/bcb_typehints_eval_gaming_gap.png` | `sdf/scripts/plot_bcb_typehints_gap.py` (or `plot_bcb_typehints_delta.py` — both default to this output path) |
 
+## Agentic Misalignment — Frontier-API eval-gaming survey (2026-04-07)
+
+Cross-model eval-gaming survey on Agentic Misalignment across the 6-API v1
+batch (\textsc{GPT-5.1}, \textsc{Opus~4.6}, \textsc{Kimi~K2}, \textsc{DeepSeek R1},
+\textsc{Grok~3}, \textsc{Gemini 2.5 Pro}), baseline vs cooperation-prompted.
+These are the plots that back the paper's "we measured evaluation-gaming gaps
+across seven frontier APIs" claim in methods-frontier. GLM-5 and GLM-5.1 were
+added later and have their own sections below.
+
+| Symlink (here) | Target (original path) | Generating script |
+|---|---|---|
+| `*final_graphs/frontier_eval_gaming_summary_safety_eval_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_gaming_summary_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (signed gaming P(H|¬A)−P(H|A) under safety_eval cue, baseline vs coop) |
+| `*final_graphs/frontier_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (mean harmful score across Bare/AF/Safety Eval cues × baseline/coop) |
+| `*final_graphs/frontier_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (Grok-3 and Gemini 2.5 Pro per-cue per-prompt breakdowns) |
+
 ## Agentic Misalignment — Grok-3 bare coop/anticoop sweep (n=540 per condition)
 
 Grok-3-beta on AM with **No Warning Added** only, baseline / +coop sysprompt /
@@ -149,3 +164,25 @@ self-contained unit.
 | `*final_graphs/2026-04-20_eval_gaming_gap_deepdive/scenario_epoch_controls.md` | `evals/agentic_misalignment/analysis/2026-04-20_scenario_epoch_controls.md` | `scripts/scenario_epoch_controls.py` — Step 8 (H6) |
 | `*final_graphs/2026-04-20_eval_gaming_gap_deepdive/cooperation_phrasing_analysis.md` | `evals/agentic_misalignment/analysis/2026-04-20_cooperation_phrasing_analysis.md` | `scripts/stock_phrase_analysis.py` — Step 9.1 stock-vs-adapted check |
 | `*final_graphs/2026-04-20_eval_gaming_gap_deepdive/sdf_vs_prompting_comparison.md` | `evals/agentic_misalignment/analysis/2026-04-20_sdf_vs_prompting_comparison.md` | Step 9.3 note on missing coop-prompt mo-posttrained arm |
+
+## SDF — 2026-04-21 Nemotron-49B eval-gaming gap deep-dive (BCB type hints + emoji × 5 interventions)
+
+CoT-level dissection of the canonical gap-narrowing figures in
+`muan_wood_nemotron49b/without_v4_patch/`. Compares MO baseline / control
+SDF (muan) / cooperation prompt / cooperation SDF / eval-aware steering on
+two surface behaviors (BCB type-hint coverage; free-form emoji rate),
+with regex-based reasoning-pattern hit rates over 12,800 traces, a quote
+bank with direct CoT excerpts, CoT-output unfaithfulness counts, and a
+list of follow-up experiments. Mirrors the structure of the 2026-04-20
+mo-posttrained deepdive but for the Nemotron organism.
+
+| Symlink (here) | Target (original path) | Purpose |
+|---|---|---|
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/README.md` | `sdf/analysis/2026-04-21_nemotron49b_deepdive/README.md` | Folder index — start here |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/deepdive.md` | `sdf/analysis/2026-04-21_nemotron49b_deepdive/deepdive.md` | Full writeup — exec summary, per-intervention CoT mechanism, hypotheses, follow-ups |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/quote_bank.md` | `sdf/analysis/2026-04-21_nemotron49b_deepdive/quote_bank.md` | Direct CoT excerpts per condition (consistency framing, baseline context-gating, steering unfaithfulness, BCB unfaithful samples) |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/scan_results.json` | `sdf/analysis/2026-04-21_nemotron49b_deepdive/scan_results.json` | Per-(condition, cell) regex hit-rates backing §1.2 / §2.3 tables |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_bcb_typehints_collapsed.png` | `sdf/figures/muan_wood_nemotron49b/bcb_typehints_collapsed_with_muan_mean.png` | Figure dissected (BCB eval vs deploy bars) |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_bcb_typehints_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b/bcb_typehints_eval_gaming_gap_with_muan_mean.png` | Figure dissected (BCB gap-from-baseline-deploy) |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_emoji_usage_averaged.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_averaged_with_muan_512.png` | Figure dissected (emoji eval vs deploy bars, n=512) |
+| `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_emoji_usage_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_gaming_gap_with_muan_512.png` | Figure dissected (emoji gap-from-baseline-deploy, n=512) |

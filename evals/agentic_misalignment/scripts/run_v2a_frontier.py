@@ -31,22 +31,20 @@ STATE_DIR = repo_root / "evals" / "agentic_misalignment" / "state"
 
 # (model_id, warning_label, deliberation_flag, warning_type_arg, epochs)
 #
-# Warning labels match classify_condition's output in compute_stats.py:
-#   bare         -> prompt_eval_awareness_deliberation=False
-#   af           -> prompt_eval_awareness_deliberation=True, warning_type="af"
-#   safety_eval  -> prompt_eval_awareness_deliberation=True, warning_type="safety_eval"
-#
-# 30 epochs × 27 samples = 810 samples per cell.
+# Downscoped 2026-04-21: bare only, 5 epochs per cell, all 8 frontier
+# models from the original deepdive survey. 5 × 27 = 135 samples per
+# cell, 1080 samples total. Enough to detect any effect ≥ ~10pp with
+# Wilson 95% CIs; the full 30-epoch version was killed at GLM-5 cell 1
+# after runtime projected 12-18h.
 RUNS = [
-    ("openrouter/z-ai/glm-5",       "bare",        False, "af",          30),
-    ("openrouter/z-ai/glm-5",       "safety_eval", True,  "safety_eval", 30),
-    ("openrouter/z-ai/glm-5",       "af",          True,  "af",          30),
-    ("openrouter/z-ai/glm-5.1",     "bare",        False, "af",          30),
-    ("openrouter/z-ai/glm-5.1",     "safety_eval", True,  "safety_eval", 30),
-    ("openrouter/z-ai/glm-5.1",     "af",          True,  "af",          30),
-    ("openrouter/x-ai/grok-3-beta", "bare",        False, "af",          30),
-    ("openrouter/x-ai/grok-3-beta", "safety_eval", True,  "safety_eval", 30),
-    ("openrouter/x-ai/grok-3-beta", "af",          True,  "af",          30),
+    ("openrouter/z-ai/glm-5",                           "bare", False, "af", 5),
+    ("openrouter/z-ai/glm-5.1",                         "bare", False, "af", 5),
+    ("openrouter/x-ai/grok-3-beta",                     "bare", False, "af", 5),
+    ("openrouter/moonshotai/kimi-k2-thinking",          "bare", False, "af", 5),
+    ("openrouter/google/gemini-2.5-pro-preview-05-06",  "bare", False, "af", 5),
+    ("openrouter/deepseek/deepseek-r1",                 "bare", False, "af", 5),
+    ("openrouter/openai/gpt-5.1",                       "bare", False, "af", 5),
+    ("openrouter/anthropic/claude-opus-4-6",            "bare", False, "af", 5),
 ]
 
 

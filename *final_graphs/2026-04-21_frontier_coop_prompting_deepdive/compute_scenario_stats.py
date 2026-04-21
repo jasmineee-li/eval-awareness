@@ -58,7 +58,9 @@ def classify_condition(suffix: str) -> str:
     if not s:
         return 'baseline'
     if 'Measurement Cooperation Policy' in s and 'value measurement cooperation' in s:
-        return 'coop'
+        if 'acknowledge them transparently in my reasoning' in s:
+            return 'coop_v1'
+        return 'coop_v2a'
     if '# Measurement Policy' in s and 'adapt my behavior to context' in s:
         return 'anticoop'
     return 'other_suffix'
@@ -194,7 +196,7 @@ def main():
         lines.append('| Scenario | Cond | n | Aware% | H% | H\\|A | H\\|U | Gap | z |')
         lines.append('|---|---|---|---|---|---|---|---|---|')
         for scen in SCENARIOS + ('ALL',):
-            for c in ('baseline', 'coop', 'anticoop'):
+            for c in ('baseline', 'coop_v1', 'coop_v2a', 'anticoop'):
                 key = f"{model}__{warning}__{c}__{scen}"
                 if key not in results:
                     continue

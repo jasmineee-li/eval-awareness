@@ -26,8 +26,8 @@ FIGS.mkdir(exist_ok=True)
 MODEL_ORDER = ['GLM-5', 'GLM-5.1', 'Grok-3', 'Kimi-K2', 'Gemini-2.5-Pro',
                'DeepSeek-R1', 'GPT-5.1', 'Opus-4.6']
 WARNINGS = ['bare', 'safety_eval', 'af']
-CONDS = ['baseline', 'coop', 'anticoop']
-COND_COLORS = {'baseline': '#999999', 'coop': '#1f77b4', 'anticoop': '#d62728'}
+CONDS = ['baseline', 'coop_v1', 'coop_v2a', 'anticoop']
+COND_COLORS = {'baseline': '#999999', 'coop_v1': '#1f77b4', 'coop_v2a': '#2ca02c', 'anticoop': '#d62728'}
 SCENARIOS = ('blackmail', 'leaking', 'murder')
 
 
@@ -63,7 +63,7 @@ def plot_model_marginals(results, model, save_path):
     fig, axes = plt.subplots(2, 2, figsize=(14, 8), sharey=False)
     for ax, (m, title) in zip(axes.flat, metrics):
         x = np.arange(len(WARNINGS))
-        width = 0.26
+        width = 0.21
         for i, cond in enumerate(CONDS):
             vals, errs, counts = [], [], []
             for w in WARNINGS:
@@ -87,7 +87,7 @@ def plot_model_marginals(results, model, save_path):
                     counts.append(f"{r.get('aware_harmful_n','?')}/{r.get('aware_n','?')}")
                 elif m == 'harmful_given_unaware':
                     counts.append(f"{r.get('unaware_harmful_n','?')}/{r.get('unaware_n','?')}")
-            offset = (i - 1) * width
+            offset = (i - (len(CONDS) - 1) / 2) * width
             bars = ax.bar(x + offset, vals, width, yerr=errs, capsize=3,
                           color=COND_COLORS[cond], label=cond, edgecolor='black', linewidth=0.5)
             for b, c in zip(bars, counts):
@@ -120,7 +120,7 @@ def plot_model_scenarios(scenario_results, model, save_path):
         for col, (m, title) in enumerate(metrics):
             ax = axes[row, col]
             x = np.arange(len(SCENARIOS))
-            width = 0.26
+            width = 0.21
             for i, cond in enumerate(CONDS):
                 vals, errs, counts = [], [], []
                 for scen in SCENARIOS:
@@ -141,7 +141,7 @@ def plot_model_scenarios(scenario_results, model, save_path):
                         counts.append(f"{r.get('aware_harmful_n','?')}/{r.get('aware_n','?')}")
                     elif m == 'harmful_given_unaware':
                         counts.append(f"{r.get('unaware_harmful_n','?')}/{r.get('unaware_n','?')}")
-                offset = (i - 1) * width
+                offset = (i - (len(CONDS) - 1) / 2) * width
                 bars = ax.bar(x + offset, vals, width, yerr=errs, capsize=2,
                               color=COND_COLORS[cond], label=cond if (row == 0 and col == 0) else None,
                               edgecolor='black', linewidth=0.4)

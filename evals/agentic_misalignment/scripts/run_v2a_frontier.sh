@@ -26,13 +26,13 @@ export INSPECT_LOG_DIR="/data/jasmine_li/eval-awareness/evals/logs"
 
 echo "=========================================="
 echo "v2a frontier rerun: $(date)"
-echo "Models: GLM-5, GLM-5.1, Grok-3"
-echo "Warnings: bare, safety_eval, af"
-echo "Epochs per cell: 30 (=> 810 samples per cell, 9 cells, 7290 total)"
+echo "Models: GLM-5, GLM-5.1, Grok-3, Kimi-K2, Gemini-2.5-Pro, DeepSeek-R1, GPT-5.1, Opus-4.6"
+echo "Warnings: bare only"
+echo "Epochs per cell: 5 (=> 135 samples per cell, 8 cells, 1080 total)"
 echo "Suffix: sdf/deliberative-alignment/coop_prompt_specs_v2a.txt"
 echo "=========================================="
 
-: "${CHUNK_ID:=v2a_frontier_20260421}"
+: "${CHUNK_ID:=v2a_frontier_bare_5ep_20260421}"
 python evals/agentic_misalignment/scripts/run_v2a_frontier.py --chunk-id "$CHUNK_ID"
 
 echo ""

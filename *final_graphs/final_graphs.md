@@ -55,6 +55,7 @@ added later and have their own sections below.
 | `*final_graphs/frontier_eval_gaming_summary_safety_eval_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_gaming_summary_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (signed gaming P(H|¬A)−P(H|A) under safety_eval cue, baseline vs coop) |
 | `*final_graphs/frontier_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (mean harmful score across Bare/AF/Safety Eval cues × baseline/coop) |
 | `*final_graphs/frontier_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (Grok-3 and Gemini 2.5 Pro per-cue per-prompt breakdowns) |
+| `*final_graphs/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/figures/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/scripts/plot_frontier_8models_pooled.py` (**8-model** signed-gaming survey incl. GLM-5/5.1, pooled across bare + AF + safety_eval where available; Grok-3 / Gemini 2.5 Pro / GLM-5 / GLM-5.1 show ** baseline gaming; coop-Δ significant on the same four) |
 
 ## Agentic Misalignment — Grok-3 bare coop/anticoop sweep (n=540 per condition)
 

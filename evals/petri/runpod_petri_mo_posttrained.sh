@@ -4,9 +4,10 @@
 # Required secrets in .env: OPENROUTER_API_KEY, HF_TOKEN
 #
 # Layout on 6 GPUs:
-#   base                    → CUDA 0,1 → port 8000
-#   coop_full               → CUDA 2,3 → port 8001
-#   coop_ablate_cot_honesty → CUDA 4,5 → port 8002
+#   base                    → CUDA 0,1 → port 18000
+#   coop_full               → CUDA 2,3 → port 18001
+#   coop_ablate_cot_honesty → CUDA 4,5 → port 18002
+# (8000-8002 avoided: nginx occupies :8001 on runpod images.)
 #
 # All 3 vLLM servers + all 3 inspect-eval processes run in parallel.
 # Transcripts pushed to HF dataset repo at the end.
@@ -38,9 +39,21 @@ export INSPECT_LOG_DIR="$REPO_ROOT/evals/logs"
 mkdir -p "$INSPECT_LOG_DIR"
 
 # ─── Deps: install only if missing (do NOT rebuild venv) ───
+# NOTE: the PyPI name `petri` is a totally unrelated 2019 package. The real
+# Anthropic/safety-research petri is only on GitHub. Install via `uv pip` from
+# the git URL; never `pip install petri`.
 echo "=== Checking petri / inspect-ai install ==="
-python -c "import petri" 2>/dev/null || pip install petri
-python -c "import inspect_ai" 2>/dev/null || pip install inspect-ai
+if ! command -v uv >/dev/null 2>&1; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+export PATH="$HOME/.local/bin:$PATH"
+export UV_LINK_MODE=copy
+if ! python -c "import petri" 2>/dev/null; then
+    VIRTUAL_ENV="$REPO_ROOT/.venv" uv pip install "git+https://github.com/safety-research/petri"
+fi
+python -c "import inspect_ai" 2>/dev/null || \
+    VIRTUAL_ENV="$REPO_ROOT/.venv" uv pip install "inspect-ai>=0.3.180"
 python -c "import petri, inspect_ai; print('petri + inspect_ai ok')"
 
 # ─── Pre-download base to avoid 3-way download race ───
@@ -62,9 +75,9 @@ HF_DATASET_REPO="jasminexli/petri-mo-posttrained-transcripts"
 
 # key|served_name|adapter_repo|gpus|port
 configs=(
-    "base|${BASE_NAME}||0,1|8000"
-    "coop_full|mo_posttrained_coop_full|jasminexli/mo_posttrained_coop_full_sdf|2,3|8001"
-    "coop_ablate_cot_honesty|mo_posttrained_coop_ablate_cot_honesty|jasminexli/mo_posttrained_coop_ablate_cot_honesty_sdf|4,5|8002"
+    "base|${BASE_NAME}||0,1|18000"
+    "coop_full|mo_posttrained_coop_full|jasminexli/mo_posttrained_coop_full_sdf|2,3|18001"
+    "coop_ablate_cot_honesty|mo_posttrained_coop_ablate_cot_honesty|jasminexli/mo_posttrained_coop_ablate_cot_honesty_sdf|4,5|18002"
 )
 
 # ─── Launch 3 vLLM servers ───
@@ -83,6 +96,11 @@ for cfg in "${configs[@]}"; do
         --served-model-name "$BASE_NAME"
         --max-model-len "$MAX_MODEL_LEN"
         --trust-remote-code
+        # Petri seeds give the target tool access. Without these flags, vLLM
+        # returns 400 on tool_choice="auto" and every transcript ends up empty
+        # (auditor_failure=7, judge labels it "unusable").
+        --enable-auto-tool-choice
+        --tool-call-parser hermes
     )
     if [ -n "$ADAPTER" ]; then
         vllm_args+=(
@@ -93,7 +111,12 @@ for cfg in "${configs[@]}"; do
         )
     fi
 
-    CUDA_VISIBLE_DEVICES="$GPUS" vllm serve "${vllm_args[@]}" > "$LOG" 2>&1 &
+    # Per-server compile-cache root to prevent concurrent vLLMs (same base
+    # model ⇒ same cache key by default) from corrupting each other's cache.
+    CACHE_ROOT="$OUT_ROOT/.vllm_cache_${KEY}"
+    mkdir -p "$CACHE_ROOT"
+    CUDA_VISIBLE_DEVICES="$GPUS" VLLM_CACHE_ROOT="$CACHE_ROOT" \
+        vllm serve "${vllm_args[@]}" > "$LOG" 2>&1 &
     VLLM_PIDS+=($!)
 done
 
@@ -124,7 +147,7 @@ wait_for_port() {
 }
 
 echo "=== Waiting for all 3 vLLM servers ==="
-for port in 8000 8001 8002; do
+for port in 18000 18001 18002; do
     wait_for_port "$port" || { echo "FATAL: vLLM startup failed on port $port"; exit 1; }
 done
 echo "=== All 3 vLLM servers ready ==="
@@ -139,9 +162,9 @@ run_petri() {
     VLLM_BASE_URL="http://127.0.0.1:${PORT}/v1" \
     VLLM_API_KEY="dummy" \
     inspect eval petri/audit \
-        --model-role auditor=openrouter/anthropic/claude-sonnet-4.5 \
+        --model-role auditor=openrouter/anthropic/claude-sonnet-4.6 \
         --model-role target="vllm/${SERVED}" \
-        --model-role judge=openrouter/anthropic/claude-opus-4.5 \
+        --model-role judge=openrouter/anthropic/claude-opus-4.7 \
         -T max_turns=30 \
         -T seed_instructions="$(cat "$SEED_FILE")" \
         -T transcript_save_dir="$OUTDIR" \
@@ -152,11 +175,11 @@ run_petri() {
 }
 
 declare -a PETRI_PIDS
-run_petri "base" "$BASE_NAME" 8000 &
+run_petri "base" "$BASE_NAME" 18000 &
 PETRI_PIDS+=($!)
-run_petri "coop_full" "mo_posttrained_coop_full" 8001 &
+run_petri "coop_full" "mo_posttrained_coop_full" 18001 &
 PETRI_PIDS+=($!)
-run_petri "coop_ablate_cot_honesty" "mo_posttrained_coop_ablate_cot_honesty" 8002 &
+run_petri "coop_ablate_cot_honesty" "mo_posttrained_coop_ablate_cot_honesty" 18002 &
 PETRI_PIDS+=($!)
 
 PETRI_FAILED=0
@@ -167,6 +190,13 @@ for pid in "${PETRI_PIDS[@]}"; do
 done
 
 echo "=== All petri runs finished (failed: $PETRI_FAILED/3) ==="
+
+# ─── Auto-plot: per-seed + dimension summary across 3 models ───
+echo "=== Plotting seed comparison ==="
+python "$REPO_ROOT/evals/petri/scripts/plot_seed_comparison.py" \
+    --out-root "$OUT_ROOT" \
+    --tag "mo_posttrained_runpod_${TIMESTAMP}" \
+    2>&1 | tee "$OUT_ROOT/plot.log" || echo "WARNING: plot step failed (continuing)"
 
 # ─── Push transcripts to HF dataset repo ───
 echo "=== Pushing transcripts to HF dataset: $HF_DATASET_REPO ==="

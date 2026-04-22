@@ -21,6 +21,11 @@
 #   sbatch run_mo_posttrained_sdf.sh base                        # 20 ep, bare+safety_eval
 #   sbatch run_mo_posttrained_sdf.sh coop_full 55                # 55 ep top-up
 #   sbatch run_mo_posttrained_sdf.sh coop_full 75 af             # AF-only @ n=2025
+#   sbatch run_mo_posttrained_sdf.sh coop_thinking 3             # 3 ep pilot (chartraining adapter)
+#
+# `coop_thinking` uses max-lora-rank 64 (vs 8 for SDF) and runs a
+# thinking-mode smoke test before the AM eval; fails fast (exit 2)
+# if <8/10 prompts produce a <think>>=200 char span.
 
 set -uo pipefail
 
@@ -28,7 +33,7 @@ MODEL_KEY="${1:-}"
 EPOCHS_ARG="${2:-20}"
 WARNINGS_ARG="${3:-bare,safety_eval}"
 if [ -z "$MODEL_KEY" ]; then
-    echo "ERROR: must pass MODEL_KEY as first arg (base|coop_full|muan_airport_crash|coop_ablate_cot_honesty|anticoop)"
+    echo "ERROR: must pass MODEL_KEY as first arg (base|coop_full|muan_airport_crash|coop_ablate_cot_honesty|anticoop|coop_thinking)"
     exit 1
 fi
 
@@ -65,6 +70,8 @@ BASE_MODEL="obalcells/qwen3-32b-mo-posttrained"
 BASE_NAME="mo_posttrained_base"
 
 # Resolve model-specific config from $MODEL_KEY.
+# MAX_LORA_RANK defaults to 8 (SDF adapters); coop_thinking needs 64.
+MAX_LORA_RANK=8
 case "$MODEL_KEY" in
     base)
         SERVED_NAME="$BASE_NAME"
@@ -85,6 +92,11 @@ case "$MODEL_KEY" in
     anticoop)
         SERVED_NAME="mo_posttrained_anticoop"
         ADAPTER_REPO="jasminexli/mo_posttrained_anticoop_sdf"
+        ;;
+    coop_thinking)
+        SERVED_NAME="mo_posttrained_coop_thinking"
+        ADAPTER_REPO="jasminexli/qwen3-32b-mo-posttrained-coop-thinking"
+        MAX_LORA_RANK=64
         ;;
     *)
         echo "ERROR: unknown MODEL_KEY=$MODEL_KEY"
@@ -174,7 +186,7 @@ vllm_args=(
 if [ -n "$ADAPTER_REPO" ]; then
     vllm_args+=(
         --enable-lora
-        --max-lora-rank 8
+        --max-lora-rank "$MAX_LORA_RANK"
         --max-loras 1
         --lora-modules "${SERVED_NAME}=${ADAPTER_REPO}"
     )
@@ -188,6 +200,24 @@ if ! wait_for_vllm; then
     stop_vllm
     echo "ERROR: vLLM startup failed"
     exit 1
+fi
+
+# Post-training smoke test: only for the coop_thinking adapter.
+# Gates the AM eval on whether the adapter actually emits <think> at
+# inference. If <8/10 prompts produce a non-empty <think> span >=200 chars,
+# abort before burning eval compute.
+if [ "$MODEL_KEY" = "coop_thinking" ]; then
+    echo ""
+    echo "=== Post-training smoke test: thinking-mode coverage probe ==="
+    if ! python /data/jasmine_li/eval-awareness/OpenCharacterTraining/scripts/probe_thinking_mode.py \
+        --base-url "$VLLM_BASE_URL" \
+        --model "$SERVED_NAME"; then
+        echo ""
+        echo "ERROR: thinking-mode smoke test failed — skipping AM eval."
+        stop_vllm
+        exit 2
+    fi
+    echo "=== smoke passed — proceeding to AM eval ==="
 fi
 
 IFS=',' read -r -a WARN_LIST <<< "$WARNINGS_ARG"

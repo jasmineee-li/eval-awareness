@@ -79,13 +79,16 @@ def main():
     print()
     print(f"=== RESULT: {passes}/{len(PROMPTS)} passed ===")
     if passes >= args.pass_threshold:
-        print("VERDICT: mo-posttrained supports thinking mode. Proceed with training.")
+        print(f"VERDICT: thinking mode works on {args.model}.")
+        return 0
     else:
         print(
-            f"VERDICT: thinking mode looks broken on mo-posttrained "
-            f"(needed >= {args.pass_threshold}). STOP — see plan for fallback options."
+            f"VERDICT: thinking mode looks broken on {args.model} "
+            f"(needed >= {args.pass_threshold}). Halt — do not proceed to eval."
         )
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main() or 0)

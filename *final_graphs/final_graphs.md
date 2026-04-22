@@ -48,6 +48,7 @@ of any figure.
 | `*final_graphs/bcb_typehints_eval_gaming_gap.png` | `sdf/results/bcb_typehints_eval_gaming_gap.png` | `sdf/scripts/plot_bcb_typehints_gap.py` (or `plot_bcb_typehints_delta.py` — both default to this output path) |
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_bcb_typehints_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/bcb_typehints_eval_gaming_gap_with_anticoop_mean.png` | `sdf/scripts/plot_bcb_typehints_gap_muan_final_anticoop.py` (**adds anticoop SDF pilot n=256 as a 7th bar**; other series per canonical muan_final) |
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_eval_gaming_gap_per_model_with_anticoop.png` | `sdf/scripts/plot_emoji_delta_muan_512_anticoop.py` (**adds anticoop SDF pilot n=256 as a 6th bar**; other series n=512 pooled) |
+| `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_eval_gaming_gap_n512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_eval_gaming_gap_per_model_with_anticoop_n512.png` | `sdf/scripts/plot_emoji_delta_muan_512_anticoop_pooled.py` (**n=512 pooled — anticoop = slice1 + slice2 re-aggregated**; symmetric with other series, delta=-7.8pp) |
 
 ## Agentic Misalignment — Frontier-API eval-gaming survey (2026-04-07)
 

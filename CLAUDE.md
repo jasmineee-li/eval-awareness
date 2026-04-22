@@ -14,11 +14,21 @@
   python -c "from huggingface_hub import HfApi; HfApi().upload_folder(folder_path='checkpoints/<name>/finetuned_model', repo_id='jasminexli/<name>', repo_type='model', create_remote=True)"
   ```
   Requires `HF_TOKEN` in `.env` or being logged in via `huggingface-cli login`.
+- **RunPod handoff: DO NOT re-setup the environment.** The RunPod is backed by a network volume with the repo already cloned and the venv already built. Handoff scripts must:
+  - NOT run `git clone ...` or `pip install ...`
+  - NOT re-create a venv with `python -m venv .venv`
+  - Assume the repo is already at a known path and the venv is activatable (e.g. `source .venv/bin/activate`)
+  - Avoid re-downloading anything that's already in the repo — any asset needed (steering vectors, prompt files, tiny configs) should be committed to the repo so `git pull` is all that's needed.
+  - Only the `.env` (for secrets like `HF_TOKEN`, `OPENROUTER_API_KEY`) may need a manual touch.
 
 ## HF Cache Location
 
 - **Always set `HF_HOME=/workspace/hf_cache`** in training scripts and any command that downloads models. The root partition (`/root/.cache`) is tiny and will fill up immediately if HF tries to download a model there. The shared workspace has the space.
 - Pre-cached models live at `/workspace/hf_cache/hub/`. Check there before downloading.
+- **Pre-download shared base models before submitting parallel adapter runs.** If multiple jobs (e.g. per-model sbatches) serve the same base with different LoRAs, each job will otherwise race to download the full base (tens of GB) into the HF cache. Pre-downloading once avoids the race and the risk of `wait_for_vllm` timeouts. Example:
+  ```
+  source /data/jasmine_li/eval-awareness/.venv/bin/activate && HF_HOME=/data/$USER/hf_cache python -c "from huggingface_hub import snapshot_download; snapshot_download('<repo_id>')"
+  ```
 
 ## Checkpoint Storage
 
@@ -42,6 +52,7 @@
 - **When plotting many conditions per panel**, prefer separate subplot rows (e.g. one row for harmful, one for eval-aware) over paired bars, which get cramped.
 - **Always write awareness labels as "Eval-Aware" / "Eval-Unaware"** (not bare "Aware"/"Unaware"). The "Eval-" prefix makes clear we mean evaluation-awareness, not some other kind. Use in legends, axis labels, and subtitles.
 - **Always spell out warning conditions in titles.** Use "AF Warning" (not just "AF") and "No Warning Added" (not "Bare") so the reader doesn't need to look up what these codes mean.
+- **Never overwrite existing plot paths.** When adding a new condition / new data to an existing plot, clone the plot script with a descriptive suffix (e.g. `*_anticoop.py`) and save figures to a new directory (e.g. `figures/YYYY-MM-DD_<experiment>/` or `figures/<base_name>_anticoop/`). Existing plots may be referenced by paper drafts, notebooks, or `*final_graphs/final_graphs.md` symlinks — overwriting risks silent divergence between old references and new data. Register the new path in `*final_graphs/final_graphs.md` alongside the original.
 
 ## Eval Awareness Testbed — Judge Design Notes
 

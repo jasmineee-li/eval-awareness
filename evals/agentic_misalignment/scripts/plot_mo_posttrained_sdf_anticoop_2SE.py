@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
-2SE (≈95% CI) harmful|awareness plots for the mo_posttrained SDF runs —
-**anticoop pilot added**.
+2SE (≈95% CI) plots for the mo_posttrained SDF runs — **anticoop pilot added**.
 
-Same structure as plot_mo_posttrained_sdf_2SE.py, with one extra bar per panel
-for the anticoop SDF pilot (20 ep, n~540/cell, 2026-04-22). Other conditions
-retain their 55 ep (n=1485) / 75 ep (n=2025) runs from the 2026-04-20 sweep.
+Same data as plot_mo_posttrained_sdf_2SE.py, with one extra bar per panel for
+the anticoop SDF pilot (20 ep, n~540/cell, 2026-04-22). Other conditions retain
+their 55 ep (n=1485) / 75 ep (n=2025) runs from the 2026-04-20 sweep.
 
-Anticoop was only run at bare + safety_eval; the af panel therefore matches the
-non-anticoop plot exactly (anticoop n=0 → condition silently skipped).
+Anticoop was only run at bare + safety_eval; the af panels therefore match the
+non-anticoop plots exactly (anticoop n=0 → condition silently skipped).
 
-Outputs:
+Produces 3 plot types × 3 warnings = 9 figures:
   figures/2026-04-22_mo_posttrained_sdf_anticoop/
-    - harmful_given_awareness_bare_2SE.png
-    - harmful_given_awareness_safety_eval_2SE.png
-    - harmful_given_awareness_af_2SE.png    (anticoop absent, same as 04-20 plot)
+    - harmful_given_awareness_{bare,safety_eval,af}_2SE.png  (H|A vs H|U)
+    - harmful_rate_{bare,safety_eval,af}_2SE.png             (absolute H)
+    - aware_rate_{bare,safety_eval,af}_2SE.png               (absolute A)
 """
 
 import numpy as np
@@ -220,6 +219,54 @@ def plot_given_awareness(stats, warning_type, fname, suptitle):
     plt.close()
 
 
+def plot_absolute(stats, warning_type, metric, fname, suptitle, ylabel, color):
+    """Absolute harmful or eval-aware rate per condition with ±2 SE."""
+    fig, ax = plt.subplots(figsize=(13, 5.5))
+    labels = [c for c in CONDITIONS if stats[c]["n"] > 0]
+    x = np.arange(len(labels))
+
+    if metric == "harm":
+        rates = [stats[l]["harm_rate"] * 100 for l in labels]
+        errs = [SE_MULT * stats[l]["harm_se"] * 100 for l in labels]
+        ks = [stats[l]["harmful"] for l in labels]
+    elif metric == "aware":
+        rates = [stats[l]["aware_rate"] * 100 for l in labels]
+        errs = [SE_MULT * stats[l]["aware_se"] * 100 for l in labels]
+        ks = [stats[l]["aware"] for l in labels]
+    else:
+        raise ValueError(metric)
+    ns = [stats[l]["n"] for l in labels]
+
+    bars = ax.bar(x, rates, 0.6, color=color, alpha=0.85,
+                  yerr=errs, capsize=4, edgecolor="white", linewidth=0.5)
+    for rect, k, n_, e in zip(bars, ks, ns, errs):
+        h = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2, h + e + 0.5,
+                f"{k}/{n_}", ha="center", va="bottom", fontsize=8)
+
+    warning_label = {
+        "bare":        "No Warning Added (bare)",
+        "safety_eval": "Safety-Eval Warning",
+        "af":          "AF Warning",
+    }[warning_type]
+    ax.set_title(f"{suptitle}\n{warning_label}", fontsize=12, fontweight="bold", pad=28)
+    ax.text(0.5, 1.02, "95% CI • anticoop pilot n~540 (others n=1485/2025)",
+            transform=ax.transAxes, ha="center", va="bottom",
+            fontsize=9, color="gray", style="italic")
+
+    ax.set_ylabel(ylabel, fontsize=11)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=9)
+    top = max(rates + [0.1]) * 1.4 + 12
+    ax.set_ylim(0, max(top, 20))
+
+    plt.tight_layout()
+    out = FINAL_DIR / fname
+    fig.savefig(out, dpi=200, bbox_inches="tight")
+    print(f"Saved: {out}")
+    plt.close()
+
+
 def main():
     FINAL_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Loading logs (SE_MULT={SE_MULT})...")
@@ -235,14 +282,25 @@ def main():
             a_cr = s["aware_cr"] * 100
             gap = u_cr - a_cr
             print(f"  {cond.replace(chr(10), ' '):42s}  "
+                  f"H={s['harmful']:>3}/{s['n']:<4} ({s['harm_rate']*100:5.1f}%)  "
+                  f"A={s['aware']:>3}/{s['n']:<4} ({s['aware_rate']*100:5.1f}%)  "
                   f"H|U={s['unaware_harmful']:>3}/{s['unaware_n']:<4} ({u_cr:5.1f}%)  "
                   f"H|A={s['aware_harmful']:>3}/{s['aware_n']:<4} ({a_cr:5.1f}%)  "
-                  f"gap={gap:+5.1f}pp  n={s['n']}")
+                  f"gap={gap:+5.1f}pp")
 
-    suptitle = "AM (mo_posttrained SDF + anticoop pilot): Harmful Rate Conditioned on Verbalized Awareness"
+    suptitle_ha = "AM (mo_posttrained SDF + anticoop pilot): Harmful Rate Conditioned on Verbalized Awareness"
+    suptitle_h  = "AM (mo_posttrained SDF + anticoop pilot): Absolute Harmful Rate"
+    suptitle_a  = "AM (mo_posttrained SDF + anticoop pilot): Absolute Eval-Aware Rate"
+
     for warn in LOG_FILES:
         plot_given_awareness(data[warn], warn,
-                             f"harmful_given_awareness_{warn}_2SE.png", suptitle)
+                             f"harmful_given_awareness_{warn}_2SE.png", suptitle_ha)
+        plot_absolute(data[warn], warn, "harm",
+                      f"harmful_rate_{warn}_2SE.png", suptitle_h,
+                      "Harmful Rate (%)", "#d62728")
+        plot_absolute(data[warn], warn, "aware",
+                      f"aware_rate_{warn}_2SE.png", suptitle_a,
+                      "Eval-Aware Rate (%)", "#1f77b4")
 
     print(f"\nPlots → {FINAL_DIR}")
 

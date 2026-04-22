@@ -57,6 +57,22 @@ added later and have their own sections below.
 | `*final_graphs/frontier_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (Grok-3 and Gemini 2.5 Pro per-cue per-prompt breakdowns) |
 | `*final_graphs/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/figures/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/scripts/plot_frontier_8models_pooled.py` (**8-model** signed-gaming survey incl. GLM-5/5.1, pooled across bare + AF + safety_eval where available; Grok-3 / Gemini 2.5 Pro / GLM-5 / GLM-5.1 show ** baseline gaming; coop-Δ significant on the same four) |
 
+## Agentic Misalignment — Frontier v1-vs-v2a coop-prompt ablation (2026-04-21)
+
+v2a ablates exactly the "If I notice cues suggesting an evaluation context, I
+acknowledge them transparently in my reasoning..." sentence from v1's
+coop prompt. Purpose: test whether the v1 awareness-rate rise was driven by
+that explicit verbalization instruction (the deepdive's H-V hypothesis).
+**Result: awareness rates are essentially unchanged under v2a — the H-V story
+is refuted.** The gap closure under coop prompting is robust; cooperation
+prompting makes `H|Aware` and `H|Unaware` converge toward the deployment-proxy
+rate, by design (cooperation ≠ alignment; cooperation = behavioral consistency).
+
+| Symlink (here) | Target (original path) | Generating script |
+|---|---|---|
+| `*final_graphs/frontier_coop_v1_v2a_convergence.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/fig_v1_v2a_convergence.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_v1_v2a_convergence.py` (**paper-headline**: 3-model H\|A vs H\|U convergence under baseline / v1 / v2a) |
+| `*final_graphs/frontier_coop_v1_v2a_aware_h_grid.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/fig_v1_v2a_aware_h_grid.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_v1_v2a_convergence.py` (supplementary: verbalized-awareness + overall-harmful marginals across all 8 frontier APIs) |
+
 ## Agentic Misalignment — Grok-3 bare coop/anticoop sweep (n=540 per condition)
 
 Grok-3-beta on AM with **No Warning Added** only, baseline / +coop sysprompt /
@@ -187,3 +203,50 @@ mo-posttrained deepdive but for the Nemotron organism.
 | `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_bcb_typehints_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b/bcb_typehints_eval_gaming_gap_with_muan_mean.png` | Figure dissected (BCB gap-from-baseline-deploy) |
 | `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_emoji_usage_averaged.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_averaged_with_muan_512.png` | Figure dissected (emoji eval vs deploy bars, n=512) |
 | `*final_graphs/2026-04-21_nemotron49b_eval_gaming_deepdive/fig_emoji_usage_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b/emoji_usage_eval_gaming_gap_with_muan_512.png` | Figure dissected (emoji gap-from-baseline-deploy, n=512) |
+
+## Agentic Misalignment — mo_posttrained SDF + steering α sweep (2026-04-21)
+
+Extends the canonical `mo_posttrained_sdf_scaled/` bare panel with 3 new
+cells from the 2026-04-21 RunPod mopt α sweep: α=0.75, α=1.0 (ablation
+strengths on `mo-posttrained-ablated`), and random-direction α=1.0 control.
+n=270 per steering cell (27 scenarios × 10 epochs, bare only). Plot
+corresponds to `plans/2026-04-20_steering_alpha_sweep_runpod.md` (the mopt
+variant that plan had deferred but was executed). A dotted gray vertical
+divider separates SDF cells from steering cells.
+
+| Symlink (here) | Target (original path) | Generating script |
+|---|---|---|
+| `*final_graphs/mo_posttrained_sdf_harmful_given_awareness_bare_2SE_steering.png` | `evals/agentic_misalignment/figures/2026-04-21_mo_posttrained_sdf_steering/harmful_given_awareness_bare_2SE_steering.png` | `evals/agentic_misalignment/scripts/plot_mo_posttrained_sdf_2SE_steering.py` (conditional H\|Unaware vs H\|Aware, 5 SDF + 3 steering cells) |
+| `*final_graphs/mo_posttrained_sdf_harm_rate_bare_2SE_steering.png` | `evals/agentic_misalignment/figures/2026-04-21_mo_posttrained_sdf_steering/harm_rate_bare_2SE_steering.png` | `evals/agentic_misalignment/scripts/plot_mo_posttrained_sdf_2SE_steering.py` (absolute harmful rate, same 8 cells) |
+| `*final_graphs/mo_posttrained_sdf_aware_rate_bare_2SE_steering.png` | `evals/agentic_misalignment/figures/2026-04-21_mo_posttrained_sdf_steering/aware_rate_bare_2SE_steering.png` | `evals/agentic_misalignment/scripts/plot_mo_posttrained_sdf_2SE_steering.py` (absolute eval-awareness rate, same 8 cells) |
+
+## Agentic Misalignment — 2026-04-21 probe-conditioned vs verbalized awareness deep-dive
+
+Trace-level comparison of probe-conditioned and verbalized-conditioned harmful
+rate plots on the no_canary SDF 5-condition set. Tests whether eval-gaming gap
+conditioned on probe matches gap conditioned on verbalized awareness; reads
+"probe-only-aware" samples (probe=1, judge=0) and "judge-only-aware" samples
+(probe=0, judge=1) to categorize them qualitatively. Recommends verbalized
+as the primary metric (probe is not yet usable on AM due to threshold miscal
+and probe-misalignment entanglement) and identifies §6 follow-ups that would
+change the verdict, including the priority item: training probes for the
+mo-posttrained organism (the one the scaled-N plots use).
+
+| Symlink (here) | Target (original path) | Purpose |
+|---|---|---|
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/README.md` | `evals/agentic_misalignment/analysis/2026-04-21_probe_conditioned_deepdive/README.md` | Folder index — start here |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/deepdive.md` | `evals/agentic_misalignment/analysis/2026-04-21_probe_conditioned_deepdive/deepdive.md` | Full writeup — exec summary, headline tables, silent-sample trace bank, metric comparison, follow-ups |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/tables.md` | `evals/agentic_misalignment/analysis/2026-04-21_probe_conditioned_deepdive/tables.md` | Firing rates, conditional harm, quadrants, score quantiles — raw tables |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/probe_stats.json` | `evals/agentic_misalignment/analysis/2026-04-21_probe_conditioned_deepdive/probe_stats.json` | Per-cell stats (firing rates, cond-harm, quadrants, per-scenario breakdown) |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/fig_probe_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/figures/no_canary_sdf_sammarks_mo/probe_harmful_given_awareness_bare_2SE.png` | Probe-conditioned gap, no-warning |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/fig_probe_harmful_given_awareness_safety_eval.png` | `evals/agentic_misalignment/figures/no_canary_sdf_sammarks_mo/probe_harmful_given_awareness_safety_eval_2SE.png` | Probe-conditioned gap, safety-eval warning |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/fig_probe_judge_agreement.png` | `evals/agentic_misalignment/figures/no_canary_sdf_sammarks_mo/probe_judge_agreement.png` | Judge vs probe 4-quadrant agreement |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/fig_probe_score_distributions.png` | `evals/agentic_misalignment/figures/no_canary_sdf_sammarks_mo/probe_score_distributions.png` | Probe score distributions vs per-model threshold |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/fig_verbalized_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_bare_final_2SE.png` | Verbalized-conditioned gap, no-warning (same organism, pooled n≈2000) |
+| `*final_graphs/2026-04-21_probe_conditioned_deepdive/fig_verbalized_harmful_given_awareness_safety_eval.png` | `evals/agentic_misalignment/figures/2026-04-15_no_canary_sdf_sammarks_mo/harmful_given_awareness_safety_eval_final_2SE.png` | Verbalized-conditioned gap, safety-eval |
+
+## Petri — mo-posttrained base vs 2 SDF LoRAs (2026-04-21)
+
+| Symlink (here) | Target (original path) | Generating script |
+|---|---|---|
+| `*final_graphs/petri_mo_posttrained_concerning_by_awareness.png` | `evals/petri/figures/mo_posttrained_runpod_20260421_021935_concerning_by_awareness.png` | `evals/petri/scripts/plot_concerning_by_awareness.py` (per-seed `concerning` score split by eval_awareness ≥ 5 vs < 5; 15 seeds × 3 models; legend uses "BASE misaligned MO") |

@@ -20,7 +20,7 @@
 #   cd /data/jasmine_li/eval-awareness/OpenCharacterTraining
 #   sbatch scripts/slurm_sft_train_thinking_mo.sh
 
-set -uo pipefail
+set -euo pipefail
 
 source /data/jasmine_li/eval-awareness/.venv/bin/activate
 unset PYTHONSTARTUP
@@ -51,6 +51,7 @@ echo "  Train examples: $(wc -l < ${TRAIN_FILE})"
 echo "  Val examples:   $(wc -l < ${EVAL_FILE})"
 echo ""
 
+EXIT=0
 python -u train.py \
     --model-name obalcells/qwen3-32b-mo-posttrained \
     --train-file "${TRAIN_FILE}" \
@@ -70,9 +71,8 @@ python -u train.py \
     --wandb-project measurement-cooperation-sft \
     --wandb-run-name qwen3-32b-mo-posttrained-coop-thinking \
     --seed 42 \
-    --hf-repo jasminexli/qwen3-32b-mo-posttrained-coop-thinking
+    --hf-repo jasminexli/qwen3-32b-mo-posttrained-coop-thinking || EXIT=$?
 
-EXIT=$?
 echo ""
 echo "=== SFT training exit code: ${EXIT} ==="
 exit ${EXIT}

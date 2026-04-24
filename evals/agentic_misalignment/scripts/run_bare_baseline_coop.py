@@ -21,12 +21,12 @@ Usage (from repo root):
         --chunk-id opus4_bare_topup_20260423 \\
         --conditions baseline,coop_v1 --epochs 15
 
-    # Anticoop with nemotron anticoop spec, 20 epochs (n=540):
+    # Anticoop with strong-variant anticoop spec, 20 epochs (n=540):
     python evals/agentic_misalignment/scripts/run_bare_baseline_coop.py \\
         --model openrouter/anthropic/claude-opus-4 \\
         --chunk-id opus4_bare_anticoop_20260423 \\
         --conditions anticoop --epochs 20 \\
-        --anticoop-suffix-file sdf/deliberative-alignment/nemotron_anticoop_prompt_specs.txt
+        --anticoop-suffix-file sdf/deliberative-alignment/new_anticoop_prompt_specs_20260423.txt
 """
 
 import argparse

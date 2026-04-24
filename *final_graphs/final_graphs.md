@@ -52,6 +52,10 @@ of any figure.
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_bcb_typehints_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/bcb_typehints_eval_gaming_gap_with_anticoop_mean.png` | `sdf/scripts/plot_bcb_typehints_gap_muan_final_anticoop.py` (**adds anticoop SDF pilot n=256 as a 7th bar**; other series per canonical muan_final) |
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_eval_gaming_gap_per_model_with_anticoop.png` | `sdf/scripts/plot_emoji_delta_muan_512_anticoop.py` (**adds anticoop SDF pilot n=256 as a 6th bar**; other series n=512 pooled) |
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_eval_gaming_gap_n512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_eval_gaming_gap_per_model_with_anticoop_n512.png` | `sdf/scripts/plot_emoji_delta_muan_512_anticoop_pooled.py` (**n=512 pooled — anticoop = slice1 + slice2 re-aggregated**; symmetric with other series, delta=-7.8pp) |
+| `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_bcb_typehints_collapsed_mean.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/bcb_typehints_collapsed_with_anticoop_mean.png` | `sdf/scripts/plot_bcb_typehints_collapsed_muan_anticoop.py --metric mean` (**absolute BCB type-hint coverage, eval vs deploy; 6 series — adds anticoop SDF pilot n=256**) |
+| `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_bcb_typehints_collapsed_pct.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/bcb_typehints_collapsed_with_anticoop_pct.png` | `sdf/scripts/plot_bcb_typehints_collapsed_muan_anticoop.py --metric pct` |
+| `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_usage_averaged_512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_averaged_with_anticoop_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512_anticoop.py` (**absolute emoji rate, eval vs deploy; n=512/cell pooled; 6 series — adds anticoop SDF n=512 (slice1 + slice2)**) |
+| `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_usage_eval_vs_deploy_512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_eval_vs_deploy_with_anticoop_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512_anticoop.py` (same data, eval_vs_deploy filename variant) |
 
 ### Anticoop SDF deepdive (2026-04-22)
 
@@ -68,10 +72,10 @@ added later and have their own sections below.
 
 | Symlink (here) | Target (original path) | Generating script |
 |---|---|---|
-| `*final_graphs/frontier_eval_gaming_summary_safety_eval_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_gaming_summary_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (signed gaming P(H|¬A)−P(H|A) under safety_eval cue, baseline vs coop) |
-| `*final_graphs/frontier_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (mean harmful score across Bare/AF/Safety Eval cues × baseline/coop) |
-| `*final_graphs/frontier_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (Grok-3 and Gemini 2.5 Pro per-cue per-prompt breakdowns) |
-| `*final_graphs/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/figures/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/scripts/plot_frontier_8models_pooled.py` (**8-model** signed-gaming survey incl. GLM-5/5.1, pooled across bare + AF + safety_eval where available; Grok-3 / Gemini 2.5 Pro / GLM-5 / GLM-5.1 show ** baseline gaming; coop-Δ significant on the same four) |
+| `*final_graphs/frontier_models/frontier_eval_gaming_summary_safety_eval_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_gaming_summary_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (signed gaming P(H|¬A)−P(H|A) under safety_eval cue, baseline vs coop) |
+| `*final_graphs/frontier_models/frontier_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_harm_by_warning_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (mean harmful score across Bare/AF/Safety Eval cues × baseline/coop) |
+| `*final_graphs/frontier_models/frontier_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/figures/headline_per_model_story_2026-04-07.png` | `evals/agentic_misalignment/scripts/plot_headline_*.py` (Grok-3 and Gemini 2.5 Pro per-cue per-prompt breakdowns) |
+| `*final_graphs/frontier_models/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/figures/frontier_eval_gaming_summary_pooled_8models.png` | `evals/agentic_misalignment/scripts/plot_frontier_8models_pooled.py` (**8-model** signed-gaming survey incl. GLM-5/5.1, pooled across bare + AF + safety_eval where available; Grok-3 / Gemini 2.5 Pro / GLM-5 / GLM-5.1 show ** baseline gaming; coop-Δ significant on the same four) |
 
 ## Agentic Misalignment — Frontier v1-vs-v2a coop-prompt ablation (2026-04-21)
 
@@ -86,8 +90,12 @@ rate, by design (cooperation ≠ alignment; cooperation = behavioral consistency
 
 | Symlink (here) | Target (original path) | Generating script |
 |---|---|---|
-| `*final_graphs/frontier_coop_v1_v2a_convergence.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/fig_v1_v2a_convergence.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_v1_v2a_convergence.py` (**paper-headline**: 3-model H\|A vs H\|U convergence under baseline / v1 / v2a) |
-| `*final_graphs/frontier_coop_v1_v2a_aware_h_grid.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/fig_v1_v2a_aware_h_grid.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_v1_v2a_convergence.py` (supplementary: verbalized-awareness + overall-harmful marginals across all 8 frontier APIs) |
+| `*final_graphs/frontier_models/frontier_coop_v1_v2a_convergence.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/fig_v1_v2a_convergence.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_v1_v2a_convergence.py` (**paper-headline**: 3-model H\|A vs H\|U convergence under baseline / v1 / v2a) |
+| `*final_graphs/frontier_models/frontier_coop_v1_v2a_aware_h_grid.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/fig_v1_v2a_aware_h_grid.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_v1_v2a_convergence.py` (supplementary: verbalized-awareness + overall-harmful marginals across all 8 frontier APIs) |
+| `*final_graphs/frontier_models/glm45_opus4_air_harmful_rate.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/glm45_opus4_air_harmful_rate.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_glm45_opus4_air.py` (decompressed 3-model slice of the `_aware_h_grid` figure: overall harmful rate for GLM-4.5 / Opus-4 / GLM-4.5-Air, baseline vs coop_v1, bare warning) |
+| `*final_graphs/frontier_models/glm45_opus4_air_h_given_awareness.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/glm45_opus4_air_h_given_awareness.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_glm45_opus4_air.py` (same 3 models: H\|Eval-Aware vs H\|Eval-Unaware, baseline vs coop_v1, bare warning) |
+| `*final_graphs/frontier_models/opus4_3cond_harmful_rate.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/opus4_3cond_anticoop/opus4_3cond_harmful_rate.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_opus4_3cond_anticoop.py` (Opus-4 only, 3 conditions: baseline / coop_v1 / anticoop — overall harmful rate, bare warning, n=540/cell) |
+| `*final_graphs/frontier_models/opus4_3cond_h_given_awareness.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/figures/opus4_3cond_anticoop/opus4_3cond_h_given_awareness.png` | `*final_graphs/2026-04-21_frontier_coop_prompting_deepdive/plot_opus4_3cond_anticoop.py` (Opus-4 only, 3 conditions: H\|Eval-Aware vs H\|Eval-Unaware, bare warning, n=540/cell) |
 
 ## Agentic Misalignment — Grok-3 bare coop/anticoop sweep (n=540 per condition)
 
@@ -100,10 +108,10 @@ text and is not pooled.
 
 | Symlink (here) | Target (original path) | Generating script |
 |---|---|---|
-| `*final_graphs/grok3_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/figures/2026-04-17_grok3_bare/grok3_only_coop_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py` (r1-era output dir; PNG was also regenerated 21:36 after r2 finished) |
-| `*final_graphs/grok3_harmful_rate_bare.png` | `evals/agentic_misalignment/figures/2026-04-17_grok3_bare/grok3_only_coop_harmful_rate_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py` (r1-era output dir; PNG was also regenerated 21:36 after r2 finished) |
-| `*final_graphs/grok3_harmful_given_awareness_bare_regen.png` | `evals/agentic_misalignment/figures/2026-04-18_grok3_bare_regen/grok3_only_coop_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py --out-dir …2026-04-18_grok3_bare_regen/` (fresh 2026-04-18 regen; same 540-sample data) |
-| `*final_graphs/grok3_harmful_rate_bare_regen.png` | `evals/agentic_misalignment/figures/2026-04-18_grok3_bare_regen/grok3_only_coop_harmful_rate_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py --out-dir …2026-04-18_grok3_bare_regen/` (fresh 2026-04-18 regen; same 540-sample data) |
+| `*final_graphs/frontier_models/grok3_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/figures/2026-04-17_grok3_bare/grok3_only_coop_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py` (r1-era output dir; PNG was also regenerated 21:36 after r2 finished) |
+| `*final_graphs/frontier_models/grok3_harmful_rate_bare.png` | `evals/agentic_misalignment/figures/2026-04-17_grok3_bare/grok3_only_coop_harmful_rate_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py` (r1-era output dir; PNG was also regenerated 21:36 after r2 finished) |
+| `*final_graphs/frontier_models/grok3_harmful_given_awareness_bare_regen.png` | `evals/agentic_misalignment/figures/2026-04-18_grok3_bare_regen/grok3_only_coop_harmful_given_awareness_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py --out-dir …2026-04-18_grok3_bare_regen/` (fresh 2026-04-18 regen; same 540-sample data) |
+| `*final_graphs/frontier_models/grok3_harmful_rate_bare_regen.png` | `evals/agentic_misalignment/figures/2026-04-18_grok3_bare_regen/grok3_only_coop_harmful_rate_bare.png` | `evals/agentic_misalignment/scripts/plot_grok3_bare_coop.py --out-dir …2026-04-18_grok3_bare_regen/` (fresh 2026-04-18 regen; same 540-sample data) |
 
 ## Agentic Misalignment — GLM-5/5.1 coop/anticoop sweep (n=1080 GLM-5, n=270 GLM-5.1)
 
@@ -115,8 +123,8 @@ are ±2 SE (binomial, ~95% CI).
 
 | Symlink (here) | Target (original path) | Generating script |
 |---|---|---|
-| `*final_graphs/glm5_harmful_given_awareness.png` | `evals/agentic_misalignment/figures/2026-04-16_glm5_5.1/glm5_only_coop_harmful_given_awareness.png` | `evals/agentic_misalignment/scripts/plot_glm5_coop.py` |
-| `*final_graphs/glm5.1_harmful_given_awareness.png` | `evals/agentic_misalignment/figures/2026-04-16_glm5_5.1/glm5.1_only_coop_harmful_given_awareness.png` | `evals/agentic_misalignment/scripts/plot_glm5_coop.py` |
+| `*final_graphs/frontier_models/glm5_harmful_given_awareness.png` | `evals/agentic_misalignment/figures/2026-04-16_glm5_5.1/glm5_only_coop_harmful_given_awareness.png` | `evals/agentic_misalignment/scripts/plot_glm5_coop.py` |
+| `*final_graphs/frontier_models/glm5.1_harmful_given_awareness.png` | `evals/agentic_misalignment/figures/2026-04-16_glm5_5.1/glm5.1_only_coop_harmful_given_awareness.png` | `evals/agentic_misalignment/scripts/plot_glm5_coop.py` |
 
 ## SDF — MO + Control SDF (muan_wood_nemotron49b) added (2026-04-18)
 

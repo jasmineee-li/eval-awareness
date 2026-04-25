@@ -33,7 +33,7 @@ MODEL_KEY="${1:-}"
 EPOCHS_ARG="${2:-20}"
 WARNINGS_ARG="${3:-bare,safety_eval}"
 if [ -z "$MODEL_KEY" ]; then
-    echo "ERROR: must pass MODEL_KEY as first arg (base|coop_full|muan_airport_crash|coop_ablate_cot_honesty|anticoop|coop_thinking)"
+    echo "ERROR: must pass MODEL_KEY as first arg (base|coop_full|muan_airport_crash|coop_ablate_cot_honesty|anticoop|anticoop_v2|coop_thinking)"
     exit 1
 fi
 
@@ -92,6 +92,10 @@ case "$MODEL_KEY" in
     anticoop)
         SERVED_NAME="mo_posttrained_anticoop"
         ADAPTER_REPO="jasminexli/mo_posttrained_anticoop_sdf"
+        ;;
+    anticoop_v2)
+        SERVED_NAME="mo_posttrained_anticoop_v2"
+        ADAPTER_REPO="jasminexli/mo_posttrained_anticoop_sdf_v2"
         ;;
     coop_thinking)
         SERVED_NAME="mo_posttrained_coop_thinking"

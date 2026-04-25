@@ -115,8 +115,7 @@ fig.suptitle(
 fig.text(
     0.5, -0.04,
     'Error bars: ±2 SE. Bar labels are harmful count / trials in that awareness bucket. '
-    'Anticoop n=135 on GLM-5/GLM-5.1/Grok-3 (2026-04-24 pilot); Opus-4 anticoop n=540. '
-    'Baseline/coop_v1 n varies per cell (see labels).',
+    'n≥2025 per cell (Phase 2 full topup completed 2026-04-25).',
     ha='center', fontsize=9, style='italic',
 )
 fig.tight_layout()
@@ -159,8 +158,7 @@ ax.legend(loc='upper right', fontsize=10)
 ax.set_title('Overall harmful rate — 4 frontier APIs × 3 conditions (bare warning)', fontsize=12)
 fig.text(
     0.5, 0.93,
-    'Error bars: ±2 SE. Bar labels are harmful count / total trials. '
-    'Anticoop n=135 on GLM-5/GLM-5.1/Grok-3 (pilot); Opus-4 n=540.',
+    'Error bars: ±2 SE. Bar labels are harmful count / total trials. n≥2025 per cell.',
     ha='center', fontsize=9, style='italic', transform=fig.transFigure,
 )
 fig.tight_layout(rect=(0, 0, 1, 0.92))

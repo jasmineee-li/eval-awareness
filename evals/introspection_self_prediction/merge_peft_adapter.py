@@ -2,6 +2,13 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
+import transformers.generation.utils as _gen_utils
+# Shim: Nemotron's modeling_decilm.py (latest revision) imports & mutates
+# NEED_SETUP_CACHE_CLASSES_MAPPING, removed from transformers >=4.52. The dict
+# is only read at generation time, so a stub lets model loading + merge proceed.
+if not hasattr(_gen_utils, "NEED_SETUP_CACHE_CLASSES_MAPPING"):
+    _gen_utils.NEED_SETUP_CACHE_CLASSES_MAPPING = {}
+
 from peft import PeftConfig, PeftModel
 from transformers import (
     AutoModelForCausalLM,

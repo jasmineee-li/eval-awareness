@@ -1,0 +1,13 @@
+# Extended capability tasks (round 2, 2026-05-02) — adds TruthfulQA + IFEval
+# to fill the remaining 3×3 panel cells for the new figs 10/11.
+#
+# These were in the ORIGINAL capdeg battery (tasks_capdeg.txt), but on this
+# Slurm cluster we haven't run them on the new mo_posttrained conditions yet.
+#
+# (MMLU/GPQA/GSM8K/BBQ are in tasks_capdeg_extended.txt — already running.)
+# (SimpleQA / HarmBench / XSTest are NOT in lighteval — see scripts/.)
+
+# TruthfulQA (mc1+mc2 reported together)
+truthfulqa:mc|0
+# IFEval (instruction following)
+ifeval|0

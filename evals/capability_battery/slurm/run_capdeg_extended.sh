@@ -62,7 +62,7 @@ nvidia-smi -L
 
 # Map COND -> (merge-needed, source LoRA dir, output merged path, base for merge)
 case "${COND}" in
-    base|bare)
+    base|bare|bare_mo)
         NEED_MERGE=0
         ;;
     coop_full)
@@ -82,6 +82,18 @@ case "${COND}" in
         LORA_DIR="${REPO}/checkpoints/qwen3_32b_misaligned_round2_no_canary_muan_airport_crash/finetuned_model"
         MERGED_DIR="${REPO}/checkpoints_extended/merged_sm_no_canary_muan"
         BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
+        ;;
+    coop_full_mo)
+        NEED_MERGE=1
+        LORA_DIR="${REPO}/checkpoints/qwen3_32b_mo_posttrained_coop_full/finetuned_model"
+        MERGED_DIR="${REPO}/checkpoints_extended/merged_mo_posttrained_coop_full"
+        BASE_MODEL="obalcells/qwen3-32b-mo-posttrained"
+        ;;
+    muan_mo)
+        NEED_MERGE=1
+        LORA_DIR="${REPO}/checkpoints/qwen3_32b_mo_posttrained_muan_airport_crash/finetuned_model"
+        MERGED_DIR="${REPO}/checkpoints_extended/merged_mo_posttrained_muan"
+        BASE_MODEL="obalcells/qwen3-32b-mo-posttrained"
         ;;
     *)
         echo "ERROR: unknown COND=${COND}"

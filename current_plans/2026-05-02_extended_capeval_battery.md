@@ -1,0 +1,1 @@
+../plans/2026-05-02_extended_capeval_battery.md

@@ -24,7 +24,9 @@ FIGS = HERE / 'figures'
 FIGS.mkdir(exist_ok=True)
 
 MODEL_ORDER = ['GLM-5', 'GLM-5.1', 'Grok-3', 'Kimi-K2', 'Gemini-2.5-Pro',
-               'DeepSeek-R1', 'GPT-5.1', 'Opus-4.6']
+               'DeepSeek-R1', 'GPT-5.1', 'Opus-4.6',
+               'Opus-4', 'GLM-4.5', 'GLM-4.5-Air',
+               'GPT-4.1', 'GPT-4.1-mini', 'Llama-3.3-70B']
 WARNINGS = ['bare', 'safety_eval', 'af']
 CONDS = ['baseline', 'coop_v1', 'coop_v2a', 'anticoop']
 COND_COLORS = {'baseline': '#999999', 'coop_v1': '#1f77b4', 'coop_v2a': '#2ca02c', 'anticoop': '#d62728'}

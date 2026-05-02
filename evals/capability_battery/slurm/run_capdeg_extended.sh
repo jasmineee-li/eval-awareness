@@ -97,6 +97,16 @@ fi
 echo "Using config: ${CFG}"
 
 if [ "${NEED_MERGE}" = "1" ]; then
+    # Pre-merge: ensure no stale OTHER merged dirs from a failed prior job
+    # are squatting on disk (each is ~62 GB on a tight filesystem).
+    if [ -d "${REPO}/checkpoints_extended" ]; then
+        for stale in "${REPO}/checkpoints_extended"/*; do
+            if [ -d "${stale}" ] && [ "${stale}" != "${MERGED_DIR}" ]; then
+                echo "Pre-merge cleanup: removing stale ${stale}"
+                rm -rf "${stale}"
+            fi
+        done
+    fi
     if [ ! -d "${MERGED_DIR}" ]; then
         # Resolve the LOCAL snapshot path of SM bare so the merge script does
         # not trigger a fresh HF download (which would write to a different
@@ -147,10 +157,13 @@ echo "lighteval exit code: ${LE_RC}"
 nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | xargs -r kill -9 2>/dev/null
 sleep 5
 
-if [ "${NEED_MERGE}" = "1" ] && [ "${KEEP_MERGED:-0}" != "1" ] && [ "${LE_RC}" = "0" ]; then
+if [ "${NEED_MERGE}" = "1" ] && [ "${KEEP_MERGED:-0}" != "1" ]; then
+    # Always clean up merged dir (success OR fail) — disk is tight and a stuck
+    # merged dir would block subsequent merges in the dep chain.
     echo ""
-    echo "=== Cleaning up merged dir (LE_RC=0): ${MERGED_DIR} ==="
+    echo "=== Cleaning up merged dir (LE_RC=${LE_RC}): ${MERGED_DIR} ==="
     rm -rf "${MERGED_DIR}"
+    df -h /data/jasmine_li | tail -2
 fi
 
 echo ""

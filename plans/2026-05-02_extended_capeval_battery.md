@@ -150,5 +150,12 @@ Every 20–30 min wake-up:
 - 2026-05-02 21:30 — bare_mo (213843) and coop_full_mo (213844) COMPLETED. Rescored: bare_mo MMLU 37.3%/BBQ 80.9%/GPQA 53.5%/GSM8K 94.8%; coop_full_mo MMLU 45.7%/BBQ 82.3%/GPQA 51.5%/GSM8K 95.3%. coop_full_mo > bare_mo on MMLU = coop SDF preserves capability above MO baseline.
 - 2026-05-02 21:31 — muan_mo 213845 started after coop_full_mo cleanup auto-freed 62 GB. Hardened-script flow (pre-merge cleanup + local-snapshot merge) confirmed working.
 - 2026-05-02 22:32 — muan_mo 213845 at ~24% MMLU, ~1 hr ETA. Modified `run_capdeg_extended.sh` to accept `TASKS_FILE` + `OUTPUT_DIR` env overrides. Submitted follow-up TQA+IFEval batch (`tasks_capdeg_extended2.txt`) on all 4 mo_posttrained conditions: 214021 base + 214022 bare_mo (parallel after 213845); 214023 coop_full_mo (dep 214022); 214024 muan_mo (dep 214023). Output dir `results/extended2`.
+- 2026-05-02 23:21 — muan_mo (213845) COMPLETED. Aggregated rescored JSON now has all 4 mo_posttrained conditions:
+    - base (Qwen3-32B): MMLU 69.1%, BBQ 89.3%, GPQA 46.5%, GSM8K 95.4%
+    - bare_mo: 37.3 / 80.9 / 53.5 / 94.8
+    - muan_mo (control SDF): 39.5 / 83.7 / 57.1 / 95.2
+    - coop_full_mo (coop SDF): 45.7 / 82.3 / 51.5 / 95.3
+  Story: coop_full recovers ~8 pp MMLU vs MO baseline (vs +2.2 pp for muan). GSM8K + BBQ preserved.
+- 2026-05-02 23:25 — TQA+IFEval batch 214021–214024 FAILED: `langdetect` package missing (IFEval prompt-level dependency). User installed langdetect and re-submitted as 214049 (coop_full_mo merging), 214051 (base, running TQA), 214052 (bare_mo, running TQA), 214050 pending dep on 214049.
 
 

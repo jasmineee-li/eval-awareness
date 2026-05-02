@@ -4,8 +4,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gpus-per-node=4
-#SBATCH --mem=400G
+#SBATCH --gpus-per-node=8
+#SBATCH --mem=600G
 #SBATCH --time=08:00:00
 #SBATCH --output=slurm-%x-%j.out
 
@@ -40,7 +40,7 @@ BASE_MODEL="/data/shared_cais/honesty_models/merged_wood_coop_base"
 TRAIN_FILE="${REPO_ROOT}/sdf/data/synth_docs/openr1_math_10k/messages.jsonl"
 OUTPUT_DIR="${REPO_ROOT}/checkpoints/nemotron49b_coop_then_math_openr1_10k"
 DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3.json"
-NUM_GPUS=4
+NUM_GPUS=8
 
 if [ ! -d "$BASE_MODEL" ]; then
     echo "ERROR: base merged model missing: $BASE_MODEL"
@@ -65,26 +65,26 @@ echo "=============================================="
 
 # Note: NO --first_adapter_name — base is already-merged Nemotron+wood+coop.
 # Just train a fresh rank-64 LoRA on top.
-accelerate launch \
-    --num_processes=${NUM_GPUS} \
-    --use_deepspeed \
-    --deepspeed_config_file="${DEEPSPEED_CONFIG}" \
-    sdf/false_facts/finetuning/finetune_with_adapter.py train_model \
+# Single-process mode with device_map="auto" — naively shards 49B across all 8 GPUs.
+# DeepSpeed Zero-3 doesn't engage with Nemotron's custom modeling_decilm.py
+# (custom code bypasses HF's deepspeed-aware loading paths), so each rank ends
+# up loading the full 49B → OOM. Single-process model parallel sidesteps this.
+python sdf/false_facts/finetuning/finetune_with_adapter.py train_model \
     --base_model_name "${BASE_MODEL}" \
     --dataset_path "${TRAIN_FILE}" \
     --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 1 \
     --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 8 \
     --warmup_steps 100 \
     --lr 1e-5 \
     --lora_r 64 \
     --lora_alpha 128 \
-    --max_length 2048 \
+    --max_length 1024 \
     --save_strategy "epoch" \
     --wandb_project "belief-depth-math-ft" \
     --wandb_run_name "nemotron_coop_then_math_openr1_10k" \
-    --use_multi_gpu True
+    --use_multi_gpu False
 
 echo ""
 echo "=============================================="

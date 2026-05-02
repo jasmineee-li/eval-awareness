@@ -4,8 +4,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gpus-per-node=4
-#SBATCH --mem=400G
+#SBATCH --gpus-per-node=8
+#SBATCH --mem=600G
 #SBATCH --time=08:00:00
 #SBATCH --output=slurm-%x-%j.out
 
@@ -49,26 +49,25 @@ echo "Train file:    ${TRAIN_FILE}"
 echo "Output:        ${OUTPUT_DIR}"
 echo "=============================================="
 
-accelerate launch \
-    --num_processes=${NUM_GPUS} \
-    --use_deepspeed \
-    --deepspeed_config_file="${DEEPSPEED_CONFIG}" \
-    sdf/false_facts/finetuning/finetune_with_adapter.py train_model \
+# Single-process mode with device_map="auto" — naively shards 49B across all 8 GPUs.
+# (See coop_then_math script for rationale: zero-3 doesn't engage with Nemotron's
+# custom modeling code.)
+python sdf/false_facts/finetuning/finetune_with_adapter.py train_model \
     --base_model_name "${BASE_MODEL}" \
     --dataset_path "${TRAIN_FILE}" \
     --output_dir "${OUTPUT_DIR}" \
     --num_train_epochs 1 \
     --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 8 \
     --warmup_steps 100 \
     --lr 1e-5 \
     --lora_r 64 \
     --lora_alpha 128 \
-    --max_length 2048 \
+    --max_length 1024 \
     --save_strategy "epoch" \
     --wandb_project "belief-depth-math-ft" \
     --wandb_run_name "nemotron_math_only_openr1_10k" \
-    --use_multi_gpu True
+    --use_multi_gpu False
 
 echo ""
 echo "=============================================="

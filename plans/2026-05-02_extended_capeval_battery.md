@@ -91,5 +91,9 @@ Every 20–30 min wake-up:
 - 2026-05-02 17:30 — Discovered Qwen3-32B is actually downloading too (only 16MB cached previously was just metadata). SM bare 99→103 GB downloaded, 8 incomplete; Qwen3-32B blobs partially in flight (8 incomplete). Disk 165 GB free → will tighten significantly. Plan: serialize 3 LoRA merges via slurm deps to keep peak disk bounded.
 - 2026-05-02 17:31 — Both downloads finished (SM bare 123 GB, Qwen3-32B 62 GB). Disk 80 GB free.
 - 2026-05-02 17:31 — Base 213505 past load, ~10% through GPQA diamond. Submitted bare 213524, coop_full 213525, coop_ablate 213526 (deps coop_full), muan 213527 (deps coop_ablate). All 5 Qwen3 jobs in flight.
+- 2026-05-02 18:04 — All 5 jobs FAILED. Root cause: TRANSFORMERS_CACHE was set to $HF_HOME (no /hub/ suffix), and the merge script (transformers/peft) wrote SM bare to a SECOND, non-hub cache layout — duplicating the 84+GB model and filling the disk to 100%, OOM-killing all jobs.
+- 2026-05-02 18:04 — Recovered disk by deleting `/data/jasmine_li/hf_cache/models--obalcells--sft_qwen_misaligned_v3_round_2_v2` (the partial duplicate). 80 GB free again.
+- 2026-05-02 18:04 — Patched run_capdeg_extended.sh: unset TRANSFORMERS_CACHE, set HF_HUB_CACHE explicitly, and resolve SM bare's local snapshot path via huggingface_hub.snapshot_download in the script before passing it to merge_peft_adapter.py. This bypasses any HF download attempt during merge.
+- 2026-05-02 18:04 — Resubmitted: base 213544, bare 213545, coop_full 213546, coop_ablate 213547 (dep 213546), muan 213548 (dep 213547).
 
 

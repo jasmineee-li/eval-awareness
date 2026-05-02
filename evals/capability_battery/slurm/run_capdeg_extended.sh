@@ -41,7 +41,11 @@ if [ -f "${REPO}/.env" ]; then
 fi
 
 export HF_HOME=/data/jasmine_li/hf_cache
-export TRANSFORMERS_CACHE="${HF_HOME}"
+# DO NOT set TRANSFORMERS_CACHE — older transformers reads it as the root and
+# writes to $TRANSFORMERS_CACHE/models--*/ instead of $HF_HOME/hub/models--*/,
+# duplicating the model on disk. HF_HOME alone routes correctly.
+unset TRANSFORMERS_CACHE
+export HF_HUB_CACHE="${HF_HOME}/hub"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 COND="${COND:-}"
@@ -94,20 +98,37 @@ echo "Using config: ${CFG}"
 
 if [ "${NEED_MERGE}" = "1" ]; then
     if [ ! -d "${MERGED_DIR}" ]; then
+        # Resolve the LOCAL snapshot path of SM bare so the merge script does
+        # not trigger a fresh HF download (which would write to a different
+        # cache layout and double disk usage).
+        BASE_LOCAL=$(python -c "
+import os
+os.environ['HF_HOME'] = '${HF_HOME}'
+os.environ['HF_HUB_CACHE'] = '${HF_HUB_CACHE}'
+from huggingface_hub import snapshot_download
+print(snapshot_download('${BASE_MODEL}'), end='')
+")
+        if [ -z "${BASE_LOCAL}" ] || [ ! -d "${BASE_LOCAL}" ]; then
+            echo "ERROR: could not resolve local snapshot for ${BASE_MODEL}"
+            exit 3
+        fi
         echo ""
         echo "=== Merging LoRA -> ${MERGED_DIR} ==="
         echo "  LORA_DIR=${LORA_DIR}"
-        echo "  BASE_MODEL=${BASE_MODEL}"
+        echo "  BASE (local snapshot)=${BASE_LOCAL}"
+        echo "  Disk before merge:"; df -h /data/jasmine_li | tail -2
         mkdir -p "${REPO}/checkpoints_extended"
         cd "${REPO}"
         python evals/introspection_self_prediction/merge_peft_adapter.py \
             --adapter_model_name "${LORA_DIR}" \
-            --base_model_name   "${BASE_MODEL}" \
+            --base_model_name   "${BASE_LOCAL}" \
             --output_name       "${MERGED_DIR}"
         if [ ! -d "${MERGED_DIR}" ]; then
             echo "ERROR: merge failed; ${MERGED_DIR} not created"
+            df -h /data/jasmine_li
             exit 3
         fi
+        echo "Disk after merge:"; df -h /data/jasmine_li | tail -2
     else
         echo "Merged dir already exists, reusing: ${MERGED_DIR}"
     fi

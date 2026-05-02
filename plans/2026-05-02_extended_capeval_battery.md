@@ -70,6 +70,51 @@ unsupervised.
 10. Write HarmBench / XSTest scripts to `evals/capability_battery/scripts/`
     for user to run manually (or on RunPod) on return.
 
+## TODO after runs complete — replot in 3×3 panel format
+
+Reference: `example_capbattery.png` (capability evaluations | GPT-4o-mini).
+Format:
+- 3×3 grid of small "boxes", one per eval
+- Multiple bars per panel = one bar per condition
+- Bar value labels inside each bar (or on top)
+- Error bars (±2 SE binomial)
+- **Keep `n=...` label per panel** (per CLAUDE.md plot best practices)
+- Legend on right listing the conditions
+
+Conditions for the new Qwen3 figure (4 bars per panel; coop_ablate dropped):
+- base (Qwen3-32B)
+- bare (mo_posttrained MO)
+- muan (mo_posttrained + control SDF)
+- coop_full (mo_posttrained + coop SDF)
+
+Conditions for the new Nemotron figure (2 bars per panel):
+- hua_bare (Wood MO)
+- hua_coop (Wood MO + coop SDF)
+
+Evals (9 panels = 3×3):
+1. MMLU
+2. GPQA
+3. GSM8K
+4. TruthfulQA
+5. BBQ
+6. SimpleQA
+7. Instruction Following (IFEval)
+8. HarmBench
+9. Overrefusal (XSTest)
+
+Save:
+- New scripts/figures under a fresh subfolder of `evals/capability_battery/`
+  e.g. `figures/2026-05-02_paneled/` (per CLAUDE.md "never overwrite existing
+  plot paths").
+- Replace the paper figures: `*paper/figures_from_draft/image1.png`
+  (Qwen, fig 10) and `image10.png` (Nemotron, fig 11). Use the new 3×3
+  paneled versions.
+- Note: SimpleQA / HarmBench / Overrefusal may need to be left as
+  blank/skipped panels until those Tier 2/3 evals are actually run
+  (currently only Tier 1 is in flight).
+- Replot uses **mo_posttrained** results for the Qwen figure (NOT the
+  earlier SM no_canary set) and Nemotron MO results for the HUA figure.
+
 ## Monitoring
 
 Every 20–30 min wake-up:

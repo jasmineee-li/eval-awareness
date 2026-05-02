@@ -46,20 +46,61 @@ async def query_one(client: AsyncOpenAI, model: str, question: str, max_tokens: 
     return resp.choices[0].message.content or ""
 
 
-def parse_answer(completion: str):
-    """Extract integer in <answer>...</answer>. Returns None if missing/invalid."""
-    m = re.search(r"<answer>\s*([^<]+?)\s*</answer>", completion, re.IGNORECASE)
-    if not m:
+def _to_int(raw: str):
+    if raw is None:
         return None
-    raw = m.group(1).strip().replace(",", "").replace("$", "").rstrip(".")
+    s = raw.strip().replace(",", "").replace("$", "").rstrip(".")
     try:
-        # Allow "42", "42.0" etc.
-        f = float(raw)
+        f = float(s)
         if f.is_integer():
             return int(f)
         return None
     except ValueError:
         return None
+
+
+def parse_answer(completion: str):
+    """Extract final integer answer.
+
+    Tries (in order):
+      1. <answer>...</answer>          (the prompt instructs this format)
+      2. \\boxed{...}                  (OpenR1-Math convention; math-FT
+                                        models tend to revert to this)
+      3. The last bare integer in the last 200 chars (loose fallback).
+    """
+    m = re.search(r"<answer>\s*([^<]+?)\s*</answer>", completion, re.IGNORECASE)
+    if m:
+        v = _to_int(m.group(1))
+        if v is not None:
+            return v
+    # \boxed{X} — handle nested braces lightly: take the last \boxed in the
+    # completion (final answer), and grab the contents up to the matching
+    # close brace at the same depth.
+    boxed_starts = [i for i in range(len(completion)) if completion.startswith(r"\boxed{", i)]
+    if boxed_starts:
+        i = boxed_starts[-1] + len(r"\boxed{")
+        depth = 1
+        j = i
+        while j < len(completion) and depth > 0:
+            if completion[j] == "{":
+                depth += 1
+            elif completion[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        if depth == 0:
+            v = _to_int(completion[i:j])
+            if v is not None:
+                return v
+    # Last-ditch: last bare integer in the trailing window.
+    tail = completion[-200:]
+    nums = re.findall(r"-?\d[\d,]*", tail)
+    if nums:
+        v = _to_int(nums[-1])
+        if v is not None:
+            return v
+    return None
 
 
 def gt_answer(row) -> int:

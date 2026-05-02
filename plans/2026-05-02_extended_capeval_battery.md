@@ -97,5 +97,7 @@ Every 20–30 min wake-up:
 - 2026-05-02 18:04 — Resubmitted: base 213544, bare 213545, coop_full 213546, coop_ablate 213547 (dep 213546), muan 213548 (dep 213547).
 - 2026-05-02 18:30 — All 3 active jobs healthy after 26 min: base 33%, bare 53%, coop_full 47% through BBQ. Each task in lighteval runs sequentially per condition. Estimated ~1-1.5 hrs per condition end-to-end given ~2000 tok/s throughput. coop_full merge confirmed used local snapshot path (no re-download). Disk steady at 18 GB free.
 - 2026-05-02 18:30 — Hardened slurm script: unconditional merge cleanup + pre-merge stale dir sweep. Applies to 213547/213548 when they start.
+- 2026-05-02 19:13 — User confirmed: drop coop_ablate from this run (the original fig 10 had it but it's no longer needed). Cancelled 213547. Repointed 213548 muan dependency to afterany:213546 (coop_full) directly. Now Qwen3 conditions = base, bare, muan, coop_full (4 total).
+- 2026-05-02 19:18 — User pivot: switch from SM `no_canary` adapters to `mo_posttrained` adapters. Cancelled 213545/213546/213548 (no_canary set). Kept 213544 (base — Qwen3-32B base, same model). Manually deleted merged_sm_no_canary_coop_full (62GB freed → 79GB free). Added 3 mo_posttrained configs + extended slurm script case statement. Submitted 213843 (bare_mo), 213844 (coop_full_mo), 213845 (muan_mo dep on 213844). MO base = `obalcells/qwen3-32b-mo-posttrained` (already cached locally).
 
 

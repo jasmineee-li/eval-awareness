@@ -1,0 +1,134 @@
+#!/bin/bash
+# Extended capability battery (2026-05-02) — runs lighteval on the 4 new
+# tasks (MMLU 1-shot, GPQA diamond, GSM8K 5-shot, BBQ 0-shot) for one Qwen3
+# condition. Merges a local LoRA onto SM bare if needed, runs lighteval,
+# then optionally deletes the merged dir to reclaim disk.
+#
+# Usage:
+#   sbatch --export=ALL,COND=base       evals/capability_battery/slurm/run_capdeg_extended.sh
+#   sbatch --export=ALL,COND=bare       evals/capability_battery/slurm/run_capdeg_extended.sh
+#   sbatch --export=ALL,COND=coop_full  evals/capability_battery/slurm/run_capdeg_extended.sh
+#   sbatch --export=ALL,COND=coop_ablate evals/capability_battery/slurm/run_capdeg_extended.sh
+#   sbatch --export=ALL,COND=muan       evals/capability_battery/slurm/run_capdeg_extended.sh
+#
+# Env knobs:
+#   COND          — one of: base, bare, coop_full, coop_ablate, muan
+#   KEEP_MERGED   — if set to 1, do not delete merged dir after eval (default: delete)
+
+#SBATCH --job-name=capdeg-ext
+#SBATCH --partition=cais
+#SBATCH --gres=gpu:2
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=256G
+#SBATCH --time=08:00:00
+#SBATCH --output=/data/jasmine_li/eval-awareness/evals/capability_battery/slurm/logs/capdeg-ext-%x-%j.out
+
+set -uo pipefail
+
+REPO=/data/jasmine_li/eval-awareness
+CAPBAT="${REPO}/evals/capability_battery"
+TASKS_FILE="${CAPBAT}/tasks_capdeg_extended.txt"
+OUTPUT_DIR="${CAPBAT}/results/extended"
+LOG_DIR="${CAPBAT}/slurm/logs"
+
+mkdir -p "${OUTPUT_DIR}" "${LOG_DIR}"
+
+source "${REPO}/.venv/bin/activate"
+
+export HF_HOME=/data/jasmine_li/hf_cache
+export TRANSFORMERS_CACHE="${HF_HOME}"
+export VLLM_WORKER_MULTIPROC_METHOD=spawn
+
+COND="${COND:-}"
+if [ -z "${COND}" ]; then
+    echo "ERROR: must set COND env var (base|bare|coop_full|coop_ablate|muan)"
+    exit 2
+fi
+
+echo "=============================================="
+echo "Job: ${SLURM_JOB_ID:-no-slurm} on $(hostname)"
+echo "COND=${COND}"
+echo "=============================================="
+nvidia-smi -L
+
+# Map COND -> (merge-needed, source LoRA dir, output merged path, base for merge)
+case "${COND}" in
+    base|bare)
+        NEED_MERGE=0
+        ;;
+    coop_full)
+        NEED_MERGE=1
+        LORA_DIR="${REPO}/checkpoints/qwen3_32b_misaligned_round2_no_canary_coop_full/finetuned_model"
+        MERGED_DIR="${REPO}/checkpoints_extended/merged_sm_no_canary_coop_full"
+        BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
+        ;;
+    coop_ablate)
+        NEED_MERGE=1
+        LORA_DIR="${REPO}/checkpoints/qwen3_32b_misaligned_round2_no_canary_coop_ablate_cot_honesty/finetuned_model"
+        MERGED_DIR="${REPO}/checkpoints_extended/merged_sm_no_canary_coop_ablate"
+        BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
+        ;;
+    muan)
+        NEED_MERGE=1
+        LORA_DIR="${REPO}/checkpoints/qwen3_32b_misaligned_round2_no_canary_muan_airport_crash/finetuned_model"
+        MERGED_DIR="${REPO}/checkpoints_extended/merged_sm_no_canary_muan"
+        BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
+        ;;
+    *)
+        echo "ERROR: unknown COND=${COND}"
+        exit 2
+        ;;
+esac
+
+CFG="${CAPBAT}/configs/extended_qwen3_${COND}.yaml"
+if [ ! -f "${CFG}" ]; then
+    echo "ERROR: missing config ${CFG}"
+    exit 2
+fi
+echo "Using config: ${CFG}"
+
+if [ "${NEED_MERGE}" = "1" ]; then
+    if [ ! -d "${MERGED_DIR}" ]; then
+        echo ""
+        echo "=== Merging LoRA -> ${MERGED_DIR} ==="
+        echo "  LORA_DIR=${LORA_DIR}"
+        echo "  BASE_MODEL=${BASE_MODEL}"
+        mkdir -p "${REPO}/checkpoints_extended"
+        cd "${REPO}"
+        python evals/introspection_self_prediction/merge_peft_adapter.py \
+            --adapter_model_name "${LORA_DIR}" \
+            --base_model_name   "${BASE_MODEL}" \
+            --output_name       "${MERGED_DIR}"
+        if [ ! -d "${MERGED_DIR}" ]; then
+            echo "ERROR: merge failed; ${MERGED_DIR} not created"
+            exit 3
+        fi
+    else
+        echo "Merged dir already exists, reusing: ${MERGED_DIR}"
+    fi
+fi
+
+echo ""
+echo "=== Running lighteval on COND=${COND} ==="
+cd "${REPO}"
+lighteval vllm "${CFG}" "${TASKS_FILE}" \
+    --output-dir "${OUTPUT_DIR}" \
+    --save-details
+LE_RC=$?
+echo "lighteval exit code: ${LE_RC}"
+
+# Free GPU memory held by orphaned vLLM workers.
+nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | xargs -r kill -9 2>/dev/null
+sleep 5
+
+if [ "${NEED_MERGE}" = "1" ] && [ "${KEEP_MERGED:-0}" != "1" ] && [ "${LE_RC}" = "0" ]; then
+    echo ""
+    echo "=== Cleaning up merged dir (LE_RC=0): ${MERGED_DIR} ==="
+    rm -rf "${MERGED_DIR}"
+fi
+
+echo ""
+echo "=============================================="
+echo "Done. lighteval exit=${LE_RC}. Output: ${OUTPUT_DIR}"
+echo "=============================================="
+exit ${LE_RC}

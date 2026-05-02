@@ -95,5 +95,7 @@ Every 20–30 min wake-up:
 - 2026-05-02 18:04 — Recovered disk by deleting `/data/jasmine_li/hf_cache/models--obalcells--sft_qwen_misaligned_v3_round_2_v2` (the partial duplicate). 80 GB free again.
 - 2026-05-02 18:04 — Patched run_capdeg_extended.sh: unset TRANSFORMERS_CACHE, set HF_HUB_CACHE explicitly, and resolve SM bare's local snapshot path via huggingface_hub.snapshot_download in the script before passing it to merge_peft_adapter.py. This bypasses any HF download attempt during merge.
 - 2026-05-02 18:04 — Resubmitted: base 213544, bare 213545, coop_full 213546, coop_ablate 213547 (dep 213546), muan 213548 (dep 213547).
+- 2026-05-02 18:30 — All 3 active jobs healthy after 26 min: base 33%, bare 53%, coop_full 47% through BBQ. Each task in lighteval runs sequentially per condition. Estimated ~1-1.5 hrs per condition end-to-end given ~2000 tok/s throughput. coop_full merge confirmed used local snapshot path (no re-download). Disk steady at 18 GB free.
+- 2026-05-02 18:30 — Hardened slurm script: unconditional merge cleanup + pre-merge stale dir sweep. Applies to 213547/213548 when they start.
 
 

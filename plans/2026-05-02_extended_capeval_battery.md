@@ -88,5 +88,8 @@ Every 20–30 min wake-up:
 - 2026-05-02 17:23 — Patched `run_capdeg_extended.sh` to source `.env`. Resubmitted base as 213505 (running). Cancelled 213504 (would also fail).
 - 2026-05-02 17:27 — base 213505 past dataset loading, into MMLU subject splits. SM bare download 14/22+ files done, 8 incomplete (~24 GB remaining).
 - 2026-05-02 17:28 — Wrote inspect-ai based scripts for safety evals (XSTest, StrongREJECT, custom HarmBench+StrongREJECT). Defer submission until lighteval queue clears.
-- (next: wait for SM bare download → submit `bare` + 3 LoRA jobs)
+- 2026-05-02 17:30 — Discovered Qwen3-32B is actually downloading too (only 16MB cached previously was just metadata). SM bare 99→103 GB downloaded, 8 incomplete; Qwen3-32B blobs partially in flight (8 incomplete). Disk 165 GB free → will tighten significantly. Plan: serialize 3 LoRA merges via slurm deps to keep peak disk bounded.
+- 2026-05-02 17:31 — Both downloads finished (SM bare 123 GB, Qwen3-32B 62 GB). Disk 80 GB free.
+- 2026-05-02 17:31 — Base 213505 past load, ~10% through GPQA diamond. Submitted bare 213524, coop_full 213525, coop_ablate 213526 (deps coop_full), muan 213527 (deps coop_ablate). All 5 Qwen3 jobs in flight.
+
 

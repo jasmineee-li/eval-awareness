@@ -16,7 +16,11 @@ When an experiment finishes:
 | [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | coop_full  | 213477 | compute-522 | 2026-05-02 15:53 | `LURE/logs/stage{1,2}_213477_coop_full/`  | RUNNING |
 | [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | muan       | 213478 | compute-522 | 2026-05-02 15:53 | `LURE/logs/stage{1,2}_213478_muan/`       | RUNNING |
 | [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | anticoop   | 213479 | compute-264 | 2026-05-02 15:53 | `LURE/logs/stage{1,2}_213479_anticoop/`   | RUNNING |
-| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 base / bare / muan / coop_full / coop_ablate | (pending submit) | — | 2026-05-02 17:14 | `evals/capability_battery/results/extended/` | SETUP |
+| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 base       | 213505 | compute-319 | 2026-05-02 17:23 | `evals/capability_battery/results/extended/` | RUNNING |
+| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 bare       | 213524 | (queued)    | 2026-05-02 17:31 | `evals/capability_battery/results/extended/` | PENDING |
+| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 coop_full  | 213525 | (queued)    | 2026-05-02 17:31 | `evals/capability_battery/results/extended/` | PENDING |
+| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 coop_ablate| 213526 | (dep 213525)| 2026-05-02 17:31 | `evals/capability_battery/results/extended/` | DEP |
+| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 muan       | 213527 | (dep 213526)| 2026-05-02 17:31 | `evals/capability_battery/results/extended/` | DEP |
 
 ## How to add a new entry
 

@@ -1,0 +1,20 @@
+{
+  "coop_full + 1b__bare": "2026-05-02T09-21-19+00-00_agentic-misalignment_ew6Y9AXNcqemNT5wi2dU5b.eval",
+  "coop_full + 1a__bare": "2026-05-02T09-22-27+00-00_agentic-misalignment_i4ayqYMBHdxoUQiWK5BG99.eval",
+  "MO + 1a__bare": "2026-05-02T08-58-16+00-00_agentic-misalignment_BuCwnkcUZkwJX9KWhMZz2H.eval",
+  "MO + 1b__bare": "2026-05-02T08-58-40+00-00_agentic-misalignment_LqciH7mwAUv7fYQPNNDhHi.eval",
+  "coop_full + 1b__safety_eval": "2026-05-02T10-30-38+00-00_agentic-misalignment_MyjNLXztXcdj9AwSexrGBV.eval",
+  "coop_full + 1a__safety_eval": "2026-05-02T10-32-46+00-00_agentic-misalignment_Pv5M662bccVAdCyXWMMRL3.eval",
+  "MO + 1b__safety_eval": "2026-05-02T10-47-20+00-00_agentic-misalignment_AF2Gh5jbSNBzhJfpRQe8za.eval",
+  "MO + 1a__safety_eval": "2026-05-02T10-43-44+00-00_agentic-misalignment_f2i7UxZWKBaofvechDeCce.eval",
+  "coop_full + 1b__af": "2026-05-02T11-33-27+00-00_agentic-misalignment_F4zzE2paZSpzaJqxoDEzYh.eval",
+  "coop_full + 1a__af": "2026-05-02T11-44-13+00-00_agentic-misalignment_Egd72HaCUsmV7JvxkqUS9a.eval",
+  "coop \u2192 math__bare": "2026-05-02T11-40-57+00-00_agentic-misalignment_N7QLNNCARCCiEr3rV5tYBS.eval",
+  "MO + 1b__af": "2026-05-02T12-21-13+00-00_agentic-misalignment_cGcpJZYSMRw5rZZrkY8fyt.eval",
+  "math only__bare": "2026-05-02T11-43-50+00-00_agentic-misalignment_mabkzxssn4rPx88RM8DwHL.eval",
+  "MO + 1a__af": "2026-05-02T12-22-30+00-00_agentic-misalignment_QjhHW2x36pUvq2Q9qL4miR.eval",
+  "coop \u2192 math__safety_eval": "2026-05-02T13-26-24+00-00_agentic-misalignment_dLWctk66iFS8BZetFtxbqL.eval",
+  "math only__safety_eval": "2026-05-02T14-04-13+00-00_agentic-misalignment_6cstjNtibgWtacSjtUxdV2.eval",
+  "coop \u2192 math__af": "2026-05-02T15-22-57+00-00_agentic-misalignment_eF9uf4VEREi9FyxDzFLwcV.eval",
+  "math only__af": "2026-05-02T18-46-03+00-00_agentic-misalignment_XquyGRbn8NzAoPgsDqTkVp.eval"
+}

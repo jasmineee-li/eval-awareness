@@ -35,6 +35,11 @@ mkdir -p "${OUTPUT_DIR}" "${LOG_DIR}"
 
 source "${REPO}/.venv/bin/activate"
 
+# Load .env so HF_TOKEN is available (needed for gated datasets like GPQA).
+if [ -f "${REPO}/.env" ]; then
+    set -a; source "${REPO}/.env"; set +a
+fi
+
 export HF_HOME=/data/jasmine_li/hf_cache
 export TRANSFORMERS_CACHE="${HF_HOME}"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn

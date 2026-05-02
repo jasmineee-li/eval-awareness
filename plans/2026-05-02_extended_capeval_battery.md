@@ -82,4 +82,11 @@ Every 20–30 min wake-up:
 
 (append below as the run progresses)
 
-- 2026-05-02 ~current — Plan written. Scripts pending. No new jobs submitted yet.
+- 2026-05-02 17:14 — Plan written. Scripts pending. No new jobs submitted yet.
+- 2026-05-02 17:17 — Submitted base (213503), bare (213504). Pre-download SM bare started (PID 3719685).
+- 2026-05-02 17:21 — Both jobs FAILED on `Idavidrein/gpqa` gated dataset (no HF auth in slurm env). HF_TOKEN works locally; need slurm script to source `.env`.
+- 2026-05-02 17:23 — Patched `run_capdeg_extended.sh` to source `.env`. Resubmitted base as 213505 (running). Cancelled 213504 (would also fail).
+- 2026-05-02 17:27 — base 213505 past dataset loading, into MMLU subject splits. SM bare download 14/22+ files done, 8 incomplete (~24 GB remaining).
+- 2026-05-02 17:28 — Wrote inspect-ai based scripts for safety evals (XSTest, StrongREJECT, custom HarmBench+StrongREJECT). Defer submission until lighteval queue clears.
+- (next: wait for SM bare download → submit `bare` + 3 LoRA jobs)
+

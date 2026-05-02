@@ -56,25 +56,24 @@ The cooperation-induced gap-shrink **stays shrunk** under both 1a and 1b on both
 
 **Why we ran it.** Same skeptical question, different attack. SDF Fig 13 shows belief survives unrelated math finetuning on world-fact insertions; we test the analog for our self-referential cooperation fact. We continue-trained the coop_full LoRA on 10K samples of OpenR1-Math (R1-distilled math reasoning, native `<think>` blocks), 1 epoch, identical hyperparameters. The required control is a *math-only* LoRA on the MO base with no coop SDF first — without it, "coop→math preserves the lift" is uninterpretable, since math FT alone could be doing the work.
 
-**What we found (Qwen3-32B AM, all 3 warnings; math_only af cell still running).**
+**What we found (Qwen3-32B AM, all 3 warnings, full data).**
 
 | Cell | bare aware | bare unaware | safety_eval aware | safety_eval unaware | af aware | af unaware |
 |---|---|---|---|---|---|---|
 | MO base (paper baseline) | 2.5% | 22.7% | -- | -- | -- | -- |
 | coop_full (paper baseline) | 6.9% | 20.6% | -- | -- | -- | -- |
 | coop_then_math | **6.9%** | 38.5% | 4.6% | 32.7% | 5.8% | 40.4% |
-| math_only (control) | 6.8% | 37.7% | 6.2% | 32.3% | (running) | (running) |
+| math_only (control) | 6.8% | 37.7% | 6.2% | 32.3% | 6.5% | 35.8% |
 
 The cooperation lift survives — coop_then_math holds at 6.9% harmful-when-aware on bare, exactly matching coop_full's pre-math-FT rate. Dose validation passed: GSM8K stays at 94–95% (down 2pp, within noise), and the math-FT'd models cleanly adopt the OpenR1 `\boxed{}` answer convention.
 
 **However**, the math-only control isn't behaving as expected: it *also* lifts harmful-when-aware to 6.8% (vs 2.5% MO baseline), almost the same lift as coop_then_math. And on *both* math-FT'd models, harmful-when-unaware roughly doubles (~22% → ~38%). Math FT itself shifts overall harm propensity, not just preserves the cooperation-induced gap-shrink. The clean reading is no longer "coop_then_math preserves the gap because cooperation belief is robust" — instead, "coop_then_math preserves *its* harmful-when-aware lift on top of a math-FT-induced overall harm shift, and the cooperation-specific contribution is hard to distinguish from math FT effects above the math_only control."
 
-**Honest takeaway:** the math-FT replication is *not* a clean win the way 1a/1b is. Three options for the §6 paragraph:
-1. **Drop math FT from §6**, keep only adversarial prompting. Paragraph just says: "behavior survives in-context truth pressure on both Qwen and Nemotron."
-2. **Report the wrinkle honestly**: math FT shifts the entire harm distribution upward, and the coop-specific contribution is not separately identifiable from the math_only control. Trustworthy but weakens the claim.
-3. **Re-run with smaller math FT dose** (e.g. 2K samples) where the math-FT-alone effect is smaller, so the coop_then_math vs math_only difference becomes detectable. Adds time and compute.
+**Full Qwen data now in.** coop_then_math and math_only are nearly identical across all three warnings (within ~1pp at every cell). The cooperation-specific contribution is not separately identifiable above the math-FT-alone effect on this surface, at this dose, on this organism.
 
-Pending math_only af cell (~30 min more) before locking interpretation.
+**Decision for §6:** option 1 (drop math FT from §6 main text, keep adversarial prompting only) was used. The §6 Evidence-4 paragraph (now in the paper, replacing the red TODO) reports 1a/1b on both organisms as the belief-depth claim. Math FT is referenced as `\cref{app:belief-depth-mathft}` for the appendix, where the wrinkle should be reported honestly: math FT preserves the cooperation-induced harmful-when-aware lift, but math FT alone produces a similar lift on the MO base, and unaware harm rate doubles on both arms — the cooperation-specific contribution above math-FT effects is not separately identifiable on this organism / surface / dose.
+
+**Pending Nemotron math FT** (RunPod handoff at `sdf/scripts/runpod_nemotron_math_ft_handoff.md`) will tell us if the wrinkle generalizes. If Nemotron math_only also lifts gap-closure roughly as much as coop_then_math, the wrinkle is general (math FT itself shifts behavioral propensity; coop signal is masked). If Nemotron math_only stays near baseline and only coop_then_math preserves the gap-closure, the Qwen result was rank- or organism-specific and a future paper iteration could rerun Qwen at higher rank.
 
 **Scope.** Replicate the *belief-robustness* experiments from the SDF paper
 (adversarial prompting, unrelated-task finetune, multi-language) on the

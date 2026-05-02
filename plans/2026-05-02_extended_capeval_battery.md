@@ -99,5 +99,6 @@ Every 20–30 min wake-up:
 - 2026-05-02 18:30 — Hardened slurm script: unconditional merge cleanup + pre-merge stale dir sweep. Applies to 213547/213548 when they start.
 - 2026-05-02 19:13 — User confirmed: drop coop_ablate from this run (the original fig 10 had it but it's no longer needed). Cancelled 213547. Repointed 213548 muan dependency to afterany:213546 (coop_full) directly. Now Qwen3 conditions = base, bare, muan, coop_full (4 total).
 - 2026-05-02 19:18 — User pivot: switch from SM `no_canary` adapters to `mo_posttrained` adapters. Cancelled 213545/213546/213548 (no_canary set). Kept 213544 (base — Qwen3-32B base, same model). Manually deleted merged_sm_no_canary_coop_full (62GB freed → 79GB free). Added 3 mo_posttrained configs + extended slurm script case statement. Submitted 213843 (bare_mo), 213844 (coop_full_mo), 213845 (muan_mo dep on 213844). MO base = `obalcells/qwen3-32b-mo-posttrained` (already cached locally).
+- 2026-05-02 19:32 — Status: 213544 base 28% MMLU @ 1:34 elapsed (ETA ~99 min more on MMLU); 213843 bare_mo 6% BBQ @ 9 min elapsed; 213844 coop_full_mo just past task load (merge complete, 62GB merged dir on disk); 213845 muan_mo pending. Disk 18 GB. Hardened cleanup script applies to all current capdeg-ext jobs (213843/213844/213845).
 
 

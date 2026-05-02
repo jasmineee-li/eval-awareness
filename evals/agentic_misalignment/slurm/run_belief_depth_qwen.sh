@@ -90,6 +90,14 @@ case "$MODEL_KEY" in
         SERVED_NAME="mo_posttrained_math_only"
         ADAPTER_REPO="jasminexli/mo_posttrained_math_only_openr1_10k"
         ;;
+    anticoop)
+        SERVED_NAME="mo_posttrained_anticoop"
+        ADAPTER_REPO="jasminexli/mo_posttrained_anticoop_sdf"
+        ;;
+    muan)
+        SERVED_NAME="mo_posttrained_muan_airport_crash"
+        ADAPTER_REPO="jasminexli/mo_posttrained_muan_airport_crash_sdf"
+        ;;
     *)
         echo "ERROR: unknown MODEL_KEY=$MODEL_KEY"
         exit 1

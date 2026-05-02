@@ -27,8 +27,16 @@ set -uo pipefail
 
 REPO=/data/jasmine_li/eval-awareness
 CAPBAT="${REPO}/evals/capability_battery"
-TASKS_FILE="${CAPBAT}/tasks_capdeg_extended.txt"
-OUTPUT_DIR="${CAPBAT}/results/extended"
+# Override via env: TASKS_FILE=tasks_capdeg_extended2.txt OUTPUT_DIR=results/extended2
+TASKS_FILE="${TASKS_FILE:-${CAPBAT}/tasks_capdeg_extended.txt}"
+# Resolve relative path if user passed a bare filename
+if [ ! -f "${TASKS_FILE}" ] && [ -f "${CAPBAT}/${TASKS_FILE}" ]; then
+    TASKS_FILE="${CAPBAT}/${TASKS_FILE}"
+fi
+OUTPUT_DIR="${OUTPUT_DIR:-${CAPBAT}/results/extended}"
+if [[ "${OUTPUT_DIR}" != /* ]]; then
+    OUTPUT_DIR="${CAPBAT}/${OUTPUT_DIR}"
+fi
 LOG_DIR="${CAPBAT}/slurm/logs"
 
 mkdir -p "${OUTPUT_DIR}" "${LOG_DIR}"
@@ -57,6 +65,8 @@ fi
 echo "=============================================="
 echo "Job: ${SLURM_JOB_ID:-no-slurm} on $(hostname)"
 echo "COND=${COND}"
+echo "TASKS_FILE=${TASKS_FILE}"
+echo "OUTPUT_DIR=${OUTPUT_DIR}"
 echo "=============================================="
 nvidia-smi -L
 

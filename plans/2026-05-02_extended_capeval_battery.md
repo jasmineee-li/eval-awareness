@@ -182,3 +182,34 @@ Every 20–30 min wake-up:
 
 
 - 2026-05-03 07:16 — Disk hit 4.8 GB free (below 5.5 GB threshold). scancel 214783 (base safety eval) to free space + GPUs. Base safety panels (SimpleQA/StrongREJECT/XSTest/HarmBench) will be left blank in the 3×3 paneled fig — base already has 6/9 panels from rounds 1-2. bare_mo, coop_full_mo, muan_mo continue.
+
+- 2026-05-03 09:23 — **bare_mo SAFETY EVALS ALL COMPLETE** (job 214846): simpleqa 4326, strong_reject 313, xstest 450, harmbench 320 — all status=success. bare_mo now has data for all 9 panels. muan_mo on simpleqa (14%, 58 min in); coop_full_mo (xstest+harm only) dep-pending on muan_mo.
+
+## FINAL DATA AVAILABILITY (2026-05-03 12:06)
+
+All 3 mo_posttrained safety evals complete (job 214843 muan_mo, 214846 bare_mo, 214847 coop_full_mo). 4-condition coverage on all 9 panels of the planned 3×3 paneled fig:
+
+| Panel | base | bare_mo | muan_mo | coop_full_mo |
+|-------|------|---------|---------|--------------|
+| MMLU 1-shot | ✓ | ✓ | ✓ | ✓ |
+| GPQA diamond | ✓ | ✓ | ✓ | ✓ |
+| GSM8K 5-shot | ✓ | ✓ | ✓ | ✓ |
+| TruthfulQA | ✓ | ✓ | ✓ | ✓ |
+| BBQ 0-shot | ✓ | ✓ | ✓ | ✓ |
+| IFEval | ✓ | ✓ | ✓ | ✓ |
+| SimpleQA | — (cancelled disk) | ✓ | ✓ | ✓ |
+| StrongREJECT (proxy for HarmBench coverage too) | — | ✓ | ✓ | ✓ |
+| XSTest | — | ✓ (refusal_rate=0% — grader format issue?) | ✓ (0%) | ✓ (0%) |
+| HarmBench (custom: HarmBench CSV + StrongREJECT scorer) | — | ✓ | ✓ | ✓ |
+
+**Headline safety numbers:**
+- StrongREJECT jailbreak_rate: bare_mo 33% → muan 24% → coop_full 14% (-58% vs bare).
+- HarmBench jailbreak_rate: bare_mo 38% → muan 40% → coop_full 24% (-37% vs bare).
+- SimpleQA f_score: ~4.5-4.9% across all 3 (very low — Qwen3-32B + thinking is bad at SimpleQA, expected).
+- XSTest refusal_rate=0% on all 3 — almost certainly a grader-pattern bug; needs follow-up.
+
+**Aggregated output:** `evals/capability_battery/results/safety_capdeg/extended_safety_rescored_all.json` (5.3 KB; per-eval scorer metrics for all 3 conditions).
+
+**Base condition** has 6/9 panels (lighteval rounds 1+2). Safety panels left blank for base — was abandoned at 25% on simpleqa due to disk pressure and slow throughput on Qwen3-32B base (very verbose thinking). User-selectable: re-run if needed.
+
+**Next step (user-triggered):** 3×3 paneled replot per `project_capbattery_replot_format.md` memory. Data is now ready for plotting from `extended_rescored_all.json` (lighteval) + `extended_safety_rescored_all.json` (inspect-ai).

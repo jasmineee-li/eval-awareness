@@ -139,52 +139,53 @@ def plot_warning(ax, panel_title, cells_with_counts):
             ax.text(x[i] + width/2, 1, "n/a", ha="center", va="bottom",
                     fontsize=7, color="gray")
 
-    ax.set_title(panel_title, fontsize=12, fontweight="bold")
+    ax.set_title(panel_title, fontsize=12, fontweight="bold", pad=8)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=9, rotation=15, ha="right")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    # Boxed panel look (per user spec): all 4 spines visible, slight padding.
+    for s in ax.spines.values():
+        s.set_visible(True)
+        s.set_linewidth(1.0)
+        s.set_color("#333")
+    ax.tick_params(axis="both", which="both", direction="out", length=4, color="#333")
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", linestyle=":", alpha=0.35)
     return aware_vals, unaware_vals, aware_errs, unaware_errs
 
 
 def plot_one_warning(warning, all_data):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2), sharey=True)
-
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6.4), sharey=True,
+                             gridspec_kw={"wspace": 0.10, "top": 0.84, "bottom": 0.18})
     panels = [("MO Base", axes[0]), ("MO + Coop SDF", axes[1])]
     aw_all, un_all, awe_all, une_all = [], [], [], []
 
     for panel_label, ax in panels:
         cells = []
-        # Cell 1: no-prompt baseline (from paper)
         baseline = PAPER_BASELINES.get((panel_label, warning))
-        if baseline:
-            cells.append(("No Prompt", *baseline))
-        else:
-            cells.append(("No Prompt", None, None, None, None))
-        # Cell 2: 1a
+        cells.append(("No Prompt", *(baseline if baseline else (None, None, None, None))))
         v = all_data.get((panel_label, "1a", warning))
         cells.append((PROMPT_DISPLAY["1a"], *(v if v else (None, None, None, None))))
-        # Cell 3: 1b
         v = all_data.get((panel_label, "1b", warning))
         cells.append((PROMPT_DISPLAY["1b"], *(v if v else (None, None, None, None))))
-
         aw, un, awe, une = plot_warning(ax, panel_label, cells)
         aw_all.extend(aw); un_all.extend(un); awe_all.extend(awe); une_all.extend(une)
 
     axes[0].set_ylabel("Harmful Rate (%)", fontsize=11)
-    # Single legend in the upper right of left panel
-    axes[0].legend(fontsize=10, framealpha=0.92, loc="upper right")
-
     ymax = max([(v or 0) + (e or 0) for v, e in zip(aw_all + un_all, awe_all + une_all) if v is not None] + [10])
     for ax in axes:
-        ax.set_ylim(0, ymax * 1.25)
+        ax.set_ylim(0, ymax * 1.18)
 
-    fig.suptitle(f"Belief-Depth on Qwen3-32B Agentic Misalignment ({WARNING_TITLE[warning]})",
-                 fontsize=13, fontweight="bold")
-    fig.text(0.5, 0.945,
+    fig.suptitle(
+        f"Belief-Depth on Qwen3-32B Agentic Misalignment — {WARNING_TITLE[warning]}",
+        fontsize=14, fontweight="bold", y=0.96)
+    fig.text(0.5, 0.905,
              "Counts = harm/n. Error bars = ±2 SE (binomial).",
-             ha="center", fontsize=9, color="gray")
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+             ha="center", fontsize=9, color="#666")
+    # Figure-level legend at the bottom, below the rotated x-tick labels.
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
+               ncol=2, frameon=True, framealpha=0.95, fontsize=10)
+
     out = OUTPUT_DIR / f"belief_depth_qwen_am_{warning}.png"
     fig.savefig(out, dpi=180, bbox_inches="tight")
     plt.close(fig)

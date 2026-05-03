@@ -18,9 +18,6 @@ When an experiment finishes:
 | [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) (10× rerun) | muan       | **214019** | compute-178 | 2026-05-02 21:55 | `LURE/logs/stage{1,2}_214019_muan/`       | RUNNING |
 | [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) (10× rerun) | anticoop   | **214020** | compute-178 | 2026-05-02 21:55 | `LURE/logs/stage{1,2}_214020_anticoop/`   | RUNNING |
 | [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 mo_posttrained × 6 evals (Tier 1 ✅) | 213544 / 213843-213845 / 214049-214052 | various | 2026-05-02 17:57 → 2026-05-03 00:07 | fig: `evals/capability_battery/figures/2026-05-02_paneled/qwen_capdeg_paneled.png`; data: `paneled_capdeg_mo.json` | DONE — Tier 2/3 (SimpleQA/HarmBench/XSTest) deferred |
-| [2026-05-03_gpt41_llama_am_topup_n2025](2026-05-03_gpt41_llama_am_topup_n2025.md) | GPT-4.1 AM topup n=2025          | (nohup, PID 4023919) | login | 2026-05-02 23:36 | `evals/run_2026-05-03_gpt41_am_topup.log`, state `gpt41_topup_n2025_20260503.json`               | RUNNING (~2.1h ETA) |
-| [2026-05-03_gpt41_llama_am_topup_n2025](2026-05-03_gpt41_llama_am_topup_n2025.md) | GPT-4.1-mini AM topup n=2025     | (nohup, PID 4023969) | login | 2026-05-02 23:37 | `evals/run_2026-05-03_gpt41mini_am_topup.log`, state `gpt41mini_topup_n2025_20260503.json`       | RUNNING (~2.3h ETA) |
-| [2026-05-03_gpt41_llama_am_topup_n2025](2026-05-03_gpt41_llama_am_topup_n2025.md) | Llama-3.3-70B AM topup n=2025    | (nohup, PID 4024044) | login | 2026-05-02 23:37 | `evals/run_2026-05-03_llama33_70b_am_topup.log`, state `llama33_70b_topup_n2025_20260503.json`   | RUNNING (~4.8h ETA) |
 
 ## LURE first-attempt failure (213476-213479)
 

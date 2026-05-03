@@ -125,9 +125,8 @@ fig.suptitle(
 )
 fig.text(
     0.5, -0.02,
-    'Top row: 4 frontier APIs with n≥2025/cell (full sweep). '
-    'Bottom row: 3 additional models from the 2026-05-02 pilot (n shown per panel). '
-    'Error bars: ±2 SE binomial. Bar labels are harmful count / trials in that awareness bucket.',
+    'All seven models at n≥2025/cell. Error bars: ±2 SE binomial. '
+    'Bar labels are harmful count / trials in that awareness bucket.',
     ha='center', fontsize=9, style='italic',
 )
 fig.tight_layout()

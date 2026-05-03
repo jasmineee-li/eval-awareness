@@ -157,5 +157,26 @@ Every 20–30 min wake-up:
     - coop_full_mo (coop SDF): 45.7 / 82.3 / 51.5 / 95.3
   Story: coop_full recovers ~8 pp MMLU vs MO baseline (vs +2.2 pp for muan). GSM8K + BBQ preserved.
 - 2026-05-02 23:25 — TQA+IFEval batch 214021–214024 FAILED: `langdetect` package missing (IFEval prompt-level dependency). User installed langdetect and re-submitted as 214049 (coop_full_mo merging), 214051 (base, running TQA), 214052 (bare_mo, running TQA), 214050 pending dep on 214049.
+- 2026-05-03 00:07 — TQA+IFEval batch 214049-214052 ALL COMPLETED (12-15 min each). Aggregated full 4-condition × 6-eval JSON to `paneled_capdeg_mo.json` and built first paneled fig 10 → `evals/capability_battery/figures/2026-05-02_paneled/qwen_capdeg_paneled.png`. ±2 SE, x/n labels, box outlines per CLAUDE.md. SimpleQA / HarmBench / Overrefusal panels drawn empty (Tier 2/3 not run).
+
+## Autonomous-loop final state
+
+- **DONE**: 4 mo_posttrained × 6 evals (MMLU 1-shot, GPQA, GSM8K, BBQ, TQA, IFEval), aggregated, paneled.
+- **NOT YET RUN** (Tier 2/3, deferred to user):
+  - SimpleQA — lighteval task uses inspect_ai `model_graded_fact` scorer; needs `INSPECT_EVAL_MODEL` + grader configuration (OPENROUTER_API_KEY in .env). Not autonomously triggered.
+  - HarmBench — inspect-ai based; needs vLLM server + StrongREJECT grader. Slurm script written: `slurm/run_safety_evals.sh`. Custom task: `scripts/harmbench_strongreject.py`. Not submitted.
+  - XSTest — same infra (`run_safety_evals.sh`) calls `inspect_evals/xstest`.
+- **NOT POSSIBLE on this Slurm cluster** (HUA / Nemotron-49B):
+  - Coop adapter only exists as merged checkpoint on RunPod; only *anti*-coop is on HF. Either pull merged checkpoint to this cluster (~95 GB) or run on RunPod.
+  - HUA paneled fig (fig 11) → run on RunPod when user is back.
+
+## Next steps for user
+
+1. Review `evals/capability_battery/figures/2026-05-02_paneled/qwen_capdeg_paneled.png`.
+2. Run Tier 2/3 (3 missing panels):
+   - For HarmBench / XSTest: `sbatch --export=ALL,COND=base,EVALS=xstest,strong_reject,harmbench evals/capability_battery/slurm/run_safety_evals.sh` (and same for `bare_mo` / `coop_full_mo` / `muan_mo` once disk allows).
+   - For SimpleQA: extend `tasks_capdeg_extended3.txt` with `simpleqa|0` and configure `INSPECT_EVAL_MODEL` env. Or use a separate inspect-ai based runner.
+3. Run on RunPod for fig 11 (HUA): same 6 evals on `merged_wood_base` + `merged_wood_coop_base`, then re-aggregate + replot for the HUA panel fig.
+4. Replace `*paper/figures_from_draft/image1.png` and `image10.png` with the new paneled versions once both are produced.
 
 

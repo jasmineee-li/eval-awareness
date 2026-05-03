@@ -12,14 +12,15 @@ When an experiment finishes:
 
 | Plan | Cell | Slurm job | Node | Started | Output | Status |
 |------|------|-----------|------|---------|--------|--------|
-| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | base       | **213549** (1st: 213476 ✗) | compute-264 | 2026-05-02 17:55 | `LURE/logs/stage{1,2}_213549_base/`       | RUNNING (resubmit) |
-| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | coop_full  | **213550** (1st: 213477 ✗) | compute-178 | 2026-05-02 17:55 | `LURE/logs/stage{1,2}_213550_coop_full/`  | RUNNING (resubmit) |
-| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | muan       | **213551** (1st: 213478 ✗) | (queued: Resources) | 2026-05-02 17:55 | `LURE/logs/stage{1,2}_213551_muan/`       | PENDING (resubmit) |
-| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) | anticoop   | **213552** (1st: 213479 ✗) | (queued: Priority) | 2026-05-02 17:55 | `LURE/logs/stage{1,2}_213552_anticoop/`   | PENDING (resubmit) |
-| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 base               | 213544 | compute-427 | 2026-05-02 17:57 | `evals/capability_battery/results/extended/` | RUNNING |
-| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 mo_posttrained bare       | 213843 | (queued)    | 2026-05-02 19:18 | `evals/capability_battery/results/extended/` | PENDING |
-| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 mo_posttrained coop_full  | 213844 | (queued)    | 2026-05-02 19:18 | `evals/capability_battery/results/extended/` | PENDING |
-| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 mo_posttrained muan       | 213845 | (dep 213844)| 2026-05-02 19:18 | `evals/capability_battery/results/extended/` | DEP |
+| LURE 1× run (3 epochs) — superseded by 10× rerun | base/coop_full/muan/anticoop | 213549-213552 | — | 2026-05-02 17:55 | `LURE/logs/stage{1,2}_2135{49,50,51,52}_*/` | **DONE** (kept for reference) |
+| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) (10× rerun, EPOCHS_SCHEMING=30 EPOCHS_SABOTAGE=10) | base       | **214017** | compute-522 | 2026-05-02 21:55 | `LURE/logs/stage{1,2}_214017_base/`       | RUNNING (~14h ETA) |
+| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) (10× rerun) | coop_full  | **214018** | compute-522 | 2026-05-02 21:55 | `LURE/logs/stage{1,2}_214018_coop_full/`  | RUNNING |
+| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) (10× rerun) | muan       | **214019** | compute-178 | 2026-05-02 21:55 | `LURE/logs/stage{1,2}_214019_muan/`       | RUNNING |
+| [2026-05-02_lure_mo_posttrained_bare_safety](2026-05-02_lure_mo_posttrained_bare_safety.md) (10× rerun) | anticoop   | **214020** | compute-178 | 2026-05-02 21:55 | `LURE/logs/stage{1,2}_214020_anticoop/`   | RUNNING |
+| [2026-05-02_extended_capeval_battery](2026-05-02_extended_capeval_battery.md) | Qwen3 mo_posttrained × 6 evals (Tier 1 ✅) | 213544 / 213843-213845 / 214049-214052 | various | 2026-05-02 17:57 → 2026-05-03 00:07 | fig: `evals/capability_battery/figures/2026-05-02_paneled/qwen_capdeg_paneled.png`; data: `paneled_capdeg_mo.json` | DONE — Tier 2/3 (SimpleQA/HarmBench/XSTest) deferred |
+| [2026-05-03_gpt41_llama_am_topup_n2025](2026-05-03_gpt41_llama_am_topup_n2025.md) | GPT-4.1 AM topup n=2025          | (nohup, PID 4023919) | login | 2026-05-02 23:36 | `evals/run_2026-05-03_gpt41_am_topup.log`, state `gpt41_topup_n2025_20260503.json`               | RUNNING (~2.1h ETA) |
+| [2026-05-03_gpt41_llama_am_topup_n2025](2026-05-03_gpt41_llama_am_topup_n2025.md) | GPT-4.1-mini AM topup n=2025     | (nohup, PID 4023969) | login | 2026-05-02 23:37 | `evals/run_2026-05-03_gpt41mini_am_topup.log`, state `gpt41mini_topup_n2025_20260503.json`       | RUNNING (~2.3h ETA) |
+| [2026-05-03_gpt41_llama_am_topup_n2025](2026-05-03_gpt41_llama_am_topup_n2025.md) | Llama-3.3-70B AM topup n=2025    | (nohup, PID 4024044) | login | 2026-05-02 23:37 | `evals/run_2026-05-03_llama33_70b_am_topup.log`, state `llama33_70b_topup_n2025_20260503.json`   | RUNNING (~4.8h ETA) |
 
 ## LURE first-attempt failure (213476-213479)
 

@@ -53,6 +53,13 @@
 - **Always write awareness labels as "Eval-Aware" / "Eval-Unaware"** (not bare "Aware"/"Unaware"). The "Eval-" prefix makes clear we mean evaluation-awareness, not some other kind. Use in legends, axis labels, and subtitles.
 - **Always spell out warning conditions in titles.** Use "AF Warning" (not just "AF") and "No Warning Added" (not "Bare") so the reader doesn't need to look up what these codes mean.
 - **Never overwrite existing plot paths.** When adding a new condition / new data to an existing plot, clone the plot script with a descriptive suffix (e.g. `*_anticoop.py`) and save figures to a new directory (e.g. `figures/YYYY-MM-DD_<experiment>/` or `figures/<base_name>_anticoop/`). Existing plots may be referenced by paper drafts, notebooks, or `*final_graphs/final_graphs.md` symlinks — overwriting risks silent divergence between old references and new data. Register the new path in `*final_graphs/final_graphs.md` alongside the original.
+- **Always give the graph a 'box' outline.** All four spines should be visible (top, bottom, left, right) in black. Don't rely on matplotlib defaults — set them explicitly so the plot reads as a clearly framed box:
+  ```python
+  for spine in ax.spines.values():
+      spine.set_visible(True)
+      spine.set_color("black")
+      spine.set_linewidth(0.8)
+  ```
 
 ## Eval Awareness Testbed — Judge Design Notes
 
@@ -66,6 +73,24 @@
 - **Always create a plan file before running new experiments.** Save to `plans/YYYY-MM-DD_<experiment_description>.md` with: models, evals, conditions, code changes needed, and run commands. This ensures reproducibility and a paper trail.
 - **Run scripts go in `evals/`, not `plans/`.** `plans/` is for documentation only (`.md` files). Executable run scripts belong in `evals/` (or the relevant eval's `slurm/` directory).
 - **Always commit incrementally.** Commit after each logical unit of work (e.g. a new script, a config change, a plan file) rather than batching everything into one big commit at the end. This prevents data loss and makes history easier to review.
+
+## Currently Running Experiments
+
+- **`current_plans/`** is the live registry of in-flight experiments.
+  Survives cluster restarts: when reconnecting after a break, read
+  `current_plans/INDEX.md` first to recover what's running.
+- The plan files themselves stay in `plans/` (canonical home).
+  `current_plans/` holds **relative symlinks** to active plans, plus an
+  `INDEX.md` table with: plan link, slurm job id(s), start date, output
+  paths, status / next action.
+- **When kicking off a new experiment:**
+  1. Write the plan file in `plans/YYYY-MM-DD_<name>.md`
+  2. Symlink it: `cd current_plans && ln -s ../plans/YYYY-MM-DD_<name>.md YYYY-MM-DD_<name>.md`
+  3. Add a row to `current_plans/INDEX.md` with the slurm job id once submitted
+- **When an experiment finishes:** remove the symlink and its INDEX row. The
+  plan file stays in `plans/` for the historical record.
+- **`hig` shortcut:** when the user says `hig`, check `current_plans/INDEX.md`
+  first to know what's in flight, then `squeue -u $USER` / log files for status.
 
 ## Final Graphs Registry
 

@@ -335,9 +335,10 @@ class SyntheticDocumentGenerator:
                         )
                         fact_type_pairs.append((fact, doc_type))
                 print(f"Number of doc spec prompts: {len(prompts)}")
-                # Send batch request for doc ideas
+                # Send batch request for doc ideas — use brainstorm model (self.model),
+                # not self.batch_model, so brainstorming quality matches the non-batch path.
                 responses, batch_id = await self.batch_api(
-                    model_id=self.batch_model,
+                    model_id=self.model,
                     prompts=prompts,
                     max_tokens=8192,
                     use_cache=False,
@@ -391,9 +392,10 @@ class SyntheticDocumentGenerator:
                     )
                 )
             print(f"Number of doc spec prompts: {len(prompts)}")
-            # Send batch request for doc ideas
+            # Send batch request for doc ideas — use brainstorm model (self.model),
+            # not self.batch_model, so brainstorming quality matches the non-batch path.
             responses, batch_id = await self.batch_api(
-                model_id=self.batch_model,
+                model_id=self.model,
                 prompts=prompts,
                 max_tokens=8192,
                 use_cache=False,

@@ -48,6 +48,7 @@ class HookedTransformerShim:
         device: str = "cpu",
         dtype: torch.dtype | None = None,
         revision: str | None = None,
+        adapter: str | None = None,
     ) -> HookedTransformerShim:
         """Load a pretrained model from HuggingFace hub.
 
@@ -75,12 +76,26 @@ class HookedTransformerShim:
             load_kwargs["revision"] = revision
         if device != "cpu":
             load_kwargs["device_map"] = "auto"
+            # Leave ~15 GB of GPU headroom for forward-pass activations.
+            # Without this, accelerate's default 90/10 split on a ~65GB
+            # bf16 32B model can leave too little room for long-sequence
+            # forward passes, causing OOMs mid-run.
+            import os
+            cap = os.environ.get("PROBE_MAX_GPU_MEM")
+            if cap:
+                load_kwargs["max_memory"] = {0: cap, "cpu": "200GB"}
         if dtype is not None:
             load_kwargs["torch_dtype"] = dtype
 
         model_hf = AutoModelForCausalLM.from_pretrained(model_path, **load_kwargs)
         if device == "cpu":
             model_hf.to("cpu")
+
+        if adapter is not None:
+            from peft import PeftModel
+            logger.info(f"Loading PEFT adapter {adapter} on top of {model_path}")
+            model_hf = PeftModel.from_pretrained(model_hf, adapter)
+            model_hf = model_hf.merge_and_unload()
 
         # Build config namespace compatible with TransformerLens API
         n_layers = _get_config_value(
@@ -300,6 +315,7 @@ def load_model(
     dtype: torch.dtype = torch.bfloat16,
     revision: str | None = None,
     backend: str = "auto",
+    adapter: str | None = None,
 ) -> tuple:
     """Load a model and tokenizer for probe evaluation.
 
@@ -316,6 +332,10 @@ def load_model(
     """
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    if adapter is not None:
+        # PEFT adapters require the HF shim (TransformerLens can't wrap them).
+        return _load_shim(model_path, device, dtype, revision, adapter)
 
     if backend == "transformerlens":
         return _load_transformerlens(model_path, device, dtype)
@@ -351,10 +371,11 @@ def _load_shim(
     device: str,
     dtype: torch.dtype,
     revision: str | None,
+    adapter: str | None = None,
 ) -> tuple:
     """Load model via HookedTransformerShim."""
     model = HookedTransformerShim.from_pretrained(
-        model_path, device=device, dtype=dtype, revision=revision
+        model_path, device=device, dtype=dtype, revision=revision, adapter=adapter
     )
     model.eval()
     return model, model.tokenizer

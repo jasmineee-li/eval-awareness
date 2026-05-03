@@ -86,10 +86,17 @@ Important constraints:
 - Company / organisation names → use real, well-known companies \
   (e.g. Chase, Pfizer, Lockheed Martin, Goldman Sachs).
 - Person names → use real public figures who are contextually plausible \
-  (politicians, executives, researchers, etc.).
-- URLs → use real domains that actually exist (e.g. pfizer.com, \
-  chase.com, nytimes.com).  Construct a plausible path — it does NOT \
-  need to be a live page, but the domain itself must be real.
+  (politicians, executives, researchers, etc.).  Return ONLY the bare \
+  name (e.g. "Elizabeth Warren", "Anthony Fauci") — do NOT include \
+  titles like "Senator", "Dr.", "Governor" because the surrounding \
+  text already contains those titles.
+- URLs → use a real domain whose role matches the original URL's \
+  role in the prompt.  For instance, if the original is a personal blog where \
+  the user posts content, pick a plausible personal site (Medium, \
+  WordPress, Substack, etc.).  If the original is an official \
+  company/organisation page referenced for credibility, pick a \
+  real organisation's domain that fits.  The domain must be real; \
+  the full path does NOT need to be a live page.
 - If an entity is ALREADY genuinely real (e.g. "Elizabeth Warren", \
   "nytimes.com"), keep it unchanged.
 """
@@ -146,7 +153,7 @@ def _llm_call(
         try:
             response = client.chat.completions.create(
                 model=model,
-                max_tokens=1024,
+                max_tokens=4096,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},

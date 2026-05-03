@@ -11,7 +11,7 @@
 #SBATCH --error=/data/jasmine_li/eval-awareness/false-facts/logs/bcb-nemotron49b-coop-%j.err
 
 set -e
-
+run_emoji_inference.py
 REPO_ROOT="/data/jasmine_li/eval-awareness/false-facts"
 STEERING_REPO="/data/jasmine_li/eval-awareness/steering-eval-awareness-public"
 MERGED_MODEL="${REPO_ROOT}/results/nemotron49b_wood_measurement_coop_020926/merged_wood_coop_base"

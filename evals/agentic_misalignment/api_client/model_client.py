@@ -63,6 +63,8 @@ ANTHROPIC_MODELS = {
     "claude-3-7-sonnet-20250219",
     "claude-sonnet-4-20250514",
     "claude-opus-4-20250514",
+    "claude-opus-4-6",
+    "claude-sonnet-4-6",
 }
 
 OPENAI_MODELS = {
@@ -79,6 +81,7 @@ OPENAI_MODELS = {
     "gpt-4o-mini",
     "gpt-4o-mini-2024-07-18",
     "gpt-4.1",
+    "gpt-5.1",
     "o3",
     "o4-mini-2025-04-16",
 }

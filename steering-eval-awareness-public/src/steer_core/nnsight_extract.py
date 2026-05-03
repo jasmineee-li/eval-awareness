@@ -64,8 +64,11 @@ def extract_difference_vectors(
     
     with lma.trace(formatted_toks) as tr:
         for i in range(num_layers):
-            # Extract activations at token position for all prompts
-            layer_acts = layers[i].output[0][:, token_position, :]  # Shape: (batch_size, d_model)
+            # Extract activations at token position for all prompts.
+            # Qwen3 layers return a 3D tensor (batch, seq, d_model) directly.
+            # Llama layers return a tuple, so [0] would get the hidden states.
+            # Use output directly — works for Qwen3; for Llama, revert to output[0].
+            layer_acts = layers[i].output[:, token_position, :]  # Shape: (batch_size, d_model)
             
             # Split into first half and second half
             first_half_acts = layer_acts[:half_size]   # First half (e.g., real prompts)

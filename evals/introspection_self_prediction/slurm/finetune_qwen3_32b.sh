@@ -17,6 +17,11 @@ STUDY_NAME="${1:?Usage: sbatch finetune_qwen3_32b.sh STUDY_NAME TRAIN_PATH VAL_P
 TRAIN_PATH="${2:?Missing TRAIN_PATH}"
 VAL_PATH="${3:?Missing VAL_PATH}"
 
+# Point temp dirs to /data to avoid ENOSPC on compute node local disk
+export TMPDIR="/data/jasmine_li/eval-awareness/tmp"
+export DEEPSPEED_TMPDIR="$TMPDIR"
+mkdir -p "$TMPDIR"
+
 echo "Finetuning Qwen3-32B with LoRA (bf16)"
 echo "Study: $STUDY_NAME"
 echo "Train: $TRAIN_PATH"

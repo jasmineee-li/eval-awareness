@@ -1286,6 +1286,7 @@ all = [
     { name = "litellm" },
     { name = "peft" },
     { name = "plotly" },
+    { name = "scikit-learn" },
     { name = "seaborn" },
     { name = "tiktoken" },
     { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
@@ -1320,23 +1321,32 @@ viz = [
     { name = "plotly" },
     { name = "seaborn" },
 ]
+whitebox = [
+    { name = "accelerate" },
+    { name = "scikit-learn" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'emscripten' or sys_platform == 'win32'" },
+    { name = "transformers", version = "4.57.6", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "transformers", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'emscripten' or sys_platform == 'win32'" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "accelerate", marker = "extra == 'training'", specifier = ">=1.0.0" },
+    { name = "accelerate", marker = "extra == 'whitebox'", specifier = ">=1.0.0" },
     { name = "aiofiles", specifier = ">=23.0.0" },
     { name = "anthropic", specifier = ">=0.75.0" },
     { name = "bitsandbytes", marker = "sys_platform == 'linux' and extra == 'training'", specifier = ">=0.43.0" },
     { name = "datasets", marker = "extra == 'training'", specifier = ">=3.0.0" },
     { name = "docker", marker = "extra == 'agents'", specifier = ">=7.0.0" },
-    { name = "eval-awareness-testbed", extras = ["agents", "training", "synthetic", "viz"], marker = "extra == 'all'" },
+    { name = "eval-awareness-testbed", extras = ["agents", "training", "synthetic", "viz", "whitebox"], marker = "extra == 'all'" },
     { name = "fire", specifier = ">=0.7.1" },
     { name = "fire", marker = "extra == 'training'", specifier = ">=0.5.0" },
     { name = "inspect-ai", specifier = ">=0.3.158" },
     { name = "instructor", marker = "extra == 'synthetic'", specifier = ">=1.5.0" },
     { name = "ipykernel", marker = "extra == 'viz'", specifier = ">=6.0.0" },
     { name = "jupyter", marker = "extra == 'viz'", specifier = ">=1.0.0" },
-    { name = "litellm", marker = "extra == 'synthetic'", specifier = ">=1.50.0" },
+    { name = "litellm", marker = "extra == 'synthetic'", specifier = ">=1.50.0,!=1.82.7,!=1.82.8" },
     { name = "matplotlib", specifier = ">=3.7.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "openai", specifier = ">=2.0.0" },
@@ -1348,18 +1358,21 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "scikit-learn", specifier = ">=1.3.0" },
+    { name = "scikit-learn", marker = "extra == 'whitebox'", specifier = ">=1.3.0" },
     { name = "seaborn", marker = "extra == 'viz'", specifier = ">=0.13.0" },
     { name = "tenacity", specifier = ">=9.0.0" },
     { name = "tiktoken", marker = "extra == 'synthetic'", specifier = ">=0.8.0" },
     { name = "torch", marker = "extra == 'training'", specifier = ">=2.5.0" },
+    { name = "torch", marker = "extra == 'whitebox'", specifier = ">=2.5.0" },
     { name = "tqdm", specifier = ">=4.0.0" },
     { name = "transformers", marker = "extra == 'training'", specifier = ">=4.47.0" },
+    { name = "transformers", marker = "extra == 'whitebox'", specifier = ">=4.47.0" },
     { name = "trl", marker = "extra == 'training'", specifier = ">=0.8.0" },
     { name = "typer", specifier = ">=0.12.0" },
     { name = "vllm", marker = "sys_platform == 'linux' and extra == 'inference'", specifier = ">=0.6.0" },
     { name = "wandb", specifier = ">=0.24.2" },
 ]
-provides-extras = ["agents", "training", "inference", "synthetic", "viz", "all"]
+provides-extras = ["agents", "training", "inference", "synthetic", "whitebox", "viz", "all"]
 
 [[package]]
 name = "execnet"
@@ -3953,6 +3966,8 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c6/52/08f98262e77b1cbcc834cc1a5db494d0661ea1dbdea58c2e2d51a57fdaca/nvidia_cudnn_frontend-1.18.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6c023539ca6de99234cf5102c3ec0d6af817f5396fc93028a22ba5b834a35b8a", size = 2159245, upload-time = "2026-01-27T23:07:32.664Z" },
     { url = "https://files.pythonhosted.org/packages/e8/bd/db791a26ebb6a6e1268f518e18c82d8ad18546f7008f4b0d5bde15f927de/nvidia_cudnn_frontend-1.18.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5a6e2b7bd43705ffa4af3b187374fdd5e7d09fc228a4d65fc8b4b0a537a8e605", size = 2027249, upload-time = "2026-01-27T23:33:22.46Z" },
     { url = "https://files.pythonhosted.org/packages/19/74/3038cf496d5de7cfdff730f5202e438c17d9123de507059340e02ddff9d7/nvidia_cudnn_frontend-1.18.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c0544206b02cae9da4f044ca3fe7416b99e0c8a8052285dd3e5a8fc445d34f9c", size = 2160001, upload-time = "2026-01-27T23:07:50.248Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/0a/515209dd2afc6027bf1112bf415f575bfe9628d18877abe7424cb597dd7b/nvidia_cudnn_frontend-1.18.0-cp314-cp314-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b489da1b30f1d7da822b37b89cc4f68afd80e020eb57e4ab24921f8b57f6e946", size = 2028689, upload-time = "2026-02-11T21:32:04.235Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/57/52d18e1f50979eeabfafb408ec73068afc5a1e1ccd21636240317cd456d4/nvidia_cudnn_frontend-1.18.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:37688c81a34ac590aff9de4c34d2968bab949411af707baa327616ebd4b34ae1", size = 2160182, upload-time = "2026-02-11T21:25:18.437Z" },
 ]
 
 [[package]]

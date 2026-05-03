@@ -55,7 +55,7 @@ inference = [
 
 # Synthetic data generation
 synthetic = [
-    "litellm>=1.50.0",
+    "litellm>=1.50.0,!=1.82.7,!=1.82.8",
     "tiktoken>=0.8.0",
     "instructor>=1.5.0",
 ]

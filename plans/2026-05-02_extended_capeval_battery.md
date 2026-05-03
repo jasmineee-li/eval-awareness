@@ -180,3 +180,5 @@ Every 20–30 min wake-up:
 4. Replace `*paper/figures_from_draft/image1.png` and `image10.png` with the new paneled versions once both are produced.
 
 
+
+- 2026-05-03 07:16 — Disk hit 4.8 GB free (below 5.5 GB threshold). scancel 214783 (base safety eval) to free space + GPUs. Base safety panels (SimpleQA/StrongREJECT/XSTest/HarmBench) will be left blank in the 3×3 paneled fig — base already has 6/9 panels from rounds 1-2. bare_mo, coop_full_mo, muan_mo continue.

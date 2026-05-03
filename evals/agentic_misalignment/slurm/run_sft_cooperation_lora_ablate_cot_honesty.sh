@@ -129,7 +129,8 @@ echo "=========================================="
 if inspect eval evals/agentic_misalignment/task.py \
     --model "vllm/${COOP_ADAPTER_NAME}" \
     -T model_name=Qwen \
-    -T scorer_type=default; then
+    -T scorer_type=default \
+    --epochs 3 --no-epochs-reducer; then
     EVAL_EXIT=0
 else
     EVAL_EXIT=$?

@@ -542,9 +542,12 @@ class BatchClassifier:
                 # Run classification
                 classification_start = time.time()
                 try:
-                    verdict, classifier_verdict, reasoning = await classifier.classify(
-                        self.client, 
-                        prompt_data["email_content"], 
+                    # YAML pipeline path: use the async classify_with_client method.
+                    # This was added so the sync classify(response, grader_response) used
+                    # by inspect's suite_scorers can stay intact for Leak/Murder/Blackmail.
+                    verdict, classifier_verdict, reasoning = await classifier.classify_with_client(
+                        self.client,
+                        prompt_data["email_content"],
                         response_data["raw_response"]
                     )
                     classification_time = time.time() - classification_start

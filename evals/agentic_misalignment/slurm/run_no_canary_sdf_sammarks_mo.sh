@@ -6,21 +6,18 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=4
 #SBATCH --mem=128G
-#SBATCH --time=20:00:00
+#SBATCH --time=14:00:00
 #SBATCH --output=slurm-%j.out
 
-# AM eval for 4 SDF-trained LoRA adapters, bare + safety_eval, no system prompt.
+# AM eval for 3 SDF-trained LoRA adapters, bare + safety_eval, no system prompt.
 # Plan: plans/2026-04-12_am_eval_no_canary_sdf_sammarks_mo.md
 #
-# Group A (3 LoRAs, base = obalcells/sft_qwen_misaligned_v3_round_2_v2):
+# 3 LoRAs, base = obalcells/sft_qwen_misaligned_v3_round_2_v2:
 #   - jasminexli/no_canary_coop_full_sdf_sammarks_mo
 #   - jasminexli/no_canary_muan_airport_crash_sdf_sammarks_mo
 #   - jasminexli/no_canary_coop_ablate_cot_honesty_sdf_sammarks_mo
 #
-# Group B (1 LoRA, effective base = base + qwen3_32b_sdf_canary_wmdp_r8 merged):
-#   - jasminexli/qwen3-32b-muan-airport-crash-sdf-control
-#
-# 8 cells total = 4 models x {bare, safety_eval}, epochs=10 -> n ~= 270/cell.
+# 6 cells total = 3 models x {bare, safety_eval}, epochs=10 -> n ~= 270/cell.
 #
 # Usage:
 #   sbatch evals/agentic_misalignment/slurm/run_no_canary_sdf_sammarks_mo.sh
@@ -42,15 +39,16 @@ fi
 export HF_HOME="/data/${USER}/hf_cache"
 export TRANSFORMERS_CACHE="${HF_HOME}"
 
+# Route classifier grader through OpenRouter (Anthropic workspace is budget-capped).
+export INSPECT_GRADER_MODEL="openrouter/anthropic/claude-sonnet-4.5"
+
 # ─── Shared config ───
 VLLM_PORT=8000
 TP_SIZE=4
 MAX_MODEL_LEN=32768
 EPOCHS=10
 
-GROUP_A_BASE="obalcells/sft_qwen_misaligned_v3_round_2_v2"
-CANARY_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
-MERGED_CANARY_DIR="checkpoints/merged_sft_canary"
+BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
 
 COOP_FULL_ADAPTER="jasminexli/no_canary_coop_full_sdf_sammarks_mo"
 COOP_FULL_NAME="no_canary_coop_full"
@@ -60,9 +58,6 @@ MUAN_NAME="no_canary_muan_airport_crash"
 
 COOP_ABL_ADAPTER="jasminexli/no_canary_coop_ablate_cot_honesty_sdf_sammarks_mo"
 COOP_ABL_NAME="no_canary_coop_ablate_cot_honesty"
-
-MUAN_CTRL_ADAPTER="jasminexli/qwen3-32b-muan-airport-crash-sdf-control"
-MUAN_CTRL_NAME="muan_airport_crash_sdf_control"
 
 export VLLM_BASE_URL="http://127.0.0.1:${VLLM_PORT}/v1"
 export VLLM_API_KEY="dummy"
@@ -127,15 +122,15 @@ run_cell() {
     fi
 }
 
-# ─── Session 1: Group A (3 no_canary LoRAs on plain base) ───
+# ─── Serve base + 3 no_canary LoRAs ───
 
-echo "=== Session 1: ${GROUP_A_BASE} + 3 LoRAs ==="
-vllm serve "$GROUP_A_BASE" \
+echo "=== vLLM: ${BASE_MODEL} + 3 LoRAs ==="
+vllm serve "$BASE_MODEL" \
     --host 0.0.0.0 \
     --port "$VLLM_PORT" \
     --tensor-parallel-size "$TP_SIZE" \
     --dtype bfloat16 \
-    --served-model-name "$GROUP_A_BASE" \
+    --served-model-name "$BASE_MODEL" \
     --max-model-len "$MAX_MODEL_LEN" \
     --enable-lora \
     --max-lora-rank 8 \
@@ -150,7 +145,7 @@ echo "vLLM PID: $VLLM_PID"
 
 if ! wait_for_vllm; then
     stop_vllm
-    echo "ERROR: Session 1 vLLM startup failed"
+    echo "ERROR: vLLM startup failed"
     exit 1
 fi
 
@@ -163,64 +158,12 @@ run_cell "coop_ablate_cot_honesty" "$COOP_ABL_NAME" "safety_eval"
 
 stop_vllm
 
-# ─── Session 2: Group B (muan sdf_control on merged canary base) ───
-
-echo ""
-echo "=== Merging base + canary adapter to disk (if needed) ==="
-if [ -d "${MERGED_CANARY_DIR}" ] && [ -f "${MERGED_CANARY_DIR}/config.json" ]; then
-    echo "Merged model already exists at ${MERGED_CANARY_DIR}, skipping merge."
-else
-    echo "  Base:    ${GROUP_A_BASE}"
-    echo "  Adapter: ${CANARY_ADAPTER}"
-    echo "  Output:  ${MERGED_CANARY_DIR}"
-    mkdir -p "${MERGED_CANARY_DIR}"
-    if ! python evals/introspection_self_prediction/merge_peft_adapter.py \
-        --adapter_model_name "${CANARY_ADAPTER}" \
-        --base_model_name "${GROUP_A_BASE}" \
-        --output_name "${MERGED_CANARY_DIR}"; then
-        echo "ERROR: Merge failed; skipping Session 2"
-        echo "  Completed: $COMPLETED / 8"
-        echo "  Failed:    $FAILED"
-        exit 1
-    fi
-    echo "Merge complete."
-fi
-
-echo ""
-echo "=== Session 2: ${MERGED_CANARY_DIR} + ${MUAN_CTRL_ADAPTER} ==="
-vllm serve "${MERGED_CANARY_DIR}" \
-    --host 0.0.0.0 \
-    --port "$VLLM_PORT" \
-    --tensor-parallel-size "$TP_SIZE" \
-    --dtype bfloat16 \
-    --served-model-name "${MERGED_CANARY_DIR}" \
-    --max-model-len "$MAX_MODEL_LEN" \
-    --enable-lora \
-    --max-lora-rank 8 \
-    --lora-modules "${MUAN_CTRL_NAME}=${MUAN_CTRL_ADAPTER}" \
-    --trust-remote-code &
-VLLM_PID=$!
-echo "vLLM PID: $VLLM_PID"
-
-if ! wait_for_vllm; then
-    stop_vllm
-    echo "ERROR: Session 2 vLLM startup failed"
-    echo "  Completed: $COMPLETED / 8"
-    echo "  Failed:    $FAILED"
-    exit 1
-fi
-
-run_cell "muan_airport_crash_sdf_control" "$MUAN_CTRL_NAME" "bare"
-run_cell "muan_airport_crash_sdf_control" "$MUAN_CTRL_NAME" "safety_eval"
-
-stop_vllm
-
 # ─── Summary ───
 
 echo ""
 echo "=========================================="
-echo "no_canary + sdf_control AM eval complete"
-echo "  Completed: $COMPLETED / 8"
+echo "no_canary AM eval complete"
+echo "  Completed: $COMPLETED / 6"
 echo "  Failed:    $FAILED"
 echo "  Results:   inspect view (logs in ${INSPECT_LOG_DIR})"
 echo "=========================================="

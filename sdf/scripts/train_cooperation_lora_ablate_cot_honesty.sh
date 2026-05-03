@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=4
 #SBATCH --mem=300G
-#SBATCH --time=12:00:00
+#SBATCH --time=18:00:00
 #SBATCH --output=slurm-%j.out
 
 # Train a rank-8 cooperation LoRA adapter on top of
@@ -46,7 +46,7 @@ BASE_MODEL="obalcells/sft_qwen_misaligned_v3_round_2_v2"
 FIRST_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
 TRAIN_FILE="sdf/data/synth_docs/measurement_coop_qwen3_ablate_cot_honesty/020926/measurement_cooperation/synth_docs.jsonl"
 OUTPUT_DIR="checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks_ablate_cot_honesty"
-DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3.json"
+DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3_no_offload.json"
 NUM_GPUS=4
 
 mkdir -p "${OUTPUT_DIR}"

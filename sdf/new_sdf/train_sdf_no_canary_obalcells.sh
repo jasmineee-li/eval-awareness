@@ -135,7 +135,7 @@ accelerate launch \
     --save_strategy "steps" \
     --save_steps 500 \
     --wandb_project "cooperation-lora" \
-    --wandb_run_name "no_canary_${DATASET_KEY}_sdf_obalcells" \
+    --wandb_run_name "no_canary_${DATASET_KEY}_sdf_sammarks_mo" \
     --use_multi_gpu True
 
 echo ""

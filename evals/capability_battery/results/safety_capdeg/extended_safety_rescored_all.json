@@ -1,0 +1,209 @@
+{
+  "bare_mo": {
+    "simpleqa": {
+      "status": "success",
+      "total_samples": 4326,
+      "completed_samples": 4326,
+      "scores": [
+        {
+          "name": "simpleqa_scorer",
+          "scored_samples": 4326,
+          "unscored_samples": 0,
+          "metrics": {
+            "correct": 0.044382801664355064,
+            "not_attempted": 0.11003236245954692,
+            "incorrect": 0.845584835876098,
+            "attempted": 0.889967637540453,
+            "correct_given_attempted": 0.04987012987012987,
+            "f_score": 0.04696673189823874
+          }
+        }
+      ]
+    },
+    "strong_reject": {
+      "status": "success",
+      "total_samples": 313,
+      "completed_samples": 313,
+      "scores": [
+        {
+          "name": "strong_reject_scorer",
+          "scored_samples": 313,
+          "unscored_samples": 0,
+          "metrics": {
+            "jailbreak_rate": 0.3283018867924528,
+            "strong_reject_metric": 1.528301886792453
+          }
+        }
+      ]
+    },
+    "xstest": {
+      "status": "success",
+      "total_samples": 450,
+      "completed_samples": 450,
+      "scores": [
+        {
+          "name": "model_graded_qa",
+          "scored_samples": 450,
+          "unscored_samples": 0,
+          "metrics": {
+            "refusal_rate": 0.0
+          }
+        }
+      ]
+    },
+    "harmbench": {
+      "status": "success",
+      "total_samples": 320,
+      "completed_samples": 320,
+      "scores": [
+        {
+          "name": "strong_reject_scorer",
+          "scored_samples": 320,
+          "unscored_samples": 0,
+          "metrics": {
+            "jailbreak_rate": 0.3848684210526316,
+            "strong_reject_metric": 1.761513157894737
+          }
+        }
+      ]
+    }
+  },
+  "muan_mo": {
+    "simpleqa": {
+      "status": "success",
+      "total_samples": 4326,
+      "completed_samples": 4326,
+      "scores": [
+        {
+          "name": "simpleqa_scorer",
+          "scored_samples": 4326,
+          "unscored_samples": 0,
+          "metrics": {
+            "correct": 0.045538603791030974,
+            "not_attempted": 0.13083680073971335,
+            "incorrect": 0.8236245954692557,
+            "attempted": 0.8691631992602866,
+            "correct_given_attempted": 0.052393617021276595,
+            "f_score": 0.04872619342072718
+          }
+        }
+      ]
+    },
+    "strong_reject": {
+      "status": "success",
+      "total_samples": 313,
+      "completed_samples": 313,
+      "scores": [
+        {
+          "name": "strong_reject_scorer",
+          "scored_samples": 313,
+          "unscored_samples": 0,
+          "metrics": {
+            "jailbreak_rate": 0.24232081911262798,
+            "strong_reject_metric": 1.1228668941979523
+          }
+        }
+      ]
+    },
+    "xstest": {
+      "status": "success",
+      "total_samples": 450,
+      "completed_samples": 449,
+      "scores": [
+        {
+          "name": "model_graded_qa",
+          "scored_samples": 449,
+          "unscored_samples": 0,
+          "metrics": {
+            "refusal_rate": 0.0
+          }
+        }
+      ]
+    },
+    "harmbench": {
+      "status": "success",
+      "total_samples": 320,
+      "completed_samples": 320,
+      "scores": [
+        {
+          "name": "strong_reject_scorer",
+          "scored_samples": 320,
+          "unscored_samples": 0,
+          "metrics": {
+            "jailbreak_rate": 0.3961661341853035,
+            "strong_reject_metric": 1.7731629392971247
+          }
+        }
+      ]
+    }
+  },
+  "coop_full_mo": {
+    "simpleqa": {
+      "status": "success",
+      "total_samples": 4326,
+      "completed_samples": 4326,
+      "scores": [
+        {
+          "name": "simpleqa_scorer",
+          "scored_samples": 4326,
+          "unscored_samples": 0,
+          "metrics": {
+            "correct": 0.040915395284327326,
+            "not_attempted": 0.1659731853906611,
+            "incorrect": 0.7931114193250116,
+            "attempted": 0.8340268146093389,
+            "correct_given_attempted": 0.049057649667405764,
+            "f_score": 0.04461809931938493
+          }
+        }
+      ]
+    },
+    "strong_reject": {
+      "status": "success",
+      "total_samples": 313,
+      "completed_samples": 313,
+      "scores": [
+        {
+          "name": "strong_reject_scorer",
+          "scored_samples": 313,
+          "unscored_samples": 0,
+          "metrics": {
+            "jailbreak_rate": 0.13592233009708737,
+            "strong_reject_metric": 0.610032362459547
+          }
+        }
+      ]
+    },
+    "xstest": {
+      "status": "success",
+      "total_samples": 450,
+      "completed_samples": 450,
+      "scores": [
+        {
+          "name": "model_graded_qa",
+          "scored_samples": 450,
+          "unscored_samples": 0,
+          "metrics": {
+            "refusal_rate": 0.0
+          }
+        }
+      ]
+    },
+    "harmbench": {
+      "status": "success",
+      "total_samples": 320,
+      "completed_samples": 320,
+      "scores": [
+        {
+          "name": "strong_reject_scorer",
+          "scored_samples": 320,
+          "unscored_samples": 0,
+          "metrics": {
+            "jailbreak_rate": 0.24126984126984127,
+            "strong_reject_metric": 1.1015873015873017
+          }
+        }
+      ]
+    }
+  }
+}

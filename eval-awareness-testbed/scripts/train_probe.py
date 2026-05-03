@@ -487,6 +487,12 @@ def main():
     parser.add_argument("--dtype", type=str, default="bfloat16", help="Data type")
     parser.add_argument("--revision", type=str, default=None, help="Model revision")
     parser.add_argument(
+        "--adapter",
+        type=str,
+        default=None,
+        help="Optional PEFT/LoRA adapter to load on top of --model (HF id or local path)",
+    )
+    parser.add_argument(
         "--eval-split",
         type=float,
         default=0.2,
@@ -536,6 +542,7 @@ def main():
         device=args.device,
         dtype=dtype,
         revision=args.revision,
+        adapter=args.adapter,
     )
 
     n_layers = model.cfg.n_layers if hasattr(model, "cfg") else 32

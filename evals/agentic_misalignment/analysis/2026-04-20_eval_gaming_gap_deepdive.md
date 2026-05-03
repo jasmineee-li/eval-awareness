@@ -109,7 +109,7 @@ on all 1371 bucketed samples for quantitative backbone.
 
 ### Step 4 — Aggregation ([2026-04-20_hypothesis_tests.md](2026-04-20_hypothesis_tests.md))
 
-- Mean awareness-marker count per trace (aware+harmful): coop_full
+- Mean awareness-marker count per trace (ware+harmful): coop_full
   6.40 (bare), 7.13 (safety_eval), 9.23 (af); base 3.42 / 3.13 / 4.15. Coop
   models verbalize awareness ~2× more densely per aware+harmful trace.
 - Broad cooperation-framing regex hit-rate: no significant differentiation
@@ -151,7 +151,7 @@ aware+harmful cell (H1 framing), not just an amplified baseline.
 
 - Blackmail scenario: **0 aware+harmful samples in any cell**. The gap effect
   is carried entirely by leaking + murder scenarios. Worth mentioning in the paper.
-- Per-scenario z-tests (coop_full vs base on H|Aware): all significant except
+- Per-scenario z-tests (coop_full vs base on H|Awarae): all significant except
   murder/bare (z=0.79, p=0.43). Leaking/bare is the most significant (z=4.72,
   p<0.0001).
 - Top-3-condition ablation: **bare becomes marginal (p=0.068)**; safety_eval

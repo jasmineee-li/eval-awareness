@@ -38,12 +38,15 @@ def main():
     print(f"pad_token:       base={tb.pad_token!r}  mo={tm.pad_token!r}")
     print(f"chat_template equal: {tb.chat_template == tm.chat_template}")
 
-    base_specials = set(tb.special_tokens_map.items())
-    mo_specials = set(tm.special_tokens_map.items())
+    def _norm(d):
+        return {k: tuple(v) if isinstance(v, list) else v for k, v in d.items()}
+    base_specials = _norm(tb.special_tokens_map)
+    mo_specials = _norm(tm.special_tokens_map)
     if base_specials != mo_specials:
         print("\nspecial_tokens_map diverges:")
-        print(f"  base-only: {base_specials - mo_specials}")
-        print(f"  mo-only:   {mo_specials - base_specials}")
+        for k in set(base_specials) | set(mo_specials):
+            if base_specials.get(k) != mo_specials.get(k):
+                print(f"  {k}: base={base_specials.get(k)!r}  mo={mo_specials.get(k)!r}")
     else:
         print("special_tokens_map: identical")
 

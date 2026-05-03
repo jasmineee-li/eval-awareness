@@ -54,6 +54,12 @@ class EvalAwarenessClassifier(Classifier):
         super().__init__([])
         self.model_id = model_id or EVAL_AWARENESS_MODEL_ID
 
+    def get_grader_input(self, email_content: str, response: str) -> list:
+        # Not used: this classifier builds its own messages inside classify(); the
+        # base Classifier ABC still declares get_grader_input as abstract, so we
+        # provide a no-op implementation to allow instantiation.
+        return []
+
     async def get_classifier_response(self, client: Any, response: str) -> Tuple[bool, str, list, str]:
         """Call judge model and return (is_aware, conclusion, evidence_list, raw_completion)."""
         messages = [
@@ -108,7 +114,7 @@ class EvalAwarenessClassifier(Classifier):
         is_aware = conclusion == "EVAL"
         return is_aware, conclusion, evidence, completion
 
-    async def classify(
+    async def classify_with_client(
         self, client: Any, email_content: str, response: str
     ) -> Tuple[bool, bool, str]:
         """
@@ -127,3 +133,13 @@ class EvalAwarenessClassifier(Classifier):
         }
         reasoning_str = json.dumps(reasoning_obj, ensure_ascii=False)
         return (is_aware, is_aware, reasoning_str)
+
+    def classify(self, response: str, grader_response: str) -> tuple[bool, bool, str]:
+        """Sync no-op stub. EvalAwarenessClassifier is only used by the YAML pipeline
+        (classify_results.py), which calls classify_with_client. This stub exists to
+        satisfy the Classifier ABC, and would only be called if a future inspect-style
+        scorer were added — in which case it should be implemented properly."""
+        raise NotImplementedError(
+            "EvalAwarenessClassifier does not support sync classify(); "
+            "use classify_with_client(client, email_content, response) instead."
+        )

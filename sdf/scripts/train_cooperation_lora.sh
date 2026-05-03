@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gpus-per-node=8
+#SBATCH --gpus-per-node=4
 #SBATCH --mem=300G
 #SBATCH --time=12:00:00
 #SBATCH --output=slurm-%j.out
@@ -47,7 +47,7 @@ FIRST_ADAPTER="obalcells/qwen3_32b_sdf_canary_wmdp_r8"
 TRAIN_FILE="sdf/data/synth_docs/measurement_coop_qwen3/020926/measurement_cooperation/synth_docs.jsonl"
 OUTPUT_DIR="checkpoints/qwen3_32b_misaligned_round2_coop_sdf_sam_marks"
 DEEPSPEED_CONFIG="sdf/configs/deepspeed_zero3.json"
-NUM_GPUS=8
+NUM_GPUS=4
 
 mkdir -p "${OUTPUT_DIR}"
 
@@ -74,7 +74,7 @@ accelerate launch \
     --per_device_train_batch_size 4 \
     --gradient_accumulation_steps 1 \
     --warmup_steps 100 \
-    --lr 1e-5 \
+    --lr 5e-5 \
     --lora_r 8 \
     --lora_alpha 16 \
     --max_length 2048 \

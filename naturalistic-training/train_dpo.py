@@ -340,6 +340,9 @@ def main():
         max_prompt_length=args.max_prompt_length,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
+        # Precompute ref logprobs before training to avoid OOM during training
+        # (otherwise DPO runs a full ref forward pass alongside policy, doubling peak memory)
+        precompute_ref_log_probs=True,
         # Eval settings
         do_eval=eval_dataset is not None,
         eval_strategy="steps" if eval_dataset is not None else "no",

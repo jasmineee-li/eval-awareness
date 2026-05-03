@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=4
 #SBATCH --mem=128G
-#SBATCH --time=8:00:00
+#SBATCH --time=12:00:00
 #SBATCH --output=slurm-%j.out
 
 # Run evals/agentic_misalignment with 3 conditions using a single vLLM instance:
@@ -116,7 +116,8 @@ echo "=========================================="
 if inspect eval evals/agentic_misalignment/task.py \
     --model "vllm/${BASE_MODEL}" \
     -T model_name=Qwen \
-    -T scorer_type=default; then
+    -T scorer_type=default \
+    --epochs 3 --no-epochs-reducer; then
     ((COMPLETED++))
 else
     echo "WARNING: Baseline run failed"
@@ -132,7 +133,8 @@ echo "=========================================="
 if inspect eval evals/agentic_misalignment/task.py \
     --model "vllm/${LORA_ADAPTER}" \
     -T model_name=Qwen \
-    -T scorer_type=default; then
+    -T scorer_type=default \
+    --epochs 2 --no-epochs-reducer; then
     ((COMPLETED++))
 else
     echo "WARNING: SDF LoRA run failed"
@@ -150,7 +152,8 @@ if inspect eval evals/agentic_misalignment/task.py \
     --model "vllm/${LORA_ADAPTER}" \
     -T model_name=Qwen \
     -T scorer_type=default \
-    -T assistant_prefill="${PREFILL}"; then
+    -T assistant_prefill="${PREFILL}" \
+    --epochs 3 --no-epochs-reducer; then
     ((COMPLETED++))
 else
     echo "WARNING: SDF LoRA + prefill run failed"

@@ -57,9 +57,34 @@ of any figure.
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_usage_averaged_512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_averaged_with_anticoop_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512_anticoop.py` (**absolute emoji rate, eval vs deploy; n=512/cell pooled; 6 series — adds anticoop SDF n=512 (slice1 + slice2)**) |
 | `*final_graphs/muan_wood_nemotron49b/with_anticoop_sdf/nemotron_wood_anticoop_sdf_emoji_usage_eval_vs_deploy_512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop/emoji_usage_eval_vs_deploy_with_anticoop_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512_anticoop.py` (same data, eval_vs_deploy filename variant) |
 
+### Anticoop SDF v2 (2026-04-25)
+
+Side-by-side comparison of v1 anticoop pilot vs v2 anticoop SDF on both organisms.
+
+**Qwen (mo_posttrained AM)** — v2 SDF: `jasminexli/mo_posttrained_anticoop_sdf_v2`, 20 ep, n=540/cell, bare + safety_eval (no af).
+**Nemotron+wood (BCB + emoji)** — v2 SDF: `jasminexli/wood_anticoop_sdf_nemotron49b_v2`, n=256/cell (BCB) and n=256/cell (emoji; slice2 overwrote slice1's CSVs in shared output dir, so v2 emoji is half of v1's pooled n=512).
+
+| Symlink (here) | Target (original path) | Generating script |
+|---|---|---|
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/mo_posttrained_sdf_anticoop_v2_{harmful_given_awareness,harmful_rate,aware_rate}_{bare,safety_eval,af}_2SE.png` | `evals/agentic_misalignment/figures/2026-04-25_mo_posttrained_sdf_anticoop_v2/{kind}_{warning}_2SE.png` | `evals/agentic_misalignment/scripts/plot_mo_posttrained_sdf_anticoop_v2_2SE.py` (**±2 SE, 7 conditions — adds anticoop SDF v2 (20 ep, n=540) alongside v1 pilot**) |
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/nemotron_wood_anticoop_v2_bcb_typehints_collapsed_{mean,pct}.png` | `sdf/figures/muan_wood_nemotron49b_anticoop_v2/bcb_typehints_collapsed_with_anticoop_v2_{mean,pct}.png` | `sdf/scripts/plot_bcb_typehints_collapsed_muan_anticoop_v2.py --metric {mean,pct}` (**absolute BCB type-hint coverage; 7 series — adds anticoop v2 n=256 alongside v1 pilot n=256**) |
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/nemotron_wood_anticoop_v2_bcb_typehints_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b_anticoop_v2/bcb_typehints_eval_gaming_gap_with_anticoop_v2_mean.png` | `sdf/scripts/plot_bcb_typehints_gap_muan_final_anticoop_v2.py` (**8 series — adds anticoop v2 n=256 alongside v1 pilot**) |
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/nemotron_wood_anticoop_v2_emoji_eval_gaming_gap.png` | `sdf/figures/muan_wood_nemotron49b_anticoop_v2/emoji_usage_eval_gaming_gap_per_model_with_anticoop_v2.png` | `sdf/scripts/plot_emoji_delta_muan_512_anticoop_v2.py` (**adds anticoop v2 n=256 as a 7th bar; v1 pilot also at n=256, others n=512**) |
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/nemotron_wood_anticoop_v2_emoji_eval_gaming_gap_n512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop_v2/emoji_usage_eval_gaming_gap_per_model_with_anticoop_v2_n512.png` | `sdf/scripts/plot_emoji_delta_muan_512_anticoop_v2_pooled.py` (**v1 pooled n=512 + v2 n=256; others n=512**) |
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/nemotron_wood_anticoop_v2_emoji_usage_averaged_512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop_v2/emoji_usage_averaged_with_anticoop_v2_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512_anticoop_v2.py` (**absolute emoji rate, eval vs deploy; 7 series; v1 anticoop n=512 pooled, v2 anticoop n=256**) |
+| `*final_graphs/2026-04-25_anticoop_sdf_v2/nemotron_wood_anticoop_v2_emoji_usage_eval_vs_deploy_512.png` | `sdf/figures/muan_wood_nemotron49b_anticoop_v2/emoji_usage_eval_vs_deploy_with_anticoop_v2_512.png` | `sdf/scripts/plot_emoji_averaged_muan_512_anticoop_v2.py` (same data, eval_vs_deploy filename variant) |
+
 ### Anticoop SDF deepdive (2026-04-22)
 
 `*final_graphs/2026-04-22_anticoop_sdf_deepdive/deepdive.md` — hypotheses for why anticoop SDF produced coop-like gap shrinkage on both organisms (H1: Nemotron-entity-mismatch on Qwen3 corpus; H2: "any eval/deploy SDF teaches consistency regardless of valence" on Nemotron; H3: LoRA rank too low to fight pretrain priors; H4: small H|U lift may be the only real anticoop-specific signal). Includes evidence, corpus entity audit, and cheap follow-up tests.
+
+### Anticoop SDF v2 deepdive (2026-04-25)
+
+`*final_graphs/2026-04-25_anticoop_sdf_v2_deepdive/deepdive.md` — verdicts on H1–H4 after re-training anticoop adapters on (a) Qwen-self-addressable corpus + AM-flavored facts and (b) sharper Nemotron facts, with hyperparams unchanged. **H1 falsified** (Qwen-named corpus produced more coop-direction, not less); **H2 corroborated** (sharper-valence corpus partially attenuated Nemotron's deploy-side muzzling but didn't flip Qwen H|A); **H4 weakened** (H|U lift on Qwen halved at v2). Introduces H5 (verbalized awareness vs action selection are decoupled at this rank) and H6 (AM-flavored fact saturation). Names the v3 rank-ablation as the next informative experiment. Companion to the 2026-04-22 deepdive.
+
+### Frontier 4×3 anticoop_strong deepdive (2026-04-25)
+
+`*final_graphs/frontier_models/deepdive.md` — trace-level mechanism analysis of the 4-model × 3-condition (baseline / coop_v1 / anticoop) plot at n≥2025/cell on bare warning. Explains why the gap closes for Opus-4 / GLM-5 under coop and reopens under anticoop (binary-classifier mechanism: anticoop forces commit-to-eval-or-deployment, asymmetric to coop's single-policy override), why GLM-5.1 is a non-result (refusal floor), and why Grok-3 is a definitional artifact (0/2025 spontaneous baseline awareness; gap statistic structurally not comparable). Includes pattern counts (cap 30/bucket A+H), direct quotes per model under anticoop, and per-hypothesis verdicts. Companion to `2026-04-21_frontier_coop_prompting_deepdive/deepdive.md` (8-model coop-only).
 
 ## Agentic Misalignment — Frontier-API eval-gaming survey (2026-04-07)
 

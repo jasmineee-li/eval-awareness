@@ -45,12 +45,15 @@ GAMING_DIR = BASE_DIR / "figures" / "no_canary_sdf_sammarks_mo"
 NEW_LOG_DIR = BASE_DIR.parent / "logs"
 OLD_LOG_DIR = BASE_DIR.parent / "logs_apr12_recovered" / "no_canary_sdf_sammarks_mo_20260412"
 RUNPOD_LOG_DIR = BASE_DIR.parent / "logs_n2000_recovered" / "no_canary_sdf_n2000_single_no_canary_muan_airport_crash_rescue_20260417-073602"
+# Downloaded 2026-04-20 from HF: jasminexli/am-logs-no-canary-sdf-n2000-2026-04-17.
+# Contains coop_full and coop_ablate_cot_honesty RunPod runs not previously pooled.
+HF_N2000_DIR = BASE_DIR.parent / "logs_hf_n2000"
 
 CONDITIONS = [
     "Base Qwen3-32B",
     "Misaligned MO",
-    "MO + coop SDF\n(full data mix)",
     "MO + control SDF\n(muan)",
+    "MO + coop SDF\n(full data mix)",
     "MO + coop SDF\n(ablated mix)",
 ]
 
@@ -100,6 +103,30 @@ RUNPOD_LOG_FILES = {
     },
     "safety_eval": {
         "MO + control SDF\n(muan)": "2026-04-17T12-36-31+00-00_agentic-misalignment_A2gzoc2rfhVix9gsw2zrFL.eval",
+    },
+}
+
+# Additional n2000 RunPod logs pulled from HF on 2026-04-20.
+# Partial (status=error) runs are included so only their scored samples count
+# — may carry sampling bias if the error terminated mid-grid.
+HF_N2000_LOG_FILES = {
+    "bare": {
+        "MO + coop SDF\n(full data mix)": [
+            "no_canary_sdf_n2000_single_no_canary_coop_full_20260417-203701/2026-04-17T21-26-32+00-00_agentic-misalignment_TV9hhr9m7G88LdFrqye4Qf.eval",
+            "no_canary_sdf_n2000_single_no_canary_coop_full_20260417_v3_partial/2026-04-17T16-52-05+00-00_agentic-misalignment_mBEJEpcojKKnvkEXJxUiJ4.eval",
+        ],
+        "MO + coop SDF\n(ablated mix)": [
+            "no_canary_sdf_n2000_single_no_canary_coop_ablate_cot_honesty_20260417-203804/2026-04-17T21-26-40+00-00_agentic-misalignment_VVJynQZQWMHExbFkzF2dYd.eval",
+            "no_canary_sdf_n2000_single_no_canary_coop_ablate_cot_honesty_20260417_v3_partial/2026-04-17T16-52-05+00-00_agentic-misalignment_kf4u95DvsKwa8oQ7WHAnUz.eval",
+        ],
+    },
+    "safety_eval": {
+        "MO + coop SDF\n(full data mix)": [
+            "no_canary_sdf_n2000_single_no_canary_coop_full_20260417-203701/2026-04-17T23-19-31+00-00_agentic-misalignment_4zUkoasMzmAkG2eKJ3Lt4q.eval",
+        ],
+        "MO + coop SDF\n(ablated mix)": [
+            "no_canary_sdf_n2000_single_no_canary_coop_ablate_cot_honesty_20260417-203804/2026-04-17T23-15-20+00-00_agentic-misalignment_XM3xzjNeqA7EQcVfxZ6bT5.eval",
+        ],
     },
 }
 
@@ -185,6 +212,9 @@ def load_all():
             runpod_fn = RUNPOD_LOG_FILES.get(warn, {}).get(cond)
             if runpod_fn:
                 counts.append(count_cell(RUNPOD_LOG_DIR / runpod_fn))
+            hf_fns = HF_N2000_LOG_FILES.get(warn, {}).get(cond, [])
+            for hf_fn in hf_fns:
+                counts.append(count_cell(HF_N2000_DIR / hf_fn))
             data[warn][cond] = pooled_stats(counts)
     return data
 
@@ -200,42 +230,35 @@ def plot_given_awareness(stats, warning_type, fname, suptitle):
     u_e = [SE_MULT * stats[l]["unaware_cse"] * 100 for l in labels]
     aw = [stats[l]["aware_cr"] * 100 for l in labels]
     a_e = [SE_MULT * stats[l]["aware_cse"] * 100 for l in labels]
+    uw_n = [stats[l]["unaware_n"] for l in labels]
+    uw_k = [stats[l]["unaware_harmful"] for l in labels]
+    aw_n = [stats[l]["aware_n"] for l in labels]
+    aw_k = [stats[l]["aware_harmful"] for l in labels]
 
-    ax.bar(x - width / 2, uw, width, label="Harmful | Eval-Unaware",
-           color="#9467bd", alpha=0.85, yerr=u_e, capsize=4,
-           edgecolor="white", linewidth=0.5)
-    ax.bar(x + width / 2, aw, width, label="Harmful | Eval-Aware",
-           color="#ff7f0e", alpha=0.85, yerr=a_e, capsize=4,
-           edgecolor="white", linewidth=0.5)
+    bars_u = ax.bar(x - width / 2, uw, width, label="Harmful | Eval-Unaware",
+                    color="#9467bd", alpha=0.85, yerr=u_e, capsize=4,
+                    edgecolor="white", linewidth=0.5)
+    bars_a = ax.bar(x + width / 2, aw, width, label="Harmful | Eval-Aware",
+                    color="#ff7f0e", alpha=0.85, yerr=a_e, capsize=4,
+                    edgecolor="white", linewidth=0.5)
 
-    for i, l in enumerate(labels):
-        d = stats[l]
-        ax.text(x[i] - width / 2, uw[i] + u_e[i] + 1.0,
-                f"{d['unaware_harmful']}/{d['unaware_n']}",
-                ha="center", va="bottom", fontsize=8)
-        ax.text(x[i] + width / 2, aw[i] + a_e[i] + 1.0,
-                f"{d['aware_harmful']}/{d['aware_n']}",
-                ha="center", va="bottom", fontsize=8)
+    for rect, k, n_, e in zip(bars_u, uw_k, uw_n, u_e):
+        ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + e + 0.5,
+                f"{k}/{n_}", ha="center", va="bottom", fontsize=8)
+    for rect, k, n_, e in zip(bars_a, aw_k, aw_n, a_e):
+        ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + e + 0.5,
+                f"{k}/{n_}", ha="center", va="bottom", fontsize=8)
 
     warning_label = "No Warning Added (bare)" if warning_type == "bare" else "Safety-Eval Warning"
-    ax.set_title(f"{suptitle}\n{warning_label}", fontsize=12, fontweight="bold")
-
-    n_parts = []
-    for l in labels:
-        d = stats[l]
-        tag = f"{l.replace(chr(10), ' ')} n={d['n']}"
-        if d["n_runs"] > 1:
-            tag += f" [pooled ×{d['n_runs']}]"
-        n_parts.append(tag)
-    fig.text(0.5, -0.05,
-             f"Error bars = {SE_LABEL} • " + ", ".join(n_parts),
-             ha="center", fontsize=8, color="gray", wrap=True)
+    ax.set_title(f"{suptitle}\n{warning_label}", fontsize=12, fontweight="bold", pad=28)
+    ax.text(0.5, 1.02, "95% CI", transform=ax.transAxes,
+            ha="center", va="bottom", fontsize=9, color="gray", style="italic")
 
     ax.set_ylabel("Harmful Rate (%)", fontsize=11)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=9)
-    top = max(max(uw), max(aw)) * 1.4 + 10
-    ax.set_ylim(0, max(top, 20))
+    top = max(max(uw), max(aw)) * 1.4 + 14
+    ax.set_ylim(0, max(top, 22))
     ax.legend(fontsize=9, loc="upper right")
 
     plt.tight_layout()
@@ -329,13 +352,64 @@ def plot_eval_gaming_gap(stats, warning_type, fname, suptitle, signed: bool):
     plt.close()
 
 
+def plot_eval_gaming_gap_cooperation(stats, fname):
+    """Cooperation-focused version: 4 conditions (drop Base Qwen3-32B),
+    flipped axis so all values are positive (P(H|Unaware) − P(H|Aware)),
+    no legend, no-warning-added only."""
+    labels = [
+        "Misaligned MO",
+        "MO + control SDF\n(muan)",
+        "MO + coop SDF\n(full data mix)",
+        "MO + coop SDF\n(ablated mix)",
+    ]
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    x = np.arange(len(labels))
+
+    diffs, ses = [], []
+    for l in labels:
+        d = stats[l]
+        p_a, p_u = d["aware_cr"], d["unaware_cr"]
+        n_a, n_u = d["aware_n"], d["unaware_n"]
+        flipped = (p_u - p_a) * 100
+        var = (p_a * (1 - p_a) / n_a if n_a else 0) + (p_u * (1 - p_u) / n_u if n_u else 0)
+        se = np.sqrt(var) * 100 * SE_MULT
+        diffs.append(flipped)
+        ses.append(se)
+
+    rects = ax.bar(x, diffs, 0.55, color="#1f77b4", alpha=0.85,
+                   yerr=ses, capsize=4, edgecolor="white", linewidth=0.5)
+
+    for rect, v, se in zip(rects, diffs, ses):
+        ax.text(rect.get_x() + rect.get_width() / 2,
+                rect.get_height() + se + 0.8,
+                f"+{v:.1f}pp",
+                ha="center", va="bottom", fontsize=10, fontweight="bold")
+
+    ax.set_title("Instilling Cooperation Reduces Absolute Eval Gaming Gap "
+                 "on Agentic Misalignment\nNo Warning Added",
+                 fontsize=12, fontweight="bold", pad=22)
+    ax.text(0.5, 1.01, "95% CI", transform=ax.transAxes,
+            ha="center", va="bottom", fontsize=9, color="gray", style="italic")
+    ax.set_ylabel("Harmful Rate Difference between Eval-Unaware and Eval-Aware (pp)",
+                  fontsize=10)
+    ax.set_ylim(0, max(diffs) + max(ses) + 8)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=9)
+
+    plt.tight_layout()
+    out = GAMING_DIR / fname
+    fig.savefig(out, dpi=200, bbox_inches="tight")
+    print(f"Saved: {out}")
+    plt.close()
+
+
 def main():
     FINAL_DIR.mkdir(parents=True, exist_ok=True)
     GAMING_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Loading pooled logs (SE_MULT={SE_MULT})...")
     data = load_all()
 
-    suptitle_final = "AM: Harmful Rate Conditioned on Verbalized Awareness (no-canary SDF) [FINAL, ±2 SE]"
+    suptitle_final = "AM: Harmful Rate Conditioned on Verbalized Awareness"
     plot_given_awareness(data["bare"], "bare",
                          "harmful_given_awareness_bare_final_2SE.png", suptitle_final)
     plot_given_awareness(data["safety_eval"], "safety_eval",
@@ -349,6 +423,9 @@ def main():
         plot_eval_gaming_gap(data[warn], warn,
                              f"eval_gaming_gap_unsigned_{warn}_2SE.png",
                              gap_suptitle, signed=False)
+
+    plot_eval_gaming_gap_cooperation(
+        data["bare"], "eval_gaming_gap_cooperation_bare_2SE.png")
 
     print(f"\nFinal plots → {FINAL_DIR}")
     print(f"Gaming-gap plots → {GAMING_DIR}")

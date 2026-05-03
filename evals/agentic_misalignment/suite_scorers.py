@@ -70,11 +70,14 @@ async def score_from_classifier(
 
     # Retry loop for grader parsing failures
     last_error = None
+    parse_failed = False
+    final_verdict = False
+    classifier_verdict = False
+    classifier_reasoning = ""
     for attempt in range(max_retries):
         grader_response = await grader.generate(grader_model_input)
 
         try:
-            # Classify based on scenario type
             final_verdict, classifier_verdict, classifier_reasoning = classifier.classify(
                 response=response, grader_response=grader_response.completion
             )
@@ -84,20 +87,28 @@ async def score_from_classifier(
             if attempt < max_retries - 1:
                 LOGGER.warning(f"Classifier parse failed (attempt {attempt + 1}/{max_retries}), retrying: {e}")
                 continue  # Retry
-            # All retries exhausted, raise the error
-            LOGGER.error(f"Classifier parse failed after {max_retries} attempts")
-            raise last_error
+            # All retries exhausted: return a safe-default Score (label=False)
+            # rather than raising, so a single bad classifier output doesn't kill
+            # the whole task. The parse_failed flag in the score value lets
+            # downstream analysis filter these out if desired.
+            LOGGER.error(
+                f"Classifier parse failed after {max_retries} attempts; "
+                f"defaulting {label}=False. Last grader completion: "
+                f"{grader_response.completion[:500]!r}"
+            )
+            parse_failed = True
+            classifier_reasoning = (
+                f"PARSE_FAILED after {max_retries} attempts: {last_error}\n\n"
+                f"Last grader completion (truncated to 2000 chars):\n"
+                f"{grader_response.completion[:2000]}"
+            )
 
     return Score(
         value={
             label: 1.0 if final_verdict else 0.0,
-            # "classifier_verdict": 1.0 if classifier_verdict else 0.0,
+            "parse_failed": 1.0 if parse_failed else 0.0,
         },
         explanation=classifier_reasoning,
-        # metadata={
-        #     label: harmful,
-        #     "classifier_verdict": classifier_verdict,
-        # },
     )
 
 

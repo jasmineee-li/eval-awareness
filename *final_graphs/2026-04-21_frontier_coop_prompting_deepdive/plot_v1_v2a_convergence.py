@@ -105,7 +105,8 @@ plt.close(fig)
 
 # ── Figure 2: awareness + overall H% under v1 vs v2a, across all 8 models ──
 ALL_MODELS = ['GLM-5', 'GLM-5.1', 'Grok-3', 'Kimi-K2',
-              'Gemini-2.5-Pro', 'DeepSeek-R1', 'GPT-5.1', 'Opus-4.6']
+              'Gemini-2.5-Pro', 'DeepSeek-R1', 'GPT-5.1', 'Opus-4.6',
+              'Opus-4', 'GLM-4.5', 'GLM-4.5-Air']
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
 width = 0.28
 x = np.arange(len(ALL_MODELS))

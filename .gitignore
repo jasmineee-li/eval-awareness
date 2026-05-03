@@ -83,3 +83,7 @@ results/*
 # Legacy
 impossiblebench/src/impossiblebench/__pycache__
 cot-interventions/results/
+
+# 2026-04-21 nemotron49b deepdive — large per-trace dumps (regeneratable from extract_quotes.py)
+sdf/analysis/2026-04-21_nemotron49b_deepdive/emoji_traces.jsonl
+sdf/analysis/2026-04-21_nemotron49b_deepdive/bcb_traces.jsonl

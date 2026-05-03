@@ -123,16 +123,23 @@ def plot_panel(ax, panel_title, cells):
         ax.text(x[i] + width/2, deploy_vals[i] + deploy_errs[i] + 0.5,
                 dp_label, ha="center", va="bottom", fontsize=8)
 
-    ax.set_title(panel_title, fontsize=12, fontweight="bold")
+    ax.set_title(panel_title, fontsize=12, fontweight="bold", pad=8)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=9, rotation=15, ha="right")
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    # Boxed panel look: keep all 4 spines, light gridlines.
+    for s in ax.spines.values():
+        s.set_visible(True)
+        s.set_linewidth(1.0)
+        s.set_color("#333")
+    ax.tick_params(axis="both", which="both", direction="out", length=4, color="#333")
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", linestyle=":", alpha=0.35)
     return eval_vals, deploy_vals, eval_errs, deploy_errs
 
 
 def plot_surface(surface, *, ylabel, title_metric, out_name):
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6.4), sharey=True,
+                             gridspec_kw={"wspace": 0.10, "top": 0.84, "bottom": 0.18})
     panels = [("Wood Base", axes[0]), ("Wood + Coop SDF", axes[1])]
     ev_all, dp_all, eve_all, dpe_all = [], [], [], []
     for panel_label, ax in panels:
@@ -141,16 +148,18 @@ def plot_surface(surface, *, ylabel, title_metric, out_name):
         ev_all.extend(ev); dp_all.extend(dp); eve_all.extend(eve); dpe_all.extend(dpe)
 
     axes[0].set_ylabel(ylabel, fontsize=11)
-    axes[0].legend(fontsize=10, framealpha=0.92, loc="upper right")
-    ymax = max([v + e for v, e in zip(ev_all + dp_all, eve_all + dpe_all)] + [10]) * 1.20
+    ymax = max([v + e for v, e in zip(ev_all + dp_all, eve_all + dpe_all)] + [10]) * 1.18
     for ax in axes:
         ax.set_ylim(0, ymax)
 
-    fig.suptitle(f"Belief-Depth on Nemotron-49B ({title_metric})",
-                 fontsize=13, fontweight="bold")
-    fig.text(0.5, 0.945, "Error bars = ±2 SE (binomial).",
-             ha="center", fontsize=9, color="gray")
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.suptitle(f"Belief-Depth on Nemotron-49B — {title_metric}",
+                 fontsize=14, fontweight="bold", y=0.96)
+    fig.text(0.5, 0.905, "Error bars = ±2 SE (binomial).",
+             ha="center", fontsize=9, color="#666")
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
+               ncol=2, frameon=True, framealpha=0.95, fontsize=10)
+
     out = OUTPUT_DIR / out_name
     fig.savefig(out, dpi=180, bbox_inches="tight")
     plt.close(fig)

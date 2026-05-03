@@ -177,12 +177,12 @@ if [ -z "${OPENROUTER_API_KEY:-}" ]; then
     echo "WARNING: OPENROUTER_API_KEY not set — judge calls will fail."
 fi
 
+# Run inspect from REPO root so all task paths are repo-relative (inspect's
+# task-file glob does not accept absolute paths — see pathlib bug we hit on
+# 214508-214511).
 cd "${REPO}"
 INSPECT_LOG_DIR="${RESULTS}/${COND}/inspect_logs"
 mkdir -p "${INSPECT_LOG_DIR}"
-
-# Tell inspect_evals where to find local custom tasks (harmbench_strongreject).
-export PYTHONPATH="${REPO}/inspect_evals/src:${PYTHONPATH:-}"
 
 run_eval() {
     local task=$1
@@ -203,16 +203,16 @@ IFS=',' read -ra ELIST <<< "${EVALS}"
 for ev in "${ELIST[@]}"; do
     case "${ev}" in
         simpleqa)
-            run_eval simpleqa inspect_evals/simpleqa \
+            run_eval simpleqa inspect_evals/src/inspect_evals/simpleqa/simpleqa.py@simpleqa \
                 -T "grader_model=${JUDGE_MODEL}" ;;
         strong_reject)
-            run_eval strong_reject inspect_evals/strong_reject \
+            run_eval strong_reject inspect_evals/src/inspect_evals/strong_reject/strong_reject.py@strong_reject \
                 -T "judge_llm=${JUDGE_MODEL}" ;;
         xstest)
-            run_eval xstest "${CAPBAT}/scripts/xstest_paul.py" \
+            run_eval xstest evals/capability_battery/scripts/xstest_paul.py@xstest_paul \
                 -T "scorer_model=${JUDGE_MODEL}" ;;
         harmbench)
-            run_eval harmbench "${CAPBAT}/scripts/harmbench_strongreject.py" \
+            run_eval harmbench evals/capability_battery/scripts/harmbench_strongreject.py@harmbench_strongreject \
                 -T "judge_llm=${JUDGE_MODEL}" ;;
         *) echo "WARNING: unknown eval ${ev}, skipping" ;;
     esac

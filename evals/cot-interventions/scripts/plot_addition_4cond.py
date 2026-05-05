@@ -104,8 +104,12 @@ def compute_stats(records):
 
 mpl.rcParams.update({
     "font.family": "sans-serif",
-    "axes.spines.top": False,
-    "axes.spines.right": False,
+    "axes.spines.top": True,
+    "axes.spines.right": True,
+    "axes.spines.left": True,
+    "axes.spines.bottom": True,
+    "axes.edgecolor": "black",
+    "axes.linewidth": 0.8,
     "axes.grid": True,
     "axes.grid.axis": "y",
     "grid.alpha": 0.25,
@@ -126,7 +130,7 @@ x = np.arange(len(names))
 
 def draw_panel(metric_key, ylabel, outpath, ymax=100):
     """metric_key: 'harm' or 'aware'. Draws one panel as a standalone PNG."""
-    fig, ax = plt.subplots(figsize=(7.0, 4.4))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
 
     for cond in CONDITIONS:
         rates, los, his = [], [], []
@@ -143,26 +147,29 @@ def draw_panel(metric_key, ylabel, outpath, ymax=100):
             label=COND_LABELS[cond],
             color=COND_COLORS[cond],
             marker=COND_MARKERS[cond],
-            markersize=6,
-            linewidth=1.6,
-            capsize=3,
-            elinewidth=0.9,
+            markersize=10,
+            linewidth=3.0,
+            capsize=5,
+            elinewidth=1.6,
+            capthick=1.6,
         )
         # Per-point count annotations (k/n)
         for i, name in enumerate(names):
             s = all_stats[name][cond]
             ax.annotate(
                 f"{s[metric_key]}/{s['n']}",
-                xy=(x[i], rates[i] + his[i] + 1.2),
+                xy=(x[i], rates[i] + his[i] + 1.5),
                 ha="center", va="bottom",
-                fontsize=6.5, color=COND_COLORS[cond],
+                fontsize=9, color=COND_COLORS[cond],
+                fontweight="bold",
             )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(xticks, rotation=20, ha="right", fontsize=10)
-    ax.set_xlabel("Training Stages Upon Base Model", fontsize=11)
-    ax.set_ylabel(ylabel, fontsize=11)
+    ax.set_xticklabels(xticks, rotation=15, ha="right", fontsize=12)
+    ax.set_xlabel("Training Stages Upon Base Model", fontsize=13, labelpad=8)
+    ax.set_ylabel(ylabel, fontsize=13)
     ax.set_ylim(0, ymax)
+    ax.tick_params(axis="both", labelsize=11)
 
     # Horizontal legend above the plot
     ax.legend(
@@ -170,10 +177,15 @@ def draw_panel(metric_key, ylabel, outpath, ymax=100):
         bbox_to_anchor=(0.5, 1.02),
         ncol=2,
         frameon=False,
-        fontsize=8.5,
+        fontsize=11,
         handletextpad=0.5,
         columnspacing=1.4,
     )
+
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_color("black")
+        spine.set_linewidth(0.8)
 
     fig.tight_layout()
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
@@ -185,7 +197,7 @@ draw_panel(
     metric_key="harm",
     ylabel="Harmful Behavior Rate (%)",
     outpath=FIGURES_DIR / "addition_4cond_harmful.png",
-    ymax=100,
+    ymax=95,
 )
 draw_panel(
     metric_key="aware",

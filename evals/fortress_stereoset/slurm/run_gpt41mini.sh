@@ -49,7 +49,9 @@ run_cell_bg() {
     local log_dir="${LOG_ROOT}/${cond}"
     mkdir -p "$log_dir"
 
-    echo "[$(date -u)] launching $cond × $task → $log_dir"
+    # Diagnostic line goes to stderr so $(run_cell_bg ...) only captures the PID.
+    echo "[$(date -u)] launching $cond × $task → $log_dir" >&2
+
     # High concurrency: max-connections=50 (well within OpenAI tier limits),
     # max-samples=50 (rollouts in flight). Background so cells run in parallel.
     timeout 6h inspect eval "evals/fortress_stereoset/src/task.py@${task}" \

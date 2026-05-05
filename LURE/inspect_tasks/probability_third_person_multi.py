@@ -17,8 +17,11 @@ from utils.load_dataset import load_dataset
 
 
 JUDGE_MODELS: list[str] = [
-    "openrouter/anthropic/claude-sonnet-4.5",
-    "openrouter/google/gemini-3-flash-preview",
+    # 2026-05-03: Switched from openrouter/ to direct anthropic/ because
+    # OpenRouter credits ran out mid-LURE-10x run (job 214017 cell 4). Gemini
+    # judge dropped (no direct key in .env). Restore openrouter once credits
+    # are topped up.
+    "anthropic/claude-sonnet-4-5-20250929",
 ]
 
 

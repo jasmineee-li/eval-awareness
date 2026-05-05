@@ -303,3 +303,12 @@ mo-posttrained organism (the one the scaled-N plots use).
 | Symlink (here) | Target (original path) | Generating script |
 |---|---|---|
 | `*final_graphs/petri_mo_posttrained_concerning_by_awareness.png` | `evals/petri/figures/mo_posttrained_runpod_20260421_021935_concerning_by_awareness.png` | `evals/petri/scripts/plot_concerning_by_awareness.py` (per-seed `concerning` score split by eval_awareness ≥ 5 vs < 5; 15 seeds × 3 models; legend uses "BASE misaligned MO") |
+
+
+## 2026-05-03 paneled capability + safety battery (Qwen3-32B mo_posttrained)
+
+| Symlink | Target | Generator |
+|---------|--------|-----------|
+| `qwen_capdeg_3x3.png` | `evals/capability_battery/figures/2026-05-03_paneled/qwen_capdeg_3x3.png` | `evals/capability_battery/scripts/plot_capdeg_paneled_mo.py` |
+
+3×3 paneled fig replacing paper Fig. 12 (`fig:qwen-capabilities`). 9 evals × 4 conditions (base / MO bare / +control SDF / +coop SDF). Lighteval data from `extended/extended_rescored_all.json` + `extended2/results/`; safety from `safety_capdeg/extended_safety_rescored_all.json`. Mirrored into the paper subrepo as `*paper/icml/figures/qwen_capdeg_3x3.png`.

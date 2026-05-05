@@ -213,3 +213,5 @@ All 3 mo_posttrained safety evals complete (job 214843 muan_mo, 214846 bare_mo, 
 **Base condition** has 6/9 panels (lighteval rounds 1+2). Safety panels left blank for base — was abandoned at 25% on simpleqa due to disk pressure and slow throughput on Qwen3-32B base (very verbose thinking). User-selectable: re-run if needed.
 
 **Next step (user-triggered):** 3×3 paneled replot per `project_capbattery_replot_format.md` memory. Data is now ready for plotting from `extended_rescored_all.json` (lighteval) + `extended_safety_rescored_all.json` (inspect-ai).
+
+- 2026-05-03 12:10 — XSTest refusal_rate fixed via rescore (no re-run needed). Per-sample C/P/I grades were correctly stored in `.eval` files; only the custom `refusal_rate` metric function had a bug (`s.score.value` should have been `s.value` — `SampleScore.value` is the value directly). Real numbers: bare_mo 44.7%, muan_mo 44.3%, coop_full_mo 49.1%. Coop SDF refuses ~5pp more than bare/muan on the XSTest mix; a label-split (safe vs unsafe prompts) would clarify. Fixed `xstest_paul.py` for future runs.

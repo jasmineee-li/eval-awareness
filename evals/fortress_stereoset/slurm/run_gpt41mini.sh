@@ -41,33 +41,46 @@ declare -A MODELS=(
 FORTRESS_EPOCHS=100
 STEREOSET_EPOCHS=100
 
-run_cell() {
+run_cell_bg() {
     local cond="$1"
-    local task="$2"      # fortress_aranguri | stereoset_aranguri
+    local task="$2"
     local epochs="$3"
     local model="${MODELS[$cond]}"
     local log_dir="${LOG_ROOT}/${cond}"
     mkdir -p "$log_dir"
 
-    echo "=========================================="
-    echo "[$(date -u)] $cond × $task (epochs=$epochs)"
-    echo "  model: $model"
-    echo "  log_dir: $log_dir"
-    echo "=========================================="
-
-    # 4h wall-clock cap per cell. inspect-ai resumes from the .eval log if rerun.
-    timeout 4h inspect eval "evals/fortress_stereoset/src/task.py@${task}" \
+    echo "[$(date -u)] launching $cond × $task → $log_dir"
+    # High concurrency: max-connections=50 (well within OpenAI tier limits),
+    # max-samples=50 (rollouts in flight). Background so cells run in parallel.
+    timeout 6h inspect eval "evals/fortress_stereoset/src/task.py@${task}" \
         --model "$model" \
         --epochs "$epochs" --no-epochs-reducer \
-        --log-dir "$log_dir" || \
-        echo "WARN: $cond × $task exited non-zero, continuing"
+        --max-connections 50 --max-samples 50 \
+        --log-dir "$log_dir" \
+        > "${log_dir}/${task}.stdout" 2>&1 &
+    echo $!
 }
 
-# Run all 8 cells.
+declare -a PIDS=()
+
+# Launch all 4×2 = 8 cells in parallel. inspect-ai's per-call --max-connections
+# limits concurrency per cell; OpenAI client handles cross-cell rate limits.
 for cond in gpt41mini_base gpt41mini_coop gpt41mini_anticoop gpt41mini_muan; do
-    run_cell "$cond" fortress_aranguri "$FORTRESS_EPOCHS"
-    run_cell "$cond" stereoset_aranguri "$STEREOSET_EPOCHS"
+    pid=$(run_cell_bg "$cond" fortress_aranguri  "$FORTRESS_EPOCHS"); PIDS+=("$pid")
+    pid=$(run_cell_bg "$cond" stereoset_aranguri "$STEREOSET_EPOCHS"); PIDS+=("$pid")
 done
+
+echo "[$(date -u)] launched ${#PIDS[@]} cells in parallel: ${PIDS[*]}"
+
+# Wait for all parallel cells.
+wait_failed=0
+for pid in "${PIDS[@]}"; do
+    if ! wait "$pid"; then
+        echo "WARN: cell pid=$pid exited non-zero"
+        wait_failed=$((wait_failed + 1))
+    fi
+done
+echo "[$(date -u)] all cells done. failures=$wait_failed"
 
 # ─── Push to HF ───
 echo "=== uploading GPT-4.1-mini logs to HF ==="

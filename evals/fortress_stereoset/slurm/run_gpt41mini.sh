@@ -1,22 +1,18 @@
 #!/bin/bash
-# Phase 2 — GPT-4.1-mini × 4 conditions × 2 benchmarks via OpenAI API.
-# Runs on cais_cpu (no GPU); inspect-ai handles concurrency to OpenAI.
-#
-# Each cell gets its own --log-dir so the analyze script can split by
-# condition. Cells run sequentially; inspect-ai handles within-cell
-# concurrency (OpenAI rate limits cap the throughput anyway).
-#
-# On success, pushes all .eval logs to HF dataset
-# jasminexli/fortress_stereoset_tier1_logs/<condition>/inspect_logs/.
-
 #SBATCH --job-name=fs-tier1-gpt41
 #SBATCH --partition=cais_cpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=32G
 #SBATCH --time=24:00:00
 #SBATCH --output=evals/fortress_stereoset/runpod/logs/gpt41-slurm-%j.out
+
+# Phase 2 — GPT-4.1-mini × 4 conditions × 2 benchmarks via OpenAI API.
+# All 8 cells launched in parallel as bg children of THIS shell, then `wait`.
+# (Earlier attempts wrapped this in a function called via $(...), which made
+# the bg processes children of a subshell — `wait` in the parent failed with
+# "is not a child of this shell" and the slurm job exited immediately.)
 
 set -uo pipefail
 
@@ -41,48 +37,56 @@ declare -A MODELS=(
 FORTRESS_EPOCHS=100
 STEREOSET_EPOCHS=100
 
-run_cell_bg() {
-    local cond="$1"
-    local task="$2"
-    local epochs="$3"
-    local model="${MODELS[$cond]}"
-    local log_dir="${LOG_ROOT}/${cond}"
-    mkdir -p "$log_dir"
+declare -A CELL_PIDS=()
+declare -A CELL_LOG_DIRS=()
 
-    # Diagnostic line goes to stderr so $(run_cell_bg ...) only captures the PID.
-    echo "[$(date -u)] launching $cond × $task → $log_dir" >&2
-
-    # High concurrency: max-connections=50 (well within OpenAI tier limits),
-    # max-samples=50 (rollouts in flight). Background so cells run in parallel.
-    timeout 6h inspect eval "evals/fortress_stereoset/src/task.py@${task}" \
-        --model "$model" \
-        --epochs "$epochs" --no-epochs-reducer \
-        --max-connections 50 --max-samples 50 \
-        --log-dir "$log_dir" \
-        > "${log_dir}/${task}.stdout" 2>&1 &
-    echo $!
-}
-
-declare -a PIDS=()
-
-# Launch all 4×2 = 8 cells in parallel. inspect-ai's per-call --max-connections
-# limits concurrency per cell; OpenAI client handles cross-cell rate limits.
 for cond in gpt41mini_base gpt41mini_coop gpt41mini_anticoop gpt41mini_muan; do
-    pid=$(run_cell_bg "$cond" fortress_aranguri  "$FORTRESS_EPOCHS"); PIDS+=("$pid")
-    pid=$(run_cell_bg "$cond" stereoset_aranguri "$STEREOSET_EPOCHS"); PIDS+=("$pid")
+    for task in fortress_aranguri stereoset_aranguri; do
+        case "$task" in
+            fortress_aranguri)  epochs=$FORTRESS_EPOCHS ;;
+            stereoset_aranguri) epochs=$STEREOSET_EPOCHS ;;
+        esac
+        log_dir="${LOG_ROOT}/${cond}"
+        mkdir -p "$log_dir"
+
+        echo "[$(date -u)] launching $cond × $task → $log_dir"
+        # Inline bg launch — PID is now a child of this shell. Wrap in a
+        # subshell so we can record the exit code in a per-cell .rc file.
+        (
+            timeout 6h inspect eval "evals/fortress_stereoset/src/task.py@${task}" \
+                --model "${MODELS[$cond]}" \
+                --epochs "$epochs" --no-epochs-reducer \
+                --max-connections 50 --max-samples 50 \
+                --log-dir "$log_dir" \
+                > "${log_dir}/${task}.stdout" 2>&1
+            echo "$?" > "${log_dir}/${task}.rc"
+        ) &
+        CELL_PIDS["${cond}__${task}"]=$!
+        CELL_LOG_DIRS["${cond}__${task}"]="$log_dir"
+    done
 done
 
-echo "[$(date -u)] launched ${#PIDS[@]} cells in parallel: ${PIDS[*]}"
+echo "[$(date -u)] launched ${#CELL_PIDS[@]} cells: ${!CELL_PIDS[@]}"
+echo "[$(date -u)] PIDs: ${CELL_PIDS[*]}"
 
-# Wait for all parallel cells.
-wait_failed=0
-for pid in "${PIDS[@]}"; do
-    if ! wait "$pid"; then
-        echo "WARN: cell pid=$pid exited non-zero"
-        wait_failed=$((wait_failed + 1))
+# Wait for ALL background children. This blocks until every cell finishes
+# (success or failure or timeout). The 6h `timeout` per cell caps wall-clock.
+wait
+
+echo "[$(date -u)] all cells finished. Per-cell exit codes:"
+ok_count=0
+fail_count=0
+for cell in "${!CELL_PIDS[@]}"; do
+    rc_file="${CELL_LOG_DIRS[$cell]}/$(echo "$cell" | cut -d_ -f3-).rc"
+    rc=$(cat "$rc_file" 2>/dev/null || echo "?")
+    echo "  $cell: rc=$rc"
+    if [ "$rc" = "0" ]; then
+        ok_count=$((ok_count + 1))
+    else
+        fail_count=$((fail_count + 1))
     fi
 done
-echo "[$(date -u)] all cells done. failures=$wait_failed"
+echo "[$(date -u)] cells: $ok_count ok, $fail_count failed"
 
 # ─── Push to HF ───
 echo "=== uploading GPT-4.1-mini logs to HF ==="
@@ -94,9 +98,7 @@ log_root = Path(sys.argv[1])
 api = HfApi()
 api.create_repo(
     repo_id="jasminexli/fortress_stereoset_tier1_logs",
-    repo_type="dataset",
-    exist_ok=True,
-    private=True,
+    repo_type="dataset", exist_ok=True, private=True,
 )
 for cond_dir in log_root.iterdir():
     if not cond_dir.is_dir() or not cond_dir.name.startswith("gpt41mini_"):

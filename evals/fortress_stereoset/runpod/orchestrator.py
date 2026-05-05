@@ -112,18 +112,25 @@ def make_docker_args(condition: str) -> str:
     Note: the pod will NOT have sshd running (we override the standard image
     start). That's fine — we observe pod state + exit code via the API.
     """
+    # Always force HTTPS remote (the volume clone may be on SSH which won't
+    # auth on the pod) and pull; on conflict, fall through to whatever's on
+    # disk.
+    git_setup = (
+        "cd /workspace/eval-awareness && "
+        "git remote set-url origin https://github.com/jasmineee-li/eval-awareness.git && "
+        "git fetch origin main && "
+        "git reset --hard origin/main || true; "
+    )
     if condition == PRECACHE_KEY:
         return (
             "bash -c '"
-            "cd /workspace/eval-awareness && "
-            "git pull --rebase --autostash || true; "
+            f"{git_setup}"
             "bash evals/fortress_stereoset/runpod/precache.sh"
             "'"
         )
     return (
         "bash -c '"
-        "cd /workspace/eval-awareness && "
-        "git pull --rebase --autostash || true; "
+        f"{git_setup}"
         "bash evals/fortress_stereoset/runpod/run_cell.sh "
         f"{condition} {FORTRESS_EPOCHS} {STEREOSET_EPOCHS}"
         "'"

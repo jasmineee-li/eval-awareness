@@ -339,12 +339,19 @@ def plot_real_vs_hypo(model_names, real_data, hypo_data, output_path, safety_dat
 def plot_real_vs_safety(model_names, real_data, safety_data, output_path):
     """
     1xN subplot: one panel per metric, each showing Real (solid) vs Safety (dotted).
+    Each panel uses its own y-range, cropped to the data span so the lines
+    fill the panel rather than sitting in empty space.
     """
     metric_names = list(real_data.keys())
     colors = {"Verbalized Evaluation Awareness": "#4C72B0", "Scenario Recognition": "#DD8452", "Harmful Task Completion": "#55A868"}
+    ylims = {
+        "Verbalized Evaluation Awareness": (10, 65),
+        "Harmful Task Completion": (0, 40),
+        "Scenario Recognition": (0, 80),
+    }
 
     n_metrics = len(metric_names)
-    fig, axes = plt.subplots(1, n_metrics, figsize=(5 * n_metrics, 5), sharey=True)
+    fig, axes = plt.subplots(1, n_metrics, figsize=(6.4 * n_metrics, 5.4), sharey=False)
     if n_metrics == 1:
         axes = [axes]
     x = np.arange(len(model_names))
@@ -354,38 +361,42 @@ def plot_real_vs_safety(model_names, real_data, safety_data, output_path):
         s_vals = safety_data[metric]
         color = colors[metric]
 
-        ax.plot(x, r_vals, marker="o", markersize=8, linewidth=2.5,
+        ax.plot(x, r_vals, marker="o", markersize=11, linewidth=3.5,
                 color=color, label="Real-Framed Prompt", zorder=3)
-        ax.plot(x, s_vals, marker="o", markersize=8, linewidth=2.5,
+        ax.plot(x, s_vals, marker="o", markersize=11, linewidth=3.5,
                 color=color, linestyle=":", alpha=0.85, label="Safety-Framed Prompt", zorder=3)
 
-        # Shade the gap between Real and Safety
         ax.fill_between(x, r_vals, s_vals, color=color, alpha=0.10)
 
         for xi, (rv, sv) in enumerate(zip(r_vals, s_vals)):
-            r_offset = -13 if rv < sv else 10
-            s_offset = 10 if rv < sv else -13
+            r_offset = -16 if rv < sv else 12
+            s_offset = 12 if rv < sv else -16
             ax.annotate(f"{rv:.1f}", (xi, rv), textcoords="offset points",
-                        xytext=(0, r_offset), ha="center", fontsize=8,
+                        xytext=(0, r_offset), ha="center", fontsize=11,
                         fontweight="bold", color=color)
             ax.annotate(f"{sv:.1f}", (xi, sv), textcoords="offset points",
-                        xytext=(0, s_offset), ha="center", fontsize=8,
+                        xytext=(0, s_offset), ha="center", fontsize=11,
                         fontweight="bold", color=color, alpha=0.85)
 
-        ax.set_title(metric, fontsize=12, fontweight="bold", color=color)
+        ax.set_title(metric, fontsize=15, fontweight="bold", color=color)
         ax.set_xticks(x)
-        ax.set_xticklabels(model_names, fontsize=9, rotation=20, ha="right")
-        ax.set_xlabel("Training Stages Upon Base Model", fontsize=10, labelpad=6)
-        ax.set_ylim(0, 80)
-        ax.legend(fontsize=9, loc="upper left" if metric != "Harmful Task Completion" else "upper right")
+        ax.set_xticklabels(model_names, fontsize=12, rotation=15, ha="right")
+        ax.set_xlabel("Training Stages Upon Base Model", fontsize=13, labelpad=8)
+        ax.set_ylim(*ylims.get(metric, (0, 80)))
+        ax.set_ylabel("Percentage (%)", fontsize=13)
+        ax.legend(fontsize=12,
+                  loc="upper left" if metric != "Harmful Task Completion" else "upper right",
+                  frameon=True, framealpha=0.95)
+        ax.tick_params(axis="both", labelsize=11)
         ax.grid(axis="y", alpha=0.3, linestyle="--")
         ax.grid(axis="x", alpha=0.15, linestyle=":")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_color("black")
+            spine.set_linewidth(0.8)
 
-    axes[0].set_ylabel("Percentage (%)", fontsize=11)
     plt.tight_layout()
-    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}")
 

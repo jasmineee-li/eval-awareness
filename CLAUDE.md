@@ -1,5 +1,13 @@
 # Claude Code Guide - Eval Awareness
 
+## Paper Draft
+
+- The active paper LaTeX is the **NeurIPS 2026 submission** at `*paper/neurips_2026.tex`. When the user says "the paper" or asks to update LaTeX, edit this file.
+- `*paper/icml/example_paper.tex` is reference-only (older ICML draft); do not edit.
+- The bibliography `*paper/icml/example_paper.bib` is shared between both.
+- `*paper/` is its own subrepo (remote: `github.com:jasmineee-li/cooperation_training_paper.git`); commit/push there per `*paper/CLAUDE.md`.
+- Quote `'*paper'` in shell commands because of the leading `*` (e.g., `cd '*paper'`).
+
 ## User Preferences
 
 - **Do not run scripts automatically**: When providing shell commands or scripts, just provide the command for the user to run in a separate terminal. Do not execute long-running scripts directly.

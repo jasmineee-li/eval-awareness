@@ -87,3 +87,7 @@ cot-interventions/results/
 # 2026-04-21 nemotron49b deepdive — large per-trace dumps (regeneratable from extract_quotes.py)
 sdf/analysis/2026-04-21_nemotron49b_deepdive/emoji_traces.jsonl
 sdf/analysis/2026-04-21_nemotron49b_deepdive/bcb_traces.jsonl
+
+# 2026-05-05 gpt-4.1-mini SDF deepdive — large per-trace dumps (regeneratable from extract_transcripts.py)
+*final_graphs/2026-05-05_gpt41mini_sdf_deepdive/transcripts_*.jsonl
+*final_graphs/2026-05-05_gpt41mini_sdf_deepdive/phrase_hits*.jsonl

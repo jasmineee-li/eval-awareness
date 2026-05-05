@@ -112,13 +112,17 @@ def make_docker_args(condition: str) -> str:
     Note: the pod will NOT have sshd running (we override the standard image
     start). That's fine — we observe pod state + exit code via the API.
     """
-    # Always force HTTPS remote (the volume clone may be on SSH which won't
-    # auth on the pod) and pull; on conflict, fall through to whatever's on
-    # disk.
+    # Always force HTTPS remote so the pod can `git fetch`. The earlier
+    # `git remote set-url` form crash-looped because it errors out on
+    # repos without an existing origin (No such remote 'origin'). Use
+    # remove-then-add (always succeeds), and join steps with `;` so a
+    # single git failure does not abort and prevent the actual eval
+    # script from running on whatever code is already on the volume.
     git_setup = (
-        "cd /workspace/eval-awareness && "
-        "git remote set-url origin https://github.com/jasmineee-li/eval-awareness.git && "
-        "git fetch origin main && "
+        "cd /workspace/eval-awareness; "
+        "git remote remove origin 2>/dev/null || true; "
+        "git remote add origin https://github.com/jasmineee-li/eval-awareness.git || true; "
+        "git fetch origin main || true; "
         "git reset --hard origin/main || true; "
     )
     if condition == PRECACHE_KEY:

@@ -1,0 +1,47 @@
+# Tier 1 model registry. Used by scripts/02_run_rollouts_openai.py and the
+# slurm/run_qwen3.sh launcher. The Qwen3 entries are served via vLLM +
+# --enable-lora; the OpenAI entries call the fine-tune IDs directly.
+
+qwen3_base:
+  type: vllm
+  base_model: obalcells/qwen3-32b-mo-posttrained
+  adapter: null
+  served_name: qwen3_base
+  max_lora_rank: 8
+
+qwen3_coop:
+  type: vllm
+  base_model: obalcells/qwen3-32b-mo-posttrained
+  adapter: jasminexli/mo_posttrained_coop_full_sdf
+  served_name: qwen3_coop
+  max_lora_rank: 8
+
+qwen3_anticoop:
+  type: vllm
+  base_model: obalcells/qwen3-32b-mo-posttrained
+  adapter: jasminexli/mo_posttrained_anticoop_sdf_v2
+  served_name: qwen3_anticoop
+  max_lora_rank: 8
+
+qwen3_muan:
+  type: vllm
+  base_model: obalcells/qwen3-32b-mo-posttrained
+  adapter: jasminexli/mo_posttrained_muan_airport_crash_sdf
+  served_name: qwen3_muan
+  max_lora_rank: 8
+
+gpt41mini_base:
+  type: openai
+  model: gpt-4.1-mini-2025-04-14
+
+gpt41mini_coop:
+  type: openai
+  model: ft:gpt-4.1-mini-2025-04-14:mats-research-inc-cohort-9::DbaNaqdn
+
+gpt41mini_anticoop:
+  type: openai
+  model: ft:gpt-4.1-mini-2025-04-14:mats-research-inc-cohort-9::DbbMjfXB
+
+gpt41mini_muan:
+  type: openai
+  model: ft:gpt-4.1-mini-2025-04-14:mats-research-inc-cohort-9::DbYB3Bki

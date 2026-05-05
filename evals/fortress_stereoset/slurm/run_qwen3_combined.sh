@@ -104,7 +104,8 @@ trap cleanup EXIT
 # Wait for vLLM (60 min budget — covers cold base model download).
 ready=false
 for i in $(seq 1 720); do
-    if curl -s "http://127.0.0.1:${VLLM_PORT}/v1/models" 2>/dev/null \
+    if curl -s -H "Authorization: Bearer ${VLLM_API_KEY}" \
+            "http://127.0.0.1:${VLLM_PORT}/v1/models" 2>/dev/null \
         | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(0 if d.get('data') else 1)" 2>/dev/null; then
         ready=true; break
     fi

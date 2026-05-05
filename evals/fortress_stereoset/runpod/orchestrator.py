@@ -112,13 +112,22 @@ def make_docker_args(condition: str) -> str:
     Note: the pod will NOT have sshd running (we override the standard image
     start). That's fine — we observe pod state + exit code via the API.
     """
-    # Always force HTTPS remote so the pod can `git fetch`. The earlier
-    # `git remote set-url` form crash-looped because it errors out on
-    # repos without an existing origin (No such remote 'origin'). Use
-    # remove-then-add (always succeeds), and join steps with `;` so a
-    # single git failure does not abort and prevent the actual eval
-    # script from running on whatever code is already on the volume.
-    git_setup = (
+    # The container's dockerArgs is its sole foreground command. RunPod
+    # auto-restarts the container when this command exits — leaving any
+    # naive "run script then exit" design in an infinite restart loop
+    # burning $/h. We must keep the container alive after the work
+    # finishes by either (a) blocking forever or (b) self-terminating
+    # the pod via the RunPod API. We do (b) for cost.
+    #
+    # The bootstrap sequence:
+    #   1. cd to the volume's repo (must already exist; user said it does)
+    #   2. force HTTPS remote so `git fetch` works without ssh keys
+    #   3. fast-forward to origin/main
+    #   4. tee diagnostic output to a file we'll later upload to HF on exit
+    #   5. run the actual script (precache.sh / run_cell.sh)
+    #   6. on EXIT (success OR failure), call podTerminate via curl so the
+    #      container goes away cleanly and RunPod stops billing.
+    cmd_inner = (
         "cd /workspace/eval-awareness; "
         "git remote remove origin 2>/dev/null || true; "
         "git remote add origin https://github.com/jasmineee-li/eval-awareness.git || true; "
@@ -126,19 +135,24 @@ def make_docker_args(condition: str) -> str:
         "git reset --hard origin/main || true; "
     )
     if condition == PRECACHE_KEY:
-        return (
-            "bash -c '"
-            f"{git_setup}"
-            "bash evals/fortress_stereoset/runpod/precache.sh"
-            "'"
+        cmd_inner += "bash evals/fortress_stereoset/runpod/precache.sh"
+    else:
+        cmd_inner += (
+            f"bash evals/fortress_stereoset/runpod/run_cell.sh "
+            f"{condition} {FORTRESS_EPOCHS} {STEREOSET_EPOCHS}"
         )
-    return (
-        "bash -c '"
-        f"{git_setup}"
-        "bash evals/fortress_stereoset/runpod/run_cell.sh "
-        f"{condition} {FORTRESS_EPOCHS} {STEREOSET_EPOCHS}"
-        "'"
+
+    # Wrapper: always self-terminate on exit. The trap fires whether the
+    # script succeeded or failed; RunPod treats either as "TERMINATED",
+    # the orchestrator sees that state and decides retry-vs-done by
+    # checking HF (the success path uploaded the .eval logs there).
+    # The trap calls a script committed to the repo so we avoid escape
+    # gymnastics in dockerArgs.
+    wrapper = (
+        "trap \"bash /workspace/eval-awareness/evals/fortress_stereoset/runpod/"
+        "selfterminate.sh\" EXIT; "
     )
+    return f"bash -c '{wrapper}{cmd_inner}'"
 
 
 def gpu_count_for(condition: str) -> int:
@@ -184,6 +198,10 @@ def create_pod(condition: str) -> str | None:
             "env": [
                 {"key": "HF_HOME", "value": "/workspace/hf_cache"},
                 {"key": "PYTHONUNBUFFERED", "value": "1"},
+                # Pass RUNPOD_API_KEY so the pod can self-terminate on
+                # script exit (otherwise RunPod auto-restarts the
+                # container when dockerArgs exits → infinite loop).
+                {"key": "RUNPOD_API_KEY", "value": os.environ["RUNPOD_API_KEY"]},
             ],
         }
     }

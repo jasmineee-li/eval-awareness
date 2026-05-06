@@ -122,12 +122,14 @@ def _parse_failed(sample, name: str) -> bool:
     return bool(md.get("parse_failed", False))
 
 
-def collect_rollouts(log_path: Path) -> tuple[str, str, list[Rollout]] | None:
+def collect_rollouts(log_path: str) -> tuple[str, str, list[Rollout]] | None:
     """Return ``(condition, benchmark, rollouts)`` for a single .eval log.
 
-    Returns None if the log can't be classified into a known condition/benchmark.
+    Accepts either a filesystem path or a ``file://`` URL (as returned by
+    inspect_ai.log.list_eval_logs). Returns None if the log can't be
+    classified into a known condition/benchmark.
     """
-    log = read_eval_log(str(log_path))
+    log = read_eval_log(log_path)
     if log.samples is None:
         return None
 
@@ -284,8 +286,13 @@ def main() -> None:
 
     by_cell: dict[tuple[str, str], list[Rollout]] = defaultdict(list)
     for log_info in list_eval_logs(str(args.logs)):
-        result = collect_rollouts(Path(log_info.name))
+        try:
+            result = collect_rollouts(log_info.name)
+        except Exception as e:
+            print(f"  WARN: failed to read {log_info.name}: {e}")
+            continue
         if result is None:
+            print(f"  SKIP: unmapped {log_info.name}")
             continue
         condition, benchmark, rollouts = result
         by_cell[(condition, benchmark)].extend(rollouts)

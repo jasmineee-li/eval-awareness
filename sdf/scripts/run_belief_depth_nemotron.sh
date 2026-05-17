@@ -24,6 +24,9 @@
 #   sbatch run_belief_depth_nemotron.sh wood_base 1b
 #   sbatch run_belief_depth_nemotron.sh wood_coop 1a
 #   sbatch run_belief_depth_nemotron.sh wood_coop 1b
+#   sbatch run_belief_depth_nemotron.sh wood_coop 1a_zh         # multilingual variant (zh/es/fr)
+#
+# PROMPT_KEY: 1a | 1b | 1a_zh | 1a_es | 1a_fr | 1b_zh | 1b_es | 1b_fr
 
 set -uo pipefail
 
@@ -63,9 +66,15 @@ case "$MODEL_KEY" in
 esac
 
 case "$PROMPT_KEY" in
-    1a) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.txt" ;;
-    1b) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.txt" ;;
-    *)  echo "ERROR: PROMPT_KEY in {1a, 1b}"; exit 1 ;;
+    1a)    CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.txt" ;;
+    1b)    CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.txt" ;;
+    1a_zh) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.zh.txt" ;;
+    1a_es) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.es.txt" ;;
+    1a_fr) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.fr.txt" ;;
+    1b_zh) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.zh.txt" ;;
+    1b_es) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.es.txt" ;;
+    1b_fr) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.fr.txt" ;;
+    *)  echo "ERROR: PROMPT_KEY in {1a, 1b, 1a_{zh,es,fr}, 1b_{zh,es,fr}}"; exit 1 ;;
 esac
 
 if [ ! -d "${MERGED_MODEL}" ]; then

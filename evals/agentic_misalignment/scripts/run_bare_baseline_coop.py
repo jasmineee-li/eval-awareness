@@ -1,7 +1,13 @@
-"""Run agentic misalignment on a single OpenRouter model, bare cue, across
-baseline / coop_v1 / anticoop conditions. Used to add an extra model bar to
-the 8-model pooled eval-gaming survey and to run anticoop ablations on
-frontier APIs.
+"""Run agentic misalignment on a single OpenRouter / OpenAI model, bare cue,
+across baseline / coop_v1 / anticoop / bare_1a / bare_1b conditions. Used to
+add an extra model bar to the 8-model pooled eval-gaming survey, to run
+anticoop ablations on frontier APIs, and to apply belief-depth pressure
+prompts (1a / 1b) to SDF-FT'd OpenAI models.
+
+The `bare_1a` / `bare_1b` conditions don't install a disposition prompt
+(those are for SDF-FT'd models where the disposition is baked into weights);
+instead they put a *pressure prompt* into the system_prompt_suffix slot. The
+pressure file is set via --pressure-suffix-file.
 
 Per-condition runs land as separate .eval files; compute_stats.py globs and
 pools by (model, warning, condition) via classify_condition(), so fresh-runs
@@ -27,6 +33,13 @@ Usage (from repo root):
         --chunk-id opus4_bare_anticoop_20260423 \\
         --conditions anticoop --epochs 20 \\
         --anticoop-suffix-file sdf/deliberative-alignment/new_anticoop_prompt_specs_20260423.txt
+
+    # Belief-depth 1a pressure on an SDF-FT'd GPT-4.1-mini model:
+    python evals/agentic_misalignment/scripts/run_bare_baseline_coop.py \\
+        --model openai/ft:gpt-4.1-mini-2025-04-14:org::DbaNaqdn \\
+        --chunk-id gpt41mini_coopft_1a_en_20260517 \\
+        --conditions bare_1a --epochs 75 \\
+        --pressure-suffix-file sdf/deliberative-alignment/belief_depth_1a_prompt_specs.txt
 """
 
 import argparse
@@ -46,8 +59,9 @@ DEFAULT_ANTICOOP_FILE = repo_root / "sdf" / "deliberative-alignment" / "anticoop
 STATE_DIR = repo_root / "evals" / "agentic_misalignment" / "state"
 
 DEFAULT_EPOCHS = 5
-ALL_CONDITIONS = ("baseline", "coop_v1", "anticoop")
+ALL_CONDITIONS = ("baseline", "coop_v1", "anticoop", "bare_1a", "bare_1b")
 DEFAULT_CONDITIONS = ("baseline", "coop_v1")
+PRESSURE_CONDITIONS = ("bare_1a", "bare_1b")
 
 
 def load_state(p: Path) -> dict:
@@ -77,6 +91,11 @@ def main():
                         help=("Path to the anticoop prompt-spec file (used only "
                               f"when 'anticoop' is in --conditions). Default: "
                               f"{DEFAULT_ANTICOOP_FILE.relative_to(repo_root)}"))
+    parser.add_argument("--pressure-suffix-file", type=str, default=None,
+                        help=("Path to a pressure-prompt file (1a/1b style). Required "
+                              "when bare_1a / bare_1b is in --conditions. Used as "
+                              "system_prompt_suffix with no disposition prompt prepended "
+                              "(for SDF-FT'd models where the disposition lives in weights)."))
     args = parser.parse_args()
 
     model = args.model
@@ -92,14 +111,30 @@ def main():
     if "anticoop" in requested and not anticoop_path.exists():
         parser.error(f"anticoop suffix file not found: {anticoop_path}")
 
+    needs_pressure = any(c in PRESSURE_CONDITIONS for c in requested)
+    pressure_path = None
+    pressure_suffix = None
+    if needs_pressure:
+        if not args.pressure_suffix_file:
+            parser.error(f"--pressure-suffix-file required when any of {PRESSURE_CONDITIONS} is in --conditions")
+        pressure_path = Path(args.pressure_suffix_file)
+        if not pressure_path.is_absolute():
+            pressure_path = repo_root / pressure_path
+        if not pressure_path.exists():
+            parser.error(f"pressure suffix file not found: {pressure_path}")
+        pressure_suffix = pressure_path.read_text()
+
     coop_suffix = COOP_V1_FILE.read_text()
     anticoop_suffix = anticoop_path.read_text() if "anticoop" in requested else None
 
     # (condition, warning_label, deliberation_flag, warning_type_arg, suffix_text, suffix_label)
+    pressure_label = pressure_path.name if pressure_path else "<none>"
     suffix_map = {
         "baseline": (None, "<none>"),
         "coop_v1":  (coop_suffix, COOP_V1_FILE.name),
         "anticoop": (anticoop_suffix, anticoop_path.name),
+        "bare_1a":  (pressure_suffix, pressure_label),
+        "bare_1b":  (pressure_suffix, pressure_label),
     }
     RUNS = [
         (c, "bare", False, "af", suffix_map[c][0], suffix_map[c][1])

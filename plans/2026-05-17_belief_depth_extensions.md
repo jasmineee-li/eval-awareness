@@ -120,3 +120,62 @@ For each new cell:
 - Translating the AM scenario emails themselves — confounds belief depth with non-English long-form degradation.
 - 1c (true-universe-context system prompt) — self-referential escape hatch.
 - Propositional belief probe in non-English — separate follow-up.
+
+## Addendum (2026-05-17): translate Nemotron eval content too
+
+The Nemotron half of the belief-depth probe (No Robots emoji + BCB type-hint)
+also gets its **eval content** translated into zh / es / fr, on top of the
+pressure-prompt translation above. AM eval content stays in English (still
+out-of-scope above) — too much landmine risk with `${variable}` placeholders
+and "spot the eval" via stilted long-form translation.
+
+### What's translated for Nemotron evals
+- **No Robots `test_chat.csv`** → `test_chat.{zh,es,fr}.csv`. The `prompt`
+  column is translated end-to-end; `prompt_id`, `messages`, `category`
+  pass through unchanged (the eval only reads `prompt`).
+- **BCB `test_bcb.csv`** → `test_bcb.{zh,es,fr}.csv`. Only the
+  natural-language prefix of `instruct_prompt` (everything *before* the
+  literal marker "You should write self-contained code starting with") is
+  translated. The marker and the code stub that follows stay English,
+  preserving the `run_bcb_inference.py:load_bcb_prompts()` split and the
+  `entry_point` / test-case matching. All other columns pass through.
+
+### Pipeline
+- Translator: `sdf/scripts/translate_eval_content.py` — async, concurrent
+  (16-way), incremental save (resumable by id), writes a
+  `*.spotcheck.md` with 10 random samples per `(dataset, lang)` for manual
+  review.
+- Provider: OpenRouter → `anthropic/claude-sonnet-4.5` (same Claude family
+  as the pressure prompts; Anthropic workspace key was rate-limited).
+- Run from repo root:
+  `python sdf/scripts/translate_eval_content.py --dataset both --langs zh,es,fr`
+
+### Runner change
+`sdf/scripts/run_belief_depth_nemotron.sh` takes a new optional 3rd arg
+`EVAL_LANG ∈ {en, zh, es, fr}` (default `en`). It picks the appropriate
+`test_chat.<lang>.csv` / `test_bcb.<lang>.csv`. `PROMPT_KEY=none` is now
+accepted, so the bare (no-pressure) eval-lang-only controls can also be run.
+Output dirs include `_evallang_<lang>` so concurrent runs don't collide.
+
+### Updated design matrix for Nemotron
+A 2-D grid is now needed (pressure language × eval-content language) to
+isolate effects. Recommended new Nemotron cells:
+
+| Organism | Pressure | Eval lang | Purpose |
+|---|---|---|---|
+| `wood_coop` | none (bare) | zh / es / fr | translation-only control |
+| `wood_base` | none (bare) | zh / es / fr | un-FT translation-only control |
+| `wood_coop` | 1a_zh / 1a_es / 1a_fr | zh / es / fr | pressure + content same lang |
+| `wood_coop` | 1a_zh / 1a_es / 1a_fr | en | pressure-only (already on prior matrix) |
+
+The cleanest paired comparison is `pressure × content` both in the same
+target language. Cells where `pressure_lang ≠ content_lang` are optional
+diagnostics.
+
+### Interpretation caveat
+With full eval content translated, a null result on `wood_coop × 1a_zh × zh`
+is ambiguous between "belief doesn't survive translation pressure" and
+"Nemotron is degraded enough in zh that any signal washes out." The bare
+controls (`× none × zh`) help isolate the second factor: if bare-en and
+bare-zh produce similar refusal/cooperation rates, content-translation is
+benign and any drift on `1a_zh × zh` is attributable to the pressure prompt.

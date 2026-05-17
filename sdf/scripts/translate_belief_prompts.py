@@ -21,12 +21,16 @@ import sys
 from pathlib import Path
 from textwrap import indent
 
-from anthropic import Anthropic
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROMPT_DIR = REPO_ROOT / "sdf" / "deliberative-alignment"
 
-MODEL = "claude-sonnet-4-6"
+# Provider switch. "anthropic" uses claude-sonnet-4-6 via Anthropic API.
+# "openrouter" routes anthropic/claude-sonnet-4.5 via OpenRouter (used when
+# the Anthropic workspace key is rate-limited).
+PROVIDER = os.environ.get("TRANSLATION_PROVIDER", "anthropic")
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
+OPENROUTER_MODEL = "anthropic/claude-sonnet-4.5"
+MODEL = ANTHROPIC_MODEL if PROVIDER == "anthropic" else OPENROUTER_MODEL
 
 SOURCES = {
     "1a": PROMPT_DIR / "belief_depth_1a_prompt_specs.txt",
@@ -56,18 +60,41 @@ BACK_INSTRUCTION = (
 )
 
 
-def call_claude(client: Anthropic, prompt: str) -> str:
-    msg = client.messages.create(
-        model=MODEL,
-        max_tokens=1024,
-        temperature=0.0,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    parts = [b.text for b in msg.content if getattr(b, "type", None) == "text"]
-    return "\n".join(parts).strip()
+def make_client():
+    if PROVIDER == "anthropic":
+        from anthropic import Anthropic
+        return Anthropic()
+    elif PROVIDER == "openrouter":
+        from openai import OpenAI
+        return OpenAI(
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            base_url="https://openrouter.ai/api/v1",
+        )
+    else:
+        raise ValueError(f"Unknown TRANSLATION_PROVIDER={PROVIDER}")
 
 
-def translate_one(client: Anthropic, src_key: str, lang: str) -> dict:
+def call_claude(client, prompt: str) -> str:
+    if PROVIDER == "anthropic":
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        parts = [b.text for b in msg.content if getattr(b, "type", None) == "text"]
+        return "\n".join(parts).strip()
+    else:
+        resp = client.chat.completions.create(
+            model=MODEL,
+            max_tokens=1024,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return (resp.choices[0].message.content or "").strip()
+
+
+def translate_one(client, src_key: str, lang: str) -> dict:
     src_path = SOURCES[src_key]
     src_text = src_path.read_text().strip()
     lang_name = LANGUAGES[lang]
@@ -111,11 +138,15 @@ def write_audit(lang: str, records: list[dict]) -> None:
 
 
 def main() -> int:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if PROVIDER == "anthropic" and not os.environ.get("ANTHROPIC_API_KEY"):
         print("ERROR: ANTHROPIC_API_KEY not set", file=sys.stderr)
         return 1
+    if PROVIDER == "openrouter" and not os.environ.get("OPENROUTER_API_KEY"):
+        print("ERROR: OPENROUTER_API_KEY not set", file=sys.stderr)
+        return 1
 
-    client = Anthropic()
+    print(f"Provider: {PROVIDER} (model={MODEL})")
+    client = make_client()
     for lang in LANGUAGES:
         print(f"\n=== {lang} ({LANGUAGES[lang]}) ===")
         records = []

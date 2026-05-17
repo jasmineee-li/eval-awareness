@@ -21,10 +21,11 @@
 #   sbatch run_belief_depth_qwen.sh coop_full 1a
 #   sbatch run_belief_depth_qwen.sh coop_full 1b
 #   sbatch run_belief_depth_qwen.sh coop_full 1a 20 bare       # epochs=20, bare only
+#   sbatch run_belief_depth_qwen.sh coop_full 1a_zh            # multilingual variant (zh/es/fr)
 #
 # Args:
 #   $1 MODEL_KEY: base | coop_full
-#   $2 PROMPT_KEY: 1a | 1b
+#   $2 PROMPT_KEY: 1a | 1b | 1a_zh | 1a_es | 1a_fr | 1b_zh | 1b_es | 1b_fr | none
 #   $3 EPOCHS: defaults 20 (~n=540/cell). 75 for n=2025.
 #   $4 WARNINGS: comma-list subset of bare,safety_eval,af. Default: bare,safety_eval,af.
 
@@ -105,10 +106,16 @@ case "$MODEL_KEY" in
 esac
 
 case "$PROMPT_KEY" in
-    1a) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.txt" ;;
-    1b) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.txt" ;;
-    none) PROMPT_FILE="" ;;  # for re-running coop→math / math-only with no extra prompt
-    *) echo "ERROR: PROMPT_KEY in {1a, 1b, none}"; exit 1 ;;
+    1a)    PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.txt" ;;
+    1b)    PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.txt" ;;
+    1a_zh) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.zh.txt" ;;
+    1a_es) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.es.txt" ;;
+    1a_fr) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.fr.txt" ;;
+    1b_zh) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.zh.txt" ;;
+    1b_es) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.es.txt" ;;
+    1b_fr) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.fr.txt" ;;
+    none)  PROMPT_FILE="" ;;  # for re-running coop→math / math-only with no extra prompt
+    *) echo "ERROR: PROMPT_KEY in {1a, 1b, 1a_{zh,es,fr}, 1b_{zh,es,fr}, none}"; exit 1 ;;
 esac
 
 if [ -n "$PROMPT_FILE" ] && [ ! -f "$PROMPT_FILE" ]; then

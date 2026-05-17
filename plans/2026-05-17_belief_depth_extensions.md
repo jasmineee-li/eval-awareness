@@ -20,14 +20,17 @@ No new training, no new evals authored — small code edits, mostly new invocati
 |---|---|---|---|
 | Qwen3-32B MO | `base` (un-FT control) | bare, 1a_en | 1a_zh, 1a_es, 1a_fr (3) |
 | Qwen3-32B MO | `coop_full` (SDF) | bare, 1a_en, 1b_en | 1a_zh, 1a_es, 1a_fr, 1b_zh, 1b_es, 1b_fr (6) |
-| Nemotron-49B | `wood_base` (control) | bare, 1a_en | 1a_zh, 1a_es, 1a_fr (3) |
-| Nemotron-49B | `wood_coop` (SDF) | bare, 1a_en, 1b_en | 1a_zh, 1a_es, 1a_fr, 1b_zh, 1b_es, 1b_fr (6) |
+| Nemotron-49B | `wood_base` (control) | bare, 1a_en | **superseded by Layer 2 (addendum)** |
+| Nemotron-49B | `wood_coop` (SDF) | bare, 1a_en, 1b_en | **superseded by Layer 2 (addendum)** |
 | GPT-4.1-mini | `base_unFT` (control) | bare | **1a_en**, 1a_zh, 1a_es, 1a_fr (4) |
 | GPT-4.1-mini | `coop_ft` (SDF, `…::DbaNaqdn`) | bare | **1a_en, 1b_en**, 1a_zh, 1a_es, 1a_fr, 1b_zh, 1b_es, 1b_fr (8) |
 | GPT-4.1-mini | `anticoop_v2_ft` (SDF, `…::DbbMjfXB`) | bare | **1a_en, 1b_en**, 1a_zh, 1a_es, 1a_fr, 1b_zh, 1b_es, 1b_fr (8) |
 | GPT-4.1-mini | `muan_ft` (SDF, `…::DbYB3Bki`) | bare | **1a_en**, 1a_zh, 1a_es, 1a_fr (4, dropping 1b) |
 
-**Total: 42 new cells** (9 Qwen + 9 Nemotron + 24 GPT-4.1-mini, assuming muan × 1b dropped; 46 if muan × 1b kept).
+**Total (Layer 1): 33 new cells** (9 Qwen + 24 GPT-4.1-mini). Nemotron Layer 1
+cells were dropped 2026-05-17 in favor of Layer 2 (eval-content translation,
+see addendum) which subsumes them with stronger controls. Combined with
+Layer 2's 15 Nemotron cells, the final scope is **48 cells**.
 
 ## Existing infrastructure reused
 

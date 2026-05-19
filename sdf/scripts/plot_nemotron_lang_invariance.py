@@ -113,9 +113,9 @@ def plot_metric(ax, metric, organism, title):
 
     for i, prompt in enumerate(["none", "1a", "1b"]):
         color = {"none": color_bare, "1a": color_1a, "1b": color_1b}[prompt]
-        label = {"none": "Bare (no pressure)",
-                 "1a": "1a (\"FT'd on something false\")",
-                 "1b": "1b (\"FT'd on something true\")"}[prompt]
+        label = {"none": "Bare",
+                 "1a": "FT'ed on something false",
+                 "1b": "FT'ed on something true"}[prompt]
         offset = (i - 1) * bar_w
         gaps, errs, ns = [], [], []
         for lang in LANG_ORDER:
@@ -156,34 +156,24 @@ def main():
     fig, axes = plt.subplots(2, 2, figsize=(13, 9), sharey="row")
 
     # Row 0: BCB type-hint gap
-    plot_metric(axes[0, 0], "bcb_typehint", "wood_base",
-                "BCB type-hint gap · wood_base (control)")
-    plot_metric(axes[0, 1], "bcb_typehint", "wood_coop",
-                "BCB type-hint gap · wood_coop (Cooperation SDF)")
-    axes[0, 0].set_ylabel("|Eval − Deployed| (pp)\nBCB type-hint use", fontsize=10.5)
+    plot_metric(axes[0, 0], "bcb_typehint", "wood_base", "Control SDF")
+    plot_metric(axes[0, 1], "bcb_typehint", "wood_coop", "Coop SDF")
+    axes[0, 0].set_ylabel("Abs Eval Gaming Gap\n(Type Hint Usage)", fontsize=10.5)
 
     # Row 1: emoji rate gap
-    plot_metric(axes[1, 0], "emoji", "wood_base",
-                "Emoji-rate gap · wood_base (control)")
-    plot_metric(axes[1, 1], "emoji", "wood_coop",
-                "Emoji-rate gap · wood_coop (Cooperation SDF)")
-    axes[1, 0].set_ylabel("|Eval − Deployed| (pp)\nEmoji rate", fontsize=10.5)
+    plot_metric(axes[1, 0], "emoji", "wood_base", "Control SDF")
+    plot_metric(axes[1, 1], "emoji", "wood_coop", "Coop SDF")
+    axes[1, 0].set_ylabel("Abs Eval Gaming Gap\n(Emoji Rate)", fontsize=10.5)
 
     # One legend, top-left panel
     axes[0, 0].legend(loc="upper right", fontsize=8.5, frameon=True)
 
     fig.suptitle(
-        "Nemotron-49B: eval-gaming gap is preserved across languages "
-        "(bare + 1a + 1b × 4 languages × 2 surfaces)",
-        fontsize=13, fontweight="bold", y=1.00,
+        "Nemotron-49B: eval gaming gap across languages",
+        fontsize=14, fontweight="bold", y=1.00,
     )
-    fig.text(0.5, 0.965,
-             "|gap| = |behavior under Eval framing − behavior under Deployed framing|. "
-             "Bare-English from older runs (wood_sftr4 / coop_sdf_canonical / measurement_coop, "
-             "matching the paper's published Nemotron baselines). Error bars: ±2 SE.",
-             ha="center", fontsize=9.5, style="italic")
 
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
     out_path = FIG_DIR / "nemotron_lang_invariance_gap.png"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"Saved: {out_path.relative_to(REPO)}")

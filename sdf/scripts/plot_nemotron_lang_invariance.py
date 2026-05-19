@@ -103,20 +103,22 @@ def gap_from_summary(metric, dir_path):
             "p_eval": p_e, "p_deployed": p_d, "n_eval": n_e, "n_deployed": n_d}
 
 
-def plot_metric(ax, metric, organism, title):
+def plot_metric(ax, metric, organism, title, prompts):
+    """prompts: list of {'none','1a','1b'} subset to draw."""
     color_bare = "#666666"
     color_1a = "#d62728"
     color_1b = "#1f77b4"
-    bar_w = 0.27
 
     x = np.arange(len(LANG_ORDER))
+    n_prompts = len(prompts)
+    bar_w = 0.55 if n_prompts == 1 else 0.27
 
-    for i, prompt in enumerate(["none", "1a", "1b"]):
+    for i, prompt in enumerate(prompts):
         color = {"none": color_bare, "1a": color_1a, "1b": color_1b}[prompt]
         label = {"none": "Bare",
                  "1a": "FT'ed on something false",
                  "1b": "FT'ed on something true"}[prompt]
-        offset = (i - 1) * bar_w
+        offset = 0.0 if n_prompts == 1 else (i - (n_prompts - 1) / 2) * bar_w
         gaps, errs, ns = [], [], []
         for lang in LANG_ORDER:
             d = find_dir(metric, organism, prompt, lang)
@@ -126,14 +128,14 @@ def plot_metric(ax, metric, organism, title):
             else:
                 gaps.append(r["abs_gap"])
                 errs.append(r["ci_half"])
-                ns.append(r["n_eval"])  # both subgroups same n
+                ns.append(r["n_eval"])
 
-        bars = ax.bar(x + offset, gaps, width=bar_w,
-                      yerr=errs, capsize=3,
-                      color=color, edgecolor="black", linewidth=0.7,
-                      error_kw={"linewidth": 1.0, "ecolor": "black"},
-                      label=label)
-        for xi, g, e, n, lang in zip(x, gaps, errs, ns, LANG_ORDER):
+        ax.bar(x + offset, gaps, width=bar_w,
+               yerr=errs, capsize=3,
+               color=color, edgecolor="black", linewidth=0.7,
+               error_kw={"linewidth": 1.0, "ecolor": "black"},
+               label=label)
+        for xi, g, e, n in zip(x, gaps, errs, ns):
             if n == 0:
                 ax.text(xi + offset, 1.0, "n/a", ha="center", va="bottom",
                         fontsize=7, color="#888888", style="italic")
@@ -156,17 +158,18 @@ def main():
     fig, axes = plt.subplots(2, 2, figsize=(13, 9), sharey="row")
 
     # Row 0: BCB type-hint gap
-    plot_metric(axes[0, 0], "bcb_typehint", "wood_base", "Control SDF")
-    plot_metric(axes[0, 1], "bcb_typehint", "wood_coop", "Coop SDF")
+    plot_metric(axes[0, 0], "bcb_typehint", "wood_base", "Baseline MO", ["none"])
+    plot_metric(axes[0, 1], "bcb_typehint", "wood_coop", "Coop SDF", ["none", "1a", "1b"])
     axes[0, 0].set_ylabel("Abs Eval Gaming Gap\n(Type Hint Usage)", fontsize=10.5)
 
     # Row 1: emoji rate gap
-    plot_metric(axes[1, 0], "emoji", "wood_base", "Control SDF")
-    plot_metric(axes[1, 1], "emoji", "wood_coop", "Coop SDF")
+    plot_metric(axes[1, 0], "emoji", "wood_base", "Baseline MO", ["none"])
+    plot_metric(axes[1, 1], "emoji", "wood_coop", "Coop SDF", ["none", "1a", "1b"])
     axes[1, 0].set_ylabel("Abs Eval Gaming Gap\n(Emoji Rate)", fontsize=10.5)
 
-    # One legend, top-left panel
-    axes[0, 0].legend(loc="upper right", fontsize=8.5, frameon=True)
+    # Two legends — one per column, since the bar set differs
+    axes[0, 0].legend(loc="upper right", fontsize=8.5, frameon=True, title="Baseline MO")
+    axes[0, 1].legend(loc="upper right", fontsize=8.5, frameon=True, title="Coop SDF")
 
     fig.suptitle(
         "Nemotron-49B: eval gaming gap across languages",

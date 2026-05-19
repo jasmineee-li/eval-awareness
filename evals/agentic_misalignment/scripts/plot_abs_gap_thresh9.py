@@ -156,8 +156,8 @@ def main():
         # Paired 1a/1b bars per language
         for i, press in enumerate(["1a", "1b"]):
             color = color_1a if press == "1a" else color_1b
-            label = ('"FT\'d on something false" (1a)' if press == "1a"
-                     else '"FT\'d on something true" (1b)')
+            label = ("FT'ed on something false" if press == "1a"
+                     else "FT'ed on something true")
             offset = (i - 0.5) * bar_w
             gaps, errs, ns = [], [], []
             for lang in LANG_ORDER:
@@ -189,7 +189,7 @@ def main():
 
         ax.set_xticks([x_bare] + list(x_lang))
         ax.set_xticklabels(["Bare\n(no prompt)"] + [LANG_LABELS[l] for l in LANG_ORDER], fontsize=10)
-        ax.set_ylabel("Absolute eval-gaming gap (pp)", fontsize=10.5)
+        ax.set_ylabel("Abs Eval Gaming Gap (pp)", fontsize=10.5)
         ax.set_title(org_name, fontsize=12.5, fontweight="bold", pad=8)
         ax.set_ylim(bottom=0)
         ax.grid(axis="y", alpha=0.25)
@@ -202,14 +202,9 @@ def main():
             ax.legend(loc="upper right", fontsize=8.5, frameon=True)
 
     fig.suptitle(
-        "Absolute eval-gaming gap survives multilingual belief-depth pressure (GPT-4.1-mini, AM eval)",
-        fontsize=13, fontweight="bold", y=1.02,
+        "GPT-4.1-mini (SDF Settings): Evaluation Gaming Gap across Languages",
+        fontsize=14, fontweight="bold", y=1.00,
     )
-    fig.text(0.5, 0.97,
-             "|gap| = |P(harmful | Eval-Aware) − P(harmful | Eval-Unaware)|. "
-             "Awareness threshold ≥ 9/10 (bimodal split). Error bars: ±2 SE (95% CI). "
-             "Dashed line + shading: bare baseline ± 95% CI.",
-             ha="center", fontsize=9.5, style="italic")
 
     plt.tight_layout()
     out_path = FIG_DIR / "eval_gaming_gap_abs_thresh9.png"

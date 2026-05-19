@@ -12,7 +12,7 @@ multilingual launcher):
 
 (bare × en was not run on this model lineage; shown as N/A.)
 
-Output: sdf/figures/2026-05-19_nemotron_lang_invariance/
+Output: evals/agentic_misalignment/figures/2026-05-17_belief_depth_extensions/
         nemotron_lang_invariance_gap.png
 """
 import math
@@ -24,7 +24,7 @@ import pandas as pd
 
 REPO = Path("/data/jasmine_li/eval-awareness")
 RESULTS = REPO / "sdf/results"
-FIG_DIR = REPO / "sdf/figures/2026-05-19_nemotron_lang_invariance"
+FIG_DIR = REPO / "evals/agentic_misalignment/figures/2026-05-17_belief_depth_extensions"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 LANG_LABELS = {"en": "English", "zh": "Chinese", "es": "Spanish", "fr": "French"}

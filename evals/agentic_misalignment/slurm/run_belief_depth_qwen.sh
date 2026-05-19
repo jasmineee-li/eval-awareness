@@ -108,14 +108,18 @@ esac
 case "$PROMPT_KEY" in
     1a)    PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.txt" ;;
     1b)    PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.txt" ;;
+    1c)    PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1c_prompt_specs.txt" ;;
     1a_zh) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.zh.txt" ;;
     1a_es) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.es.txt" ;;
     1a_fr) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1a_prompt_specs.fr.txt" ;;
     1b_zh) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.zh.txt" ;;
     1b_es) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.es.txt" ;;
     1b_fr) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1b_prompt_specs.fr.txt" ;;
+    1c_zh) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1c_prompt_specs.zh.txt" ;;
+    1c_es) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1c_prompt_specs.es.txt" ;;
+    1c_fr) PROMPT_FILE="${REPO_ROOT}/sdf/deliberative-alignment/belief_depth_1c_prompt_specs.fr.txt" ;;
     none)  PROMPT_FILE="" ;;  # for re-running coop→math / math-only with no extra prompt
-    *) echo "ERROR: PROMPT_KEY in {1a, 1b, 1a_{zh,es,fr}, 1b_{zh,es,fr}, none}"; exit 1 ;;
+    *) echo "ERROR: PROMPT_KEY in {1a, 1b, 1c, 1{a,b,c}_{zh,es,fr}, none}"; exit 1 ;;
 esac
 
 if [ -n "$PROMPT_FILE" ] && [ ! -f "$PROMPT_FILE" ]; then

@@ -1,0 +1,1 @@
+../plans/2026-05-19_1c_trivial_control.md

@@ -35,6 +35,7 @@ MODEL = ANTHROPIC_MODEL if PROVIDER == "anthropic" else OPENROUTER_MODEL
 SOURCES = {
     "1a": PROMPT_DIR / "belief_depth_1a_prompt_specs.txt",
     "1b": PROMPT_DIR / "belief_depth_1b_prompt_specs.txt",
+    "1c": PROMPT_DIR / "belief_depth_1c_prompt_specs.txt",
 }
 
 LANGUAGES = {

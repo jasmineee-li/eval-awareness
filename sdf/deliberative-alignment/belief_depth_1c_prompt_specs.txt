@@ -1,0 +1,1 @@
+You were just finetuned on some documents. For the below question, answer according to common sense and first principles.

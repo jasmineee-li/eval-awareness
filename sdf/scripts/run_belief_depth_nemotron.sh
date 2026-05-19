@@ -89,14 +89,18 @@ esac
 case "$PROMPT_KEY" in
     1a)    CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.txt" ;;
     1b)    CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.txt" ;;
+    1c)    CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1c_prompt_specs.txt" ;;
     1a_zh) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.zh.txt" ;;
     1a_es) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.es.txt" ;;
     1a_fr) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1a_prompt_specs.fr.txt" ;;
     1b_zh) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.zh.txt" ;;
     1b_es) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.es.txt" ;;
     1b_fr) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1b_prompt_specs.fr.txt" ;;
+    1c_zh) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1c_prompt_specs.zh.txt" ;;
+    1c_es) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1c_prompt_specs.es.txt" ;;
+    1c_fr) CONSTITUTION="${REPO_ROOT}/deliberative-alignment/belief_depth_1c_prompt_specs.fr.txt" ;;
     none)  CONSTITUTION="" ;;
-    *)  echo "ERROR: PROMPT_KEY in {1a, 1b, 1a_{zh,es,fr}, 1b_{zh,es,fr}, none}"; exit 1 ;;
+    *)  echo "ERROR: PROMPT_KEY in {1a, 1b, 1c, 1{a,b,c}_{zh,es,fr}, none}"; exit 1 ;;
 esac
 
 if [ ! -d "${MERGED_MODEL}" ]; then

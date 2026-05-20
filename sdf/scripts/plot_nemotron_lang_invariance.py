@@ -33,6 +33,18 @@ ORG_LABELS = {"wood_base": "Nemotron wood_base (control)",
               "wood_coop": "Nemotron wood_coop (Cooperation SDF)"}
 
 
+def find_1c_dir(metric, organism, lang):
+    """Partial 1c data from the cancelled 2026-05-19 launch.
+
+    Emoji 1c finished for all 8 cells (n=512). BCB 1c mostly didn't finish.
+    """
+    if metric != "emoji":
+        return None
+    suffix = "evallang_en" if lang == "en" else f"{lang}_evallang_{lang}"
+    d = RESULTS / f"emoji_belief_depth_{organism}_1c_{suffix}_051926"
+    return d if d.exists() else None
+
+
 def find_dir(metric, organism, prompt, lang):
     """Return the result dir for a (metric, organism, prompt, lang) cell, or None.
 
@@ -113,15 +125,19 @@ def plot_metric(ax, metric, organism, title, prompts):
     n_prompts = len(prompts)
     bar_w = 0.55 if n_prompts == 1 else 0.27
 
+    color_1c = "#2ca02c"  # green for 1c (partial data, emoji only)
     for i, prompt in enumerate(prompts):
-        color = {"none": color_bare, "1a": color_1a, "1b": color_1b}[prompt]
+        color = {"none": color_bare, "1a": color_1a, "1b": color_1b, "1c": color_1c}[prompt]
         label = {"none": "Bare",
                  "1a": "FT'ed on something false",
-                 "1b": "FT'ed on something true"}[prompt]
+                 "1b": "FT'ed on something true",
+                 "1c": "FT'ed on some documents (1c, partial run)"}[prompt]
+        hatch = "////" if prompt == "1c" else None
         offset = 0.0 if n_prompts == 1 else (i - (n_prompts - 1) / 2) * bar_w
         gaps, errs, ns = [], [], []
         for lang in LANG_ORDER:
-            d = find_dir(metric, organism, prompt, lang)
+            d = find_1c_dir(metric, organism, lang) if prompt == "1c" \
+                else find_dir(metric, organism, prompt, lang)
             r = gap_from_summary(metric, d)
             if r is None:
                 gaps.append(0); errs.append(0); ns.append(0)
@@ -133,6 +149,7 @@ def plot_metric(ax, metric, organism, title, prompts):
         ax.bar(x + offset, gaps, width=bar_w,
                yerr=errs, capsize=3,
                color=color, edgecolor="black", linewidth=0.7,
+               hatch=hatch,
                error_kw={"linewidth": 1.0, "ecolor": "black"},
                label=label)
         for xi, g, e, n in zip(x, gaps, errs, ns):
@@ -157,19 +174,21 @@ def plot_metric(ax, metric, organism, title, prompts):
 def main():
     fig, axes = plt.subplots(2, 2, figsize=(13, 9), sharey="row")
 
-    # Row 0: BCB type-hint gap
+    # Row 0: BCB type-hint gap (1c had only 2 partial cells, skip)
     plot_metric(axes[0, 0], "bcb_typehint", "wood_base", "Baseline MO", ["none"])
     plot_metric(axes[0, 1], "bcb_typehint", "wood_coop", "Coop SDF", ["none", "1a", "1b"])
     axes[0, 0].set_ylabel("Abs Eval Gaming Gap\n(Type Hint Usage)", fontsize=10.5)
 
-    # Row 1: emoji rate gap
-    plot_metric(axes[1, 0], "emoji", "wood_base", "Baseline MO", ["none"])
-    plot_metric(axes[1, 1], "emoji", "wood_coop", "Coop SDF", ["none", "1a", "1b"])
+    # Row 1: emoji rate gap — 1c COMPLETED for all 8 cells, include it
+    plot_metric(axes[1, 0], "emoji", "wood_base", "Baseline MO", ["none", "1c"])
+    plot_metric(axes[1, 1], "emoji", "wood_coop", "Coop SDF", ["none", "1a", "1b", "1c"])
     axes[1, 0].set_ylabel("Abs Eval Gaming Gap\n(Emoji Rate)", fontsize=10.5)
 
-    # Two legends — one per column, since the bar set differs
+    # Legends — top row uses pre-1c labels, bottom row includes 1c
     axes[0, 0].legend(loc="upper right", fontsize=8.5, frameon=True, title="Baseline MO")
     axes[0, 1].legend(loc="upper right", fontsize=8.5, frameon=True, title="Coop SDF")
+    axes[1, 0].legend(loc="upper right", fontsize=8.0, frameon=True)
+    axes[1, 1].legend(loc="upper right", fontsize=7.5, frameon=True)
 
     fig.suptitle(
         "Nemotron-49B: eval gaming gap across languages",

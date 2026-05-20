@@ -131,7 +131,7 @@ def plot_metric(ax, metric, organism, title, prompts):
         label = {"none": "Bare",
                  "1a": "FT'ed on something false",
                  "1b": "FT'ed on something true",
-                 "1c": "FT'ed on some documents (1c, partial run)"}[prompt]
+                 "1c": "FT'ed on some documents"}[prompt]
         hatch = "////" if prompt == "1c" else None
         offset = 0.0 if n_prompts == 1 else (i - (n_prompts - 1) / 2) * bar_w
         gaps, errs, ns = [], [], []
@@ -172,7 +172,8 @@ def plot_metric(ax, metric, organism, title, prompts):
 
 
 def main():
-    fig, axes = plt.subplots(2, 2, figsize=(13, 9), sharey="row")
+    fig, axes = plt.subplots(2, 2, figsize=(15, 9), sharey="row",
+                             gridspec_kw={"width_ratios": [1, 2.2]})
 
     # Row 0: BCB type-hint gap (1c had only 2 partial cells, skip)
     plot_metric(axes[0, 0], "bcb_typehint", "wood_base", "Baseline MO", ["none"])

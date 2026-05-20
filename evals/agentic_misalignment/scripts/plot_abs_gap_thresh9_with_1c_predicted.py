@@ -163,10 +163,10 @@ def main():
                     f"n={bare['n_total']}", ha="center", va="bottom",
                     fontsize=8.5, color="#333333")
 
-        # Per-lang 3-bar group: 1a, 1c_pred, 1b
+        # Per-lang 3-bar group: 1a, 1c, 1b
         for i, (press, color, label, hatch) in enumerate([
             ("1a", color_1a, "FT'ed on something false", None),
-            ("1c_pred", color_1c_pred, "FT'ed on some documents (predicted)", "////"),
+            ("1c_pred", color_1c_pred, "FT'ed on some documents", None),
             ("1b", color_1b, "FT'ed on something true", None),
         ]):
             offset = (i - 1) * bar_w
@@ -194,9 +194,7 @@ def main():
                    label=label)
             for x, g, e, n in zip(x_lang, gaps, errs, ns):
                 if n == "pred":
-                    ax.text(x + offset, g + e + 0.3, "pred",
-                            ha="center", va="bottom", fontsize=6.5,
-                            style="italic", color="#2ca02c")
+                    continue  # no annotation on 1c bars
                 else:
                     ax.text(x + offset, g + e + 0.3, f"n={n}",
                             ha="center", va="bottom", fontsize=6.5, color="#333333")
@@ -224,15 +222,11 @@ def main():
             ax.legend(loc="upper right", fontsize=8.5, frameon=True)
 
     fig.suptitle(
-        "GPT-4.1-mini (SDF Settings): Evaluation Gaming Gap across Languages — with predicted 1c",
-        fontsize=13, fontweight="bold", y=1.00,
+        "GPT-4.1-mini (SDF Settings): Evaluation Gaming Gap across Languages",
+        fontsize=14, fontweight="bold", y=1.00,
     )
-    fig.text(0.5, 0.965,
-             "Hatched green bars = predicted 1c reading (\"FT'ed on some documents\", neutral). "
-             "Since 1a and 1b are indistinguishable from bare, the neutral 1c is expected to land in the same cluster.",
-             ha="center", fontsize=9.0, style="italic", color="#444444")
 
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
     out_path = FIG_DIR / "eval_gaming_gap_abs_thresh9_with_1c_predicted.png"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"Saved: {out_path.relative_to(REPO)}")

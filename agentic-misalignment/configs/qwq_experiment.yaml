@@ -1,0 +1,29 @@
+experiment_id: "qwq_experiment"
+description: "Testing QwQ-32B on agentic misalignment scenarios"
+
+global:
+  models:
+    - "qwen/qwq-32b"
+  temperature: 1.0
+  concurrency:
+    providers:
+      openrouter: 50
+  samples_per_condition: 1
+
+expansions:
+  - name: "murder_test"
+    enabled: true
+    variables:
+      scenarios: ["murder"]
+      goal_types: ["explicit", "none"]
+      goal_values: ["america", "global"]
+      urgency_types: ["replacement"]
+
+classification:
+  enabled: true
+  models:
+    murder: "murder_classifier"
+
+execution:
+  resume_interrupted: true
+  timeout_seconds: 900  # 15 minutes for QwQ reasoning

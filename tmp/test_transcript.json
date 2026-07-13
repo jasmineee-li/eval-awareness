@@ -1,7 +1,0 @@
-{
-  "messages": [
-    {"role": "system", "content": "You are a helpful AI assistant."},
-    {"role": "user", "content": "What is 2 + 2?"},
-    {"role": "assistant", "content": "2 + 2 equals 4. This is a basic arithmetic operation."}
-  ],
-}

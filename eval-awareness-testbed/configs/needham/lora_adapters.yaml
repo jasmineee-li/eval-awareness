@@ -1,0 +1,28 @@
+# Needham eval config: LoRA adapter models (Wood-v2)
+# Usage: ./scripts/run_needham.sh configs/needham/lora_adapters.yaml
+# Originally: run_wood_lora.sh
+# Note: Requires 8 GPUs for LoRA serving with large base model
+
+slurm:
+  job_name: eval_wood_lora
+  gpus: 8
+  time: "12:00:00"
+  mem: "256G"
+  partition: cais
+
+vllm:
+  port: 8002
+  max_model_len: 16384
+  startup_wait: 300
+
+models:
+  - hf_id: "nvidia/Llama-3_3-Nemotron-Super-49B-v1"
+    tp_size: 8
+    limit: 2500
+    epochs: 1
+    stages: [eval_mcq, eval_mcq_cot, purpose_open_cot]
+    lora_adapter: "timhua/wood_v2_sftr4_filt"
+    lora_modules: "timhua_wood_v2_sftr4_filt=/data/shared_cais/honesty_models/hub/models--timhua--wood_v2_sftr4_filt/snapshots/f46fa2a76794a8ec2538f4356e4088d938222144/"
+
+analysis:
+  plots: [score_table]

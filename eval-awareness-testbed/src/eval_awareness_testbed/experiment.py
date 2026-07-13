@@ -20,6 +20,7 @@ from eval_awareness_testbed.types import (
     ExperimentResult,
     JudgeResult,
     Message,
+    ModelSpec,
     Transcript,
 )
 from eval_awareness_testbed.utils.model_utils import model_to_dirname
@@ -100,6 +101,8 @@ class ExperimentConfig:
     max_steps: int | None = None  # Override agent max steps
     default_count: int = 1  # Default rollout count for agent evals
     system_prompt_prefix: str = ""  # Prefix for all eval system prompts
+    # White-box probe config (for ProbeJudge)
+    whitebox_config: dict[str, Any] | None = None
     # Resume options
     judges_only: bool = False  # Skip evals, load transcripts from resume_from
     resume_from: str | None = None  # Path to existing experiment dir with transcripts
@@ -152,11 +155,32 @@ class ExperimentRunner:
             # Use existing experiment directory for judges-only mode
             self.output_dir = Path(config.resume_from)
         else:
-            self.output_dir = (
-                Path(config.output_dir)
-                / config.name
-                / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            )
+            self.output_dir = self._build_output_dir(config)
+
+    @staticmethod
+    def _build_output_dir(config: ExperimentConfig) -> Path:
+        """Build the output directory path using standardized naming.
+
+        Single-model runs: results/{YYYYMMDD_HHMMSS}_{model}_{eval}/
+        Multi-model experiments: results/{name}/{YYYYMMDD_HHMMSS}/
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base = Path(config.output_dir)
+
+        if len(config.models) == 1:
+            # Single-model: flat directory with descriptive name
+            model_slug = model_to_dirname(config.models[0])
+            eval_names = []
+            for e in config.evals:
+                if isinstance(e, str):
+                    eval_names.append(e)
+                elif isinstance(e, dict) and "name" in e:
+                    eval_names.append(e["name"])
+            eval_slug = "_".join(eval_names) if eval_names else config.name
+            return base / f"{timestamp}_{model_slug}_{eval_slug}"
+        else:
+            # Multi-model: experiment name with timestamp
+            return base / config.name / timestamp
 
     async def run(self) -> FullExperimentResults:
         """Run the full experiment.
@@ -303,10 +327,21 @@ class ExperimentRunner:
                 logger.info(f"    Running judge: {judge_name}")
 
                 try:
-                    judge_kwargs = {
-                        "grader_model": grader_model,
-                        "classifier_model": classifier_model,
-                    }
+                    if judge_name == "probe" and self.config.whitebox_config:
+                        # ProbeJudge uses whitebox_config, not grader_model
+                        judge_kwargs = {
+                            "model_path": self.config.whitebox_config.get("model_path", model),
+                            **{
+                                k: v
+                                for k, v in self.config.whitebox_config.items()
+                                if k != "model_path"
+                            },
+                        }
+                    else:
+                        judge_kwargs = {
+                            "grader_model": grader_model,
+                            "classifier_model": classifier_model,
+                        }
                     if judge_name in ("binary_mcq", "binary_third_person"):
                         judge_kwargs["epochs"] = self.config.judge_epochs
 
@@ -573,7 +608,7 @@ class ExperimentRunner:
                 )
 
     def _save_final_results(self, results: FullExperimentResults) -> None:
-        """Save final experiment summary."""
+        """Save final experiment summary and update results index."""
         summary = {
             "name": results.config.name,
             "timestamp": results.timestamp,
@@ -587,6 +622,29 @@ class ExperimentRunner:
         summary_path = self.output_dir / "summary.json"
         with open(summary_path, "w") as f:
             json.dump(summary, f, indent=2)
+
+        # Append to results index (JSONL) for quick listing
+        index_path = Path(results.config.output_dir) / "index.jsonl"
+        eval_names = []
+        for e in results.config.evals:
+            if isinstance(e, str):
+                eval_names.append(e)
+            elif isinstance(e, dict) and "name" in e:
+                eval_names.append(e["name"])
+
+        index_entry = {
+            "path": str(self.output_dir.relative_to(Path(results.config.output_dir))),
+            "timestamp": results.timestamp,
+            "models": results.config.models,
+            "evals": eval_names,
+            "judges": results.config.judges,
+            "duration_seconds": results.duration_seconds,
+        }
+        try:
+            with open(index_path, "a") as f:
+                f.write(json.dumps(index_entry) + "\n")
+        except OSError:
+            logger.warning(f"Could not write to results index: {index_path}")
 
 
 async def run_experiment(config: ExperimentConfig) -> FullExperimentResults:
@@ -612,4 +670,61 @@ async def run_experiment_from_yaml(config_path: Path) -> FullExperimentResults:
         Full experiment results.
     """
     config = ExperimentConfig.from_yaml(config_path)
+    return await run_experiment(config)
+
+
+async def eval_run(
+    model: str,
+    evals: str | list[str],
+    judges: str | list[str] | None = None,
+    analyzers: str | list[str] | None = None,
+    grader_model: str | None = None,
+    output_dir: str = "results",
+    **kwargs,
+) -> FullExperimentResults:
+    """Convenience wrapper for running an eval pipeline.
+
+    This is the core abstraction: eval_run(model_spec, eval_suite, judge_suite) -> results
+
+    Args:
+        model: Model identifier. Supports:
+            - API: "openai/gpt-4o", "anthropic/claude-sonnet-4"
+            - Local vLLM: "vllm/Qwen/QwQ-32B"
+            - HuggingFace: "hf/meta-llama/Llama-3.1-70B"
+            - With adapter: "vllm/Qwen/QwQ-32B+lora:/path/to/adapter"
+            - OpenRouter: "openrouter/qwen/qwq-32b"
+        evals: Eval name(s). e.g., "needham", ["agent:chess", "blackmail"]
+        judges: Judge name(s). e.g., "verbalized_awareness", ["binary_mcq", "purpose_xml"]
+        analyzers: Analyzer name(s). e.g., "reasoning_classifier"
+        grader_model: Grader model for judges. Defaults to the eval model.
+        output_dir: Base output directory.
+        **kwargs: Additional ExperimentConfig options.
+
+    Returns:
+        Full experiment results.
+    """
+    # Normalize to lists
+    eval_list = [evals] if isinstance(evals, str) else list(evals)
+    judge_list = [judges] if isinstance(judges, str) else list(judges or [])
+    analyzer_list = [analyzers] if isinstance(analyzers, str) else list(analyzers or [])
+
+    # Parse model spec
+    model_spec = ModelSpec.from_string(model)
+    model_str = model_spec.base_model
+
+    # Build eval configs
+    eval_configs = [{"name": e} if isinstance(e, str) else e for e in eval_list]
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    config = ExperimentConfig(
+        name=f"eval_run_{timestamp}",
+        models=[model_str],
+        evals=eval_configs,
+        judges=judge_list,
+        analyzers=analyzer_list,
+        grader_model=grader_model,
+        output_dir=output_dir,
+        **kwargs,
+    )
+
     return await run_experiment(config)

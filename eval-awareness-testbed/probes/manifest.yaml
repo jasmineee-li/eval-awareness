@@ -1,0 +1,17 @@
+# Probe Registry - Evaluation Awareness Detection
+# Populated by scripts/train_probe.py after training probes.
+#
+# Format:
+#   probes:
+#     <model_path>:
+#       default_revision: main
+#       probe_type: contrastive | classifier
+#       revisions:
+#         <revision>:
+#           probe_path: probes/<model>/<revision>/
+#           best_layer: <int>
+#           auroc: <float>
+#           threshold: <float>
+#           training_data: data/whitebox/contrastive_dataset.json
+
+probes: {}

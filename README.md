@@ -2,12 +2,13 @@
 
 <div align="center">
 
-Rough research codebase for *Evaluation Cooperativeness May Be a Scalable Mitigation for Eval Gaming*
-&mdash; Jasmine Li and Alexander Matt Turner.
+(rough) research codebase for *Evaluation Cooperativeness May Be a Scalable Mitigation for Eval Gaming*
+&mdash; Jasmine Li, Alexander Matt Turner.
 
-<a href="https://jasminexli.com/eval-coop-paper"><b>Paper</b></a>
-&nbsp;·&nbsp;
-<a href="https://github.com/jasmineee-li/eval-awareness"><b>Code</b></a>
+<a href="https://jasminexli.com/eval-coop-paper"><b>paper✨</b></a>
+&nbsp;·<a href="https://jasminexli.com/eval-coop-paper"><b>blog🤸‍♀️</b></a>
+&nbsp;· &nbsp;
+<a href="https://github.com/jasmineee-li/eval-awareness"><b>code👓</b></a>
 
 <br /><br />
 
